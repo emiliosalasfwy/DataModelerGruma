@@ -1,0 +1,14 @@
+{
+    "application": {
+        "sfConsumerKey": "",
+        "uniqueID": "f72161c6-f131-4f4c-b525-5923595760d7"
+    },
+    "server": {
+        "port": 3000,
+        "referenceImagePath": "",
+        "logLevel": "INFO"
+    },
+    "generator": {
+        "logLevel": "ERROR"
+    }
+}
