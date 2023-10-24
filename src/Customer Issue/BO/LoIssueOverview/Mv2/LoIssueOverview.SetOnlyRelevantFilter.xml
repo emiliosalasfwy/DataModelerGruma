@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setOnlyRelevantFilter" businessObjectClass="LoIssueOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.setFilter("filterOpen", "1", "EQ");
+var items = me.getItemObjects();
+
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+}
+else {
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

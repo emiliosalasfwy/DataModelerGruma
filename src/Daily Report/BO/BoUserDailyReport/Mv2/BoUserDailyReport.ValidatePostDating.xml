@@ -1,0 +1,39 @@
+<BusinessLogic methodName="validatePostDating" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var newError;
+
+if(!Utils.isDefined(me.getDateFrom())){
+  newError = {"level": "error", 
+              "objectClass": "BoUserDailyReport", 
+              "messageID": "CasUsrDailyReportFillInAllValues"};
+  messageCollector.add(newError);
+}  
+
+if(me.getBoUserDocMeta().getAllowPostdating().toString() === "0" && Utils.isDefined(me.getDateFrom()) ){
+
+  var compareDate = Utils.createDateNow();
+  compareDate.setHours(0);
+  compareDate.setMinutes(0);
+  compareDate.setSeconds(0);
+  compareDate.setMilliseconds(0);
+
+  var newReportDate = Utils.convertAnsiDate2Date(me.getDateFrom());
+  newReportDate.setHours(0);
+  newReportDate.setMinutes(0);
+  newReportDate.setSeconds(0);
+  newReportDate.setMilliseconds(0);
+
+  if(newReportDate > compareDate){
+    newError = {"level": "error",
+                "objectClass": "BoUserDailyReport",
+                "messageID": "CasUsrDailyReportPostDatingNotAllowed"};
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

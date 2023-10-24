@@ -1,0 +1,114 @@
+<BusinessLogic methodName="setCurrentItem" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemPKey" type="String" />
+    <MethodInput name="itemPKeys" type="DomPKey" />
+    <MethodInput name="startIndex" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var logisticUnitParams = [];
+var logisticUnitQuery = {};
+var modReasonParams = [];
+var modReasonQuery = {};
+var allItems = me.getLoItems();
+var orderItem = allItems.getItemByPKey(itemPKey);
+
+if (Utils.isDefined(orderItem)) {
+  logisticUnitParams.push(
+    {
+      "field": "ProductPKey",
+      "value": orderItem.getPrdMainPKey()
+    }
+  );
+
+  var itemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(orderItem.getSdoItemMetaPKey());
+
+  if (Utils.isDefined(itemMeta)) {
+    logisticUnitParams.push(
+      {
+        "field": "LogisticCategory",
+        "value": itemMeta.getLogisticCategory()
+      }
+    );
+    orderItem.set("sdoItemMetaText", itemMeta.getText());
+  }
+
+  var unitOfMeasuresList = me.getLoUnitOfMeasure();
+
+  unitOfMeasuresList.removeAllItems();
+  if (Utils.isDefined(itemPKeys) && Utils.isDefined(startIndex)) {
+    unitOfMeasuresList.addWeakReferencedItems(allItems.getRange(startIndex, itemPKeys.length));
+  }
+
+  var orderUnitItems = unitOfMeasuresList.getOrderUnitItems();
+  unitOfMeasuresList.setCurrent(orderUnitItems.length > 0 ? orderUnitItems[0] : unitOfMeasuresList.getFirstItem(), true);
+
+  logisticUnitQuery.params = logisticUnitParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LoLogisticUnit", logisticUnitQuery).then(
+    function (loLogisticUnit) {
+      var subItems;
+      var items = loLogisticUnit.getAllItems();
+      
+      subItems = new Array(items.length);
+      for (var i = 0; i < items.length; i++) {
+        subItems[i] = items[i].getUnitType();
+      }
+
+      orderItem.setAvailableUOMs(Utils.getToggleListObject("PrdLogisticUnit", subItems));
+
+      me.getLoItems().setCurrent(orderItem);
+
+      var loModReasonPromise = [];
+      if (!me.getLoModReasonCache().containsKey(orderItem.getSdoItemMetaPKey())) {
+        loModReasonPromise = BoFactory.loadObjectByParamsAsync("LoModReason", me.getQueryBy("sdoItemMetaPKey", orderItem.getSdoItemMetaPKey()));
+      }
+      else {
+        loModReasonPromise = when.resolve();
+      }
+
+      return loModReasonPromise.then(
+        function (loModReason) {
+          if (me.getLoModReasonCache().containsKey(orderItem.getSdoItemMetaPKey())) {
+            loModReason = me.getLoModReasonCache().get(orderItem.getSdoItemMetaPKey());
+          }
+          else {
+            loModReason = loModReason.getAllItems();
+            me.getLoModReasonCache().add(orderItem.getSdoItemMetaPKey(), loModReason);
+          }
+
+          var subItems;
+          var items = loModReason;
+
+          subItems = new Array(items.length);
+          if (items.length > 0) {
+            for (var i = 0; i < items.length; i++) {
+              subItems[i] = items[i].getModReason();
+            }
+          }
+
+          subItems.push(" ");
+          orderItem.setAvailableModReasons(Utils.getToggleListObject("SdoModReason", subItems));
+          me.getLoItems().setCurrentByPKey(itemPKey);
+        }
+      );
+    }
+  );
+
+  orderItem.setQtyDifference(orderItem.getQuantity() - orderItem.getTargetQuantity());
+
+  if (!me.isEditable() && me.getBoOrderMeta().getSdoSubType() != "TruckIvcTransferInward") {
+    orderItem.setObjectStatus(STATE.PERSISTED);
+    me.setObjectStatus(STATE.PERSISTED);
+  }
+}
+else {
+  me.getLoItems().setCurrentByPKey(itemPKey);
+  if (!me.isEditable() && me.getBoOrderMeta().getSdoSubType() != "TruckIvcTransferInward") {
+    me.setObjectStatus(STATE.PERSISTED);
+  }
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

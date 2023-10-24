@@ -1,0 +1,43 @@
+<BusinessLogic methodName="onPropertyChanged" businessObjectClass="BoWizardRescheduleVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//if any of the fields has currently been set to nothing, duration calculation can't be executed, will always result in 0
+if(handlerParams.newValue!==null && handlerParams.newValue!==""){
+  //read old values from object
+  var currentTimeFrom = me.getTimeFrom();
+  var currentTimeThru = me.getTimeThru();
+  //depending if date is still initial or changed earlier, it might have "00:00:00" added or not; substring will lead ensure ansi date without time portion; it can also be null from earlier clearance
+  var currentDateFrom = me.getDateFrom()===null ? null : me.getDateFrom().substring(0,10);
+  var currentDateThru = me.getDateThru()===null ? null : me.getDateThru().substring(0,10);
+
+  //depending on changed field, read that value from handlerParams; note that date fields from date picker are returned as "yyyy-mm-dd 00:00:00", so they have to be converted to "yyyy-mm-dd"
+  if(handlerParams.simpleProperty === "timeFrom"){
+    var currentTimeFrom = handlerParams.newValue;
+  }else if(handlerParams.simpleProperty === "timeThru"){
+    var currentTimeThru = handlerParams.newValue;
+  }else if(handlerParams.simpleProperty === "dateFrom"){
+    var currentDateFrom = Utils.convertAnsiDateTime2AnsiDate(handlerParams.newValue);
+  }else if(handlerParams.simpleProperty === "dateThru"){
+    var currentDateThru = Utils.convertAnsiDateTime2AnsiDate(handlerParams.newValue);
+  }
+  
+  //it could be that two or more fields have been empty, and only one has been refilled again - so this check is needed; if one value is empty or null, duration calculation can't be executed, will always result in 0
+  if(currentDateFrom===null || currentTimeFrom==="" || currentDateThru===null || currentTimeThru===""){
+    me.setDuration(0);
+  }else{
+    //check if Begin is < than End (note: since we have ANSI only, comparison via String concat should be working fine)
+    if(currentDateFrom + currentTimeFrom < currentDateThru + currentTimeThru){
+      var timeDifference = me.getBoVisit().getCallDuration(currentDateFrom, currentTimeFrom, currentDateThru, currentTimeThru);
+      me.setDuration(timeDifference);
+    }else{
+      me.setDuration(0);
+    }
+  }
+}else{
+  me.setDuration(0);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

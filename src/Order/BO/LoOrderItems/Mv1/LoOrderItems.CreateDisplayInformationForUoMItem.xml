@@ -1,0 +1,65 @@
+<BusinessLogic methodName="createDisplayInformationForUoMItem" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="unitOfMeasureItem" type="Object" />
+    <MethodInput name="orderMeta" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var info =
+    {
+      oQtyString: " ",
+      unitInformation: ""
+    };
+
+var unitDescription = Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+var quantityLogisticUnit;
+
+if((unitDescription == "SalesUnit") || (unitDescription == "Sales Unit"))
+{
+  unitDescription = "SUnit";
+  info.logicUnitsforDisplay = "Sales Unit";
+}
+else if((unitDescription == "ConsumerUnit") || (unitDescription == "Consumer Unit"))
+{
+  unitDescription = "CUnit";
+  info.logicUnitsforDisplay = "Consumer Unit";
+}
+else {
+info.logicUnitsforDisplay = unitDescription;
+}
+
+// For Order only show the actual quantity and for deliveries show both ordered and actual
+if (orderMeta.getSdoSubType() === "Delivery") {
+  if (orderMeta.getConsiderQuantitySuggestion() === "PQty") {
+    info.unitInformation = unitOfMeasureItem.getTargetQuantity() + "/" + unitOfMeasureItem.getQuantity() + " " + unitDescription;
+    info.oQtyString = Localization.resolve("OQtyLabel") + ": " + unitOfMeasureItem.getTargetQuantity();
+  }
+  else {
+    if ((orderMeta.getConsiderQuantitySuggestion() === "LQty" || orderMeta.getConsiderQuantitySuggestion() === "UserExit") && unitOfMeasureItem.getOQtyString() != " ") {
+      info.unitInformation = unitOfMeasureItem.getQuantity() + " " + unitDescription;
+      info.oQtyString = unitOfMeasureItem.getOQtyString();	
+    }
+    else {
+      info.unitInformation = unitOfMeasureItem.getQuantity() + " " + unitDescription;	
+    }
+  }
+}
+else {
+  var suggestedQuantity = unitOfMeasureItem.getTargetQuantity();
+  if(unitOfMeasureItem.getOQtyString() === " ") {
+    info.unitInformation = unitOfMeasureItem.getQuantity() + " " + unitDescription;
+  }
+  else {
+    info.unitInformation = unitOfMeasureItem.getQuantity() + " " + unitDescription;
+    info.oQtyString = unitOfMeasureItem.getOQtyString();
+  }
+}
+
+if(unitOfMeasureItem.getSpecialPromoted() == "1"){
+  if(unitOfMeasureItem.getIsOrderUnit() == "1"){
+    info.oQtyString = "Suggested Qty: "+ unitOfMeasureItem.getSpecialQuantity();
+    info.specialPromotionIcon = "SpecialQuantity";
+  }
+}]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

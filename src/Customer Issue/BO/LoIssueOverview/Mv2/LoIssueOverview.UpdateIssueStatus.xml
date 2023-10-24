@@ -1,0 +1,24 @@
+<BusinessLogic methodName="updateIssueStatus" businessObjectClass="LoIssueOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="issueDetail" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var pKey = me.getCurrent().getPKey();
+var liIssue = me.getItemByPKey(pKey);
+var issueStatus;
+var objectStatusNewDirty = (STATE.NEW | STATE.DIRTY);
+
+if (Utils.isDefined(liIssue) && issueDetail.getObjectStatus() == objectStatusNewDirty) {
+  liIssue.delete();
+  issueDetail.delete();
+  issueStatus = 'deleted';
+}
+else {
+  issueStatus  ='updated';
+  liIssue.setObjectStatus(STATE.PERSISTED);
+  issueDetail.setObjectStatus(STATE.PERSISTED);
+}
+me.setFilter("objectStatus", STATE.DELETED, 'NCB');]]>
+</Code>
+  <Return name="issueStatus" value="issueStatus" />
+</BusinessLogic>

@@ -1,0 +1,8 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoTripList" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+ 
+    ]]></Code>
+</BusinessLogic>

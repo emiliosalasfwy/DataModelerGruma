@@ -1,0 +1,85 @@
+<BusinessLogic methodName="answerToQuestion" businessObjectClass="BoHelperHurdleExpressionFunctions" businessObjectType="businessobjecthelper" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="hurdle" type="Object" />
+    <MethodInput name="order" type="Object" />
+    <MethodInput name="call" type="Object" />
+    <MethodInput name="pricingCalculator" type="Object" />
+    <MethodInput name="targetValue" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var perFactor = 1;
+var evaluationResult = {
+  "evaluationResult": false,
+  "differenceInfo": {
+    "detailText": "",
+    "calculatedValue": "",
+    "perFactor": 0
+  }
+};
+
+var promise = when.resolve(evaluationResult);
+
+if (Utils.isDefined(call)) {
+  var evaluateCurrentHurdle = function(){
+    var hurdleOperator = hurdle.getOperator().toUpperCase();
+    var jobManager = call.getBoJobManager();
+    var questions = jobManager.getLoQuestions();
+
+    if(hurdleOperator === "PER") {
+      if(hurdle.getExpressionResultType() === "Numeric") {
+        hurdleOperator = "GE";
+      }
+      else {
+        hurdleOperator = "EQ";
+      }
+    }
+
+    questions.resetAllFilters();
+    var validAnswers = questions.getItemsByParamArray([
+      {"jobDefinitionMetaPKey": hurdle.getJobDefinitionTemplate(), "op": "EQ"},
+      {"done":"1","op":"EQ"},
+      {"value": targetValue, "op": hurdleOperator}]);
+
+    if(validAnswers.length > 0) {
+      evaluationResult.evaluationResult = true;
+      evaluationResult.differenceInfo.calculatedValue = validAnswers[0].value;
+
+      if(hurdle.getOperator() === "PER" && hurdle.getExpressionResultType() === "Numeric") {
+        if(targetValue > 0 && validAnswers[0].value > 0) {
+          perFactor = Math.floor(validAnswers[0].value/targetValue);
+        }
+        else {
+          perFactor = 0; 
+        }
+      }
+    } else {
+      var invalidAnswers = questions.getItemsByParamArray([
+        {"jobDefinitionMetaPKey": hurdle.getJobDefinitionTemplate(), "op": "EQ"},
+        {"done":"1","op":"EQ"}]);
+
+      if(invalidAnswers.length > 0) {
+        evaluationResult.differenceInfo.calculatedValue = "Not fulfilled";
+      } else {
+        evaluationResult.differenceInfo.calculatedValue = "None found";
+      }
+      perFactor = 0;
+    }
+  };
+
+  if(!Utils.isDefined(call.getBoJobManager().getLoQuestions())){
+    promise = call.getBoJobManager().loadAndSetPrerequisites("AnswerToQuestionHurdle")
+      .then(function(){
+      evaluateCurrentHurdle();
+      return when.resolve(evaluationResult);
+    });
+  } else{
+    evaluateCurrentHurdle();
+  }
+}
+else {
+  perFactor = 0;
+}
+evaluationResult.differenceInfo.perFactor = perFactor;]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

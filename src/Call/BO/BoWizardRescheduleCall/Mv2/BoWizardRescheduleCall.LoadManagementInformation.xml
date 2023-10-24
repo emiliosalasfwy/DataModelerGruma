@@ -1,0 +1,31 @@
+<BusinessLogic methodName="loadManagementInformation" businessObjectClass="BoWizardRescheduleCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bpaMainPKey" type="DomPKey" />
+    <MethodInput name="dateFrom" type="Date" />
+    <MethodInput name="calledByWizard" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Determine substitution Info
+var managementInfoParams = [];
+var managementInfoQuery = {};
+managementInfoParams.push({ "field" : "customerPKey", "value" : bpaMainPKey });
+managementInfoParams.push({ "field" : "referenceDate", "value" : Utils.convertFullDate2Ansi(dateFrom) });
+managementInfoParams.push({ "field" : "referenceUserPKey", "value" : ApplicationContext.get('user').getPKey() });
+managementInfoQuery.params = managementInfoParams;
+me.setCalledByWizard(calledByWizard);
+me.setCustomerPKey(bpaMainPKey);
+var promise = BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", managementInfoQuery)
+  .then(function (customerManagementInfoLookup) {
+  if (customerManagementInfoLookup) {
+    me.setIsManaged(customerManagementInfoLookup.getIsManaged());
+    me.setHasSubstitute(customerManagementInfoLookup.getHasSubstitute());
+    me.setIsSubstituted(customerManagementInfoLookup.getIsSubstituted());
+    me.setSubstitutedFrom(customerManagementInfoLookup.getSubstitutedFrom());
+    me.setSubstitutedThru(customerManagementInfoLookup.getSubstitutedThru());
+    me.setManagementRelationValidFrom(customerManagementInfoLookup.getManagementRelationValidFrom());
+    me.setManagementRelationValidThru(customerManagementInfoLookup.getManagementRelationValidThru());
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

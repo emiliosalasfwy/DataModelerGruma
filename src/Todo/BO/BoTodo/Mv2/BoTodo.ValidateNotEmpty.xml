@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoTodo" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    	var newError;
+	if (Utils.isEmptyString(this.getText()))
+	{
+		newError = {"level": "error", 
+                    "objectClass": "BoTodo", 
+                    "messageID": "CasBoToDoDescriptionEmpty"};
+        messageCollector.add(newError);
+	}
+		
+   ]]></Code>
+</BusinessLogic>

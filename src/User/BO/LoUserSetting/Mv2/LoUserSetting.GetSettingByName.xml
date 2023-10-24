@@ -1,0 +1,20 @@
+<BusinessLogic methodName="getSettingByName" businessObjectClass="LoUserSetting" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="name" type="DomString" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+var settingValue = null;
+var idx;
+var settings = this.getAllItems();
+
+for (idx = 0; idx < settings.length; idx++) {
+	if (settings[idx].getName() == name) {
+		settingValue = settings[idx].getValue();
+		break;
+	}
+}
+		
+   ]]></Code>
+  <Return name="settingValue" value="settingValue" />
+</BusinessLogic>

@@ -1,0 +1,82 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoTodo" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = context.jsonQuery;
+if (!jsonQuery) {
+  jsonQuery = {
+    'params' : []
+  };
+}
+context = {
+  'jsonQuery' : jsonQuery
+};
+var promise = Facade.getObjectAsync(BO_TODO, jsonQuery).then(
+  function (selfJson) {
+    context.selfJson = selfJson;
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+    if (Utils.isDefined(selfJson)) {
+      var jsonParams = me.prepareLookupsLoadParams(selfJson);
+      return Facade.loadLookupsAsync(jsonParams);
+    }
+    else {
+      return when.resolve(null);
+    }
+  }).then(
+  function (lookups) {
+    if (Utils.isDefined(lookups)) {
+      me.assignLookups(lookups);
+    }
+    return BoFactory.loadObjectByParamsAsync(BO_TODONOTE, me.getQueryBy("svcTodoPKey", me.getPKey()));
+  }).then(
+  function (boTodoNote) {
+    if (Utils.isDefined(boTodoNote)) {
+      me.setBoTodoNote(boTodoNote);
+    }
+    else {
+      me.setBoTodoNote(null);
+    }
+    return BoFactory.loadObjectByParamsAsync(BO_SVCREQUESTMETA, me.getQueryBy("pKey", me.getSvcRequestMetaPKey()));
+  }).then(
+  function (boSvcRequestMeta) {
+    if (Utils.isDefined(boSvcRequestMeta)) {
+      if (Utils.isSfBackend()) {
+        boSvcRequestMeta.setIsPrivate("0");
+        boSvcRequestMeta.setIssueType("ToDo");
+        boSvcRequestMeta.setObjectStatus(STATE.PERSISTED);
+      }
+      me.setBoSvcRequestMeta(boSvcRequestMeta);
+    }
+    else {
+      me.setBoSvcRequestMeta(null);
+    }
+    return BoFactory.loadObjectByParamsAsync(BO_WORKFLOW, me.getQueryBy("pKey", me.getWfeWorkflowPKey()));
+  }).then(
+  function (boWorkflow) {
+    if (Utils.isDefined(boWorkflow)) {
+      me.setBoWorkflow(boWorkflow);
+    }
+    else {
+      me.setBoWorkflow(null);
+    }
+    return BoFactory.loadListAsync(LO_TODORECENTSTATE, me.getQueryBy("svcTodoPKey", me.getPKey()));
+  }).then(
+  function (loTodoRecentStateJson) {
+    if (Utils.isDefined(loTodoRecentStateJson)) {
+      me.setLoRecentState(loTodoRecentStateJson);
+    }
+    else {
+      me.setLoRecentState(null);
+    }
+    me.setObjectStatus(STATE.PERSISTED);
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

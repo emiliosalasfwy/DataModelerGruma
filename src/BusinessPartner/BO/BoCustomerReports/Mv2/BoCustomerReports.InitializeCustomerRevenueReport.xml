@@ -1,0 +1,239 @@
+<BusinessLogic methodName="initializeCustomerRevenueReport" businessObjectClass="BoCustomerReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCustomerSalesRevenue" type="Object" />
+    <MethodInput name="containerName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(me.getChartHelper()))
+{
+  return;
+}
+
+var chartHelper = me.getChartHelper();
+var createToolTip = false;
+
+// Get container and add title and chart container divs
+var d3Container = chartHelper.getUIContainer(containerName, true);
+var chartString = "chart_" + containerName;
+var chartSelector = "#"+chartString;
+chartHelper.addChartContainers(d3Container, containerName, "0", "1");
+
+// Set title
+var currentYear = parseInt(Utils.createDateToday().getUTCFullYear(), 10);
+var prevYear = currentYear-1;
+var title = Localization.resolve("Report_CustomerRevenue_Title") + " - " + prevYear + " " + Localization.resolve("Report_CustomerRevenue_Title_VS") + " " + currentYear;
+chartHelper.setChartTitle(d3Container, title, containerName);
+
+// Define attributes for chart
+var currencySign = Localization.resolve("Report_CustomerRevenue_Currency");
+var sizeJson = chartHelper.computeContainerSize(containerName, 0.70, 0.96);
+var barColors = ['#f8bd19', '#008ee6'];
+var colors = function (color, d) {
+  return barColors[(d.id && d.id == currentYear) || d == currentYear ? 1 : 0];};
+
+var monthArray = ["Report_CustomerRevenue_January_Tooltip", "Report_CustomerRevenue_February_Tooltip", "Report_CustomerRevenue_March_Tooltip", "Report_CustomerRevenue_April_Tooltip", "Report_CustomerRevenue_May_Tooltip",
+                  "Report_CustomerRevenue_June_Tooltip", "Report_CustomerRevenue_July_Tooltip", "Report_CustomerRevenue_August_Tooltip", "Report_CustomerRevenue_September_Tooltip", "Report_CustomerRevenue_October_Tooltip",
+                  "Report_CustomerRevenue_November_Tooltip", "Report_CustomerRevenue_December_Tooltip"];
+
+// Create Chart
+var chartReference = c3.generate({
+  bindto : chartSelector,
+  data : {
+    columns : [
+      [prevYear, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [currentYear, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    ],
+    color : colors,
+    type : 'bar',
+    labels : false
+  },
+  bar : {
+    width : {
+      ratio : 0.8
+    }
+  },
+  size: sizeJson,
+  transition: {
+    duration: 1000
+  },
+  axis : {
+    rotated : false,
+    x : {
+      type : 'category',
+      categories : [Localization.resolve("Report_CustomerRevenue_January"), Localization.resolve("Report_CustomerRevenue_February"),
+                    Localization.resolve("Report_CustomerRevenue_March"), Localization.resolve("Report_CustomerRevenue_April"),
+                    Localization.resolve("Report_CustomerRevenue_May"), Localization.resolve("Report_CustomerRevenue_June"),
+                    Localization.resolve("Report_CustomerRevenue_July"), Localization.resolve("Report_CustomerRevenue_August"),
+                    Localization.resolve("Report_CustomerRevenue_September"), Localization.resolve("Report_CustomerRevenue_October"),
+                    Localization.resolve("Report_CustomerRevenue_November"), Localization.resolve("Report_CustomerRevenue_December")]
+    },
+    y : {
+      padding : {
+        top : 50,
+        bottom : 0
+      },
+      show : true,
+      tick : {
+        format: function (d) {
+          var number;
+          var localizedValue;
+          if(Utils.isDefined(d) && d>9999)
+          {
+            number = Math.floor(d/1000);
+            localizedValue = Localization.localize(number, "number") + " " + Localization.resolve("ThousendSign_Chart");
+          }
+          else
+          {
+            number = d;
+            localizedValue = Localization.localize(number, "number");
+          }
+
+          return currencySign + localizedValue;
+        }
+      },
+      max: 1000
+    }
+  },
+  grid : {
+    y : {
+      show : true
+    }
+  },
+  legend: {
+    show: false/*,
+    item: {
+      onclick: function (id) {        
+        chartReference.toggle(id);
+
+        var svg = d3.select(chartSelector);
+        var text = svg.selectAll("text");
+        text.style("font-size", "1.2em");         
+		text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+      }
+    }*/
+  },
+  tooltip : {        format: {
+    title: function (d) { return Localization.resolve(monthArray[d]); },
+    value: function (value, ratio, id) {				
+      var localizedValue = Localization.localize(value.toFixed(2), "number");
+      createToolTip = true;
+      return currencySign + localizedValue;
+    }
+  },
+             contents : this.getChartHelper().getStyledTooltipFunction()
+            }
+});
+
+
+// custom legend
+
+var legend = d3Container.select('#colorContainer').insert('div', '.chart').attr("id", "legendDiv").attr('align', 'center').append("svg").attr('class', 'legend').attr('width', '360').attr('height', '100').append('g').attr('align', 'center');
+
+var rects = legend.selectAll('rect')
+.data([{id: prevYear.toString()},  {id: currentYear.toString()}])
+.enter()
+.append("rect")
+.attr("x",function(d, i){ return i == 1 ? 180 + 52 : 152;})
+.attr("y", function(d, i){ return 10;})
+.attr("width", "1em")
+.attr("height", "1em")
+.style("fill", function(id) {return chartReference.color(id.id);})
+.on('mouseover', function (id) {  chartReference.focus(id.id);})
+.on('mouseout', function (id) {  chartReference.revert();
+
+                              })
+.on('click', function (id) {  chartReference.toggle(id.id);
+                            var svg = d3.select(chartSelector);
+                            var text = svg.selectAll("text");
+                            text.style("font-size", "1.2em");
+                            text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+                            if(!Utils.isDefined(chartHelper))
+                            {
+                              return;
+                            }
+                            var d3Container = chartHelper.getUIContainer(containerName);
+                            var chartDiv = d3Container.select(chartSelector);
+                            var eventRect = chartDiv.selectAll(".c3-event-rect");
+
+                            eventRect.on('mouseout', function(elem)
+                                         { 
+                            });
+                           });
+
+var texts = legend.selectAll('text')
+.data([{id: prevYear.toString()},  {id: currentYear.toString()}])
+.enter()
+.append("text")
+.attr("x",function(d, i){ return i == 1 ? 180 + 10 : 110;})
+.attr("y", function(d, i){ return 27;})
+.text(function(id) {  return id.id;})
+.on('mouseover', function (id) {  chartReference.focus(id.id);})
+.on('mouseout', function (id) {  chartReference.revert();})
+.on('click', function (id) {  chartReference.toggle(id.id);
+                            var svg = d3.select(chartSelector);
+                            var text = svg.selectAll("text");
+                            text.style("font-size", "1.2em");
+                            text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+                            if(!Utils.isDefined(chartHelper))
+                            {
+                              return;
+                            }
+
+                            var d3Container = chartHelper.getUIContainer(containerName);
+                            var chartDiv = d3Container.select(chartSelector);
+                            var eventRect = chartDiv.selectAll(".c3-event-rect");
+
+                            eventRect.on('mouseout', function(elem)
+                                         { 
+                            });
+                           });
+
+
+
+chartHelper.setAxisDefaultColor();
+chartHelper.addChartToStorage(containerName, chartReference);
+
+var d3Cont = chartHelper.getUIContainer(containerName);
+
+var colorContainer = d3Cont.select("#colorContainer");
+colorContainer.on('click', function(){
+  if(Utils.isApple())
+  {
+    chartReference.internal.hideTooltip();
+  }
+  else
+  {
+    if(!createToolTip)
+    {
+      chartReference.internal.hideTooltip();
+    }
+    createToolTip=false;
+  }
+});
+
+// update text sizes
+var svg = d3.select(chartSelector);
+var text = svg.selectAll("text");
+text.style("font-size", "1.2em");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+// Set background to white
+chartHelper.setChartBackgroundDefaultColor(chartSelector, "100%");
+
+
+setTimeout(function () {
+  // center vertically
+  me.centerVerticallyCustomerRevenueReport(containerName);
+
+}, 100);
+
+
+// Fade in animation
+setTimeout(function () {
+  me.inputChangedForCustomerRevenueReport(loCustomerSalesRevenue,containerName);
+}, 500);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

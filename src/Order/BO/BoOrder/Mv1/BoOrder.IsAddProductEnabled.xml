@@ -1,0 +1,8 @@
+<BusinessLogic methodName="isAddProductEnabled" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// if the button is set to invisible it will be shown anyway if it is disabled. Therefore enable it if the order is not editable becasue it will not be visible then.
+var isEnabled = (!me.isEditable() || Utils.isEmptyString(me.getSelectedPromotionPKey())) && (!me.isEditable() || me.getBoOrderMeta().getSpecialOrderHandling() != "ExclusiveSpecialOrder");]]>
+</Code>
+  <Return name="isEnabled" value="isEnabled" />
+</BusinessLogic>

@@ -1,0 +1,22 @@
+<BusinessLogic methodName="applyFastOrderQuantity" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fastOrderItemDictionary" type="Object" />
+    <MethodInput name="fastOrderItems" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+me.getLoItems().suspendListRefresh();
+
+var fastOrderItems = fastOrderItems.getItems();
+
+for(var i=0; i < fastOrderItems.length; i++) { 
+  if(fastOrderItemDictionary.containsKey(fastOrderItems[i].pKey)){
+    var currentItem = fastOrderItemDictionary.get(fastOrderItems[i].pKey);
+    currentItem.setQuantity(parseInt(fastOrderItems[i].quantity, 10));
+  }
+}    
+
+promise = me.getLoItems().resumeListRefreshAsync(false,true);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

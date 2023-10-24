@@ -1,0 +1,8 @@
+<BusinessLogic methodName="isScanProductDetailVisible" businessObjectClass="BoOrder" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+    
+	var visible = (this.isEditable() && !Utils.isPhone() && !Utils.isAndroid() && !Utils.isWindows());
+		
+   ]]></Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

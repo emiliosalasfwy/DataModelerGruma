@@ -1,0 +1,16 @@
+<BusinessLogic methodName="navigateToButtonVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="visitCount" type="Integer" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Filter out Non-Customer Related calls
+var customerVisits = me.getAllItems().filter(function(x){
+  if(x.getBpaMainPKey() !== " "){
+    return x;
+  }
+});
+
+var visible = customerVisits.length > 0;]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

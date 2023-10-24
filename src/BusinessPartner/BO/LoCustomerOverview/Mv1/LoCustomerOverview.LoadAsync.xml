@@ -1,0 +1,58 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoCustomerOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var newParams;
+
+if (Utils.isOldParamsFormat(jsonParams)) {
+  newParams = Utils.convertDsParamsOldToNew(jsonParams);
+} 
+else {
+  newParams = jsonParams || {};
+}
+//Advanced Search Paging
+if (!Utils.isDefined(newParams.asoName)) {
+  newParams.asoName = 'AsoCustomerOverview';
+  //Transforming back in the new Format
+  jsonParams = Utils.convertDsParamsNewToOld(newParams);
+}
+if (Utils.isDefined(newParams.cardOverdue)) {
+  newParams.addCond_OverdueCustomers = " AND customers.isOverdue = '1' " ;
+  newParams.asoName = 'AsoOverdueCustomerOverview';
+}
+
+// Additional condition for the case that lead time / follow up time of a substitution is considered
+if (newParams.considerSubstitutionLeadFollowUpTime == '1') {
+  if (Utils.isSfBackend()) {
+    newParams.addCond_LeadTimeFollowUpTime = " ((SubBpaRelValidFrom <= #TodayAsDate# AND SubBpaRelValidThru >= #TodayAsDate#) OR Account_Manager__c.Id IS NOT NULL ) AND ";
+  }
+  else {
+    newParams.addCond_LeadTimeFollowUpTime = " (((DATETIME (SubBpaRelValidFrom) <= '#Today#' AND DATETIME (SubBpaRelValidThru) >= '#Today#')) OR BpaManagement.Pkey IS NOT NULL ) AND ";
+  }
+}
+
+promise = BoFactory.loadObjectByParamsAsync("LuCurrentAddress", {}).then(
+  function(luCurrentAddress){
+    jsonParams.params.push({ "field": "currentLatitude", "value": luCurrentAddress.latitude });
+    jsonParams.params.push({ "field": "currentLongitude", "value": luCurrentAddress.longitude });
+    return me.addAsoInformation(jsonParams);
+  }).then(
+  function (success) {
+    return Facade.getListAsync(LO_CUSTOMEROVERVIEW, jsonParams);
+  }).then(
+  function (items) {
+    items.forEach(function(item){
+      item.mapIcon = 'PurpleGoogleMarkerEmpty';
+      item.visibleInMap = "1";
+    });
+    me.addItems(items, jsonParams);
+    if(items.length > 0) {
+      me.setCurrentByPKey(items[0].getPKey());
+    }
+    return me;
+  });]]>
+</Code>
+  <Return name="LoCustomerOverview_LoadAsync" value="promise" />
+</BusinessLogic>

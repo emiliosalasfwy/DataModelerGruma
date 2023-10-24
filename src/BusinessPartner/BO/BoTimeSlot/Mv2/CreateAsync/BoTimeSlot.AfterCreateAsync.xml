@@ -1,0 +1,18 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoTimeSlot" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(result);
+
+//Type is a mandatory TimeSlot field. Only "Normal" TimeSlots are supported.
+me.setType('Normal');
+
+//set pKey to pKey of changed time slot (used in validation to filter out time slots for overlap check)
+if(Utils.isDefined(context.jsonQuery.pKey)){
+  me.setPKey(context.jsonQuery.pKey);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

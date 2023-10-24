@@ -1,0 +1,31 @@
+<BusinessLogic methodName="getNextStateHoldBack" businessObjectClass="BoWorkflow" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="actualStatePKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+          
+    	var wfeNextState = {};
+
+      var currentWfeTransition;
+      var allWorkflowTransitions = this.getLoWfeStateTransitions().getItemsByParam({ "fromStatePKey": actualStatePKey });
+                 
+      for (var idxTrans=0; idxTrans < allWorkflowTransitions.length; idxTrans++)
+      {
+        currentWfeTransition = allWorkflowTransitions[idxTrans];
+       
+        var wfeStates = this.getLoWfeState().getItemsByParam({ "pKey" : currentWfeTransition.getToStatePKey(), "stateType" : "HoldBack" });
+        
+        if (wfeStates.length > 0) {    
+          wfeNextState.toStatePKey = currentWfeTransition.getToStatePKey();
+          wfeNextState.stateType = wfeStates[0].getStateType();
+          
+          break;
+        }
+        
+      }
+      
+      this.getLoWfeState().resetAllFilters();
+  
+    ]]></Code>
+  <Return name="wfeNextState" value="wfeNextState" />
+</BusinessLogic>

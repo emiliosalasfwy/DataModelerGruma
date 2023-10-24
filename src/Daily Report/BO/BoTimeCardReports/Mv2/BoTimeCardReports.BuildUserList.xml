@@ -1,0 +1,25 @@
+<BusinessLogic methodName="buildUserList" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="userPKey" type="String" />
+    <MethodInput name="team" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var user = ApplicationContext.get('user');
+
+if(team === "0")
+{
+  promise = when.resolve("'" + userPKey + "'");
+}
+else
+{
+  promise = user.loadTeamOfUser("1").then(
+    function() {
+      return user.getTeamList();
+    }
+  );
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

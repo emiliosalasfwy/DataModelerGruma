@@ -1,0 +1,13 @@
+<BusinessLogic methodName="getFirstEntry" businessObjectClass="LoSvcRequestMeta" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+    
+      var svcRequestMetas = this.getItemObjects();
+      var pKey = " ";
+      
+      if (svcRequestMetas.length > 0) {
+          pKey = svcRequestMetas[0].getPKey();
+      }
+      
+    ]]></Code>
+  <Return name="pkey" value="pKey" />
+</BusinessLogic>

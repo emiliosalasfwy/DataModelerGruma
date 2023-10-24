@@ -1,0 +1,19 @@
+<BusinessLogic methodName="getInfoForMobileLinkCard" businessObjectClass="LoSysMobileLink" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var count = me.cardItemCount;
+var numberVisibleMobileLinks = 5;
+if(Utils.isPhone()){
+  numberVisibleMobileLinks = 3;
+}
+
+if(count <= numberVisibleMobileLinks){
+  numberVisibleMobileLinks = count;
+}
+var info = " ";
+if(numberVisibleMobileLinks != "0"){
+  info = numberVisibleMobileLinks.toString() + " / " + count;
+}]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

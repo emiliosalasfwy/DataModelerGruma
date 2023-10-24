@@ -1,0 +1,139 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = context.jsonQuery;
+
+if (!jsonQuery) {
+  jsonQuery = {
+    params: [],
+  };
+}
+
+var context = {
+  jsonQuery: jsonQuery,
+};
+
+var promise = Facade.getObjectAsync(BO_ISSUE, jsonQuery)
+  .then(function (selfJson) {
+    context.selfJson = selfJson;
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+    if (Utils.isDefined(selfJson)) {
+      var jsonParams = me.prepareLookupsLoadParams(selfJson);
+      return Facade.loadLookupsAsync(jsonParams);
+    } else {
+      return when.resolve(null);
+    }
+  })
+  .then(function (lookups) {
+    if (Utils.isDefined(lookups)) {
+      me.assignLookups(lookups);
+    }
+
+    return BoFactory.loadObjectByParamsAsync(
+      BO_ISSUENOTE,
+      me.getQueryBy("svcIssuePKey", me.getPKey())
+    );
+  })
+  .then(function (boIssueNote) {
+    if (Utils.isDefined(boIssueNote)) {
+      me.setBoIssueNote(boIssueNote);
+    } else {
+      me.setBoIssueNote(null);
+    }
+
+    return BoFactory.loadObjectByParamsAsync(
+      BO_SVCREQUESTMETA,
+      me.getQueryBy("pKey", me.getSvcRequestMetaPKey())
+    );
+  })
+  .then(function (boSvcRequestMeta) {
+    if (Utils.isDefined(boSvcRequestMeta)) {
+      me.setBoSvcRequestMeta(boSvcRequestMeta);
+    } else {
+      me.setBoSvcRequestMeta(null);
+    }
+
+    if (
+      !Utils.isEmptyString(me.getOwnerBpaMainPKey()) &&
+      me.getBoSvcRequestMeta().getIsPrivate() === "0"
+    ) {
+      //check management / substitution info for EA-Rights
+      var cmiParams = [];
+      var cmiQuery = {};
+
+      cmiParams.push({
+        field: "customerPKey",
+        value: me.getOwnerBpaMainPKey(),
+      });
+      cmiParams.push({
+        field: "referenceDate",
+        value: Utils.createAnsiDateTimeToday(),
+      });
+      cmiParams.push({
+        field: "referenceUserPKey",
+        value: ApplicationContext.get("user").getPKey(),
+      });
+
+      if (me.getIssuePhase() !== "initial") {
+        var managementType = me.getBoSvcRequestMeta().getManagementType();
+
+        cmiQuery.addCond_managementType =
+          "AND SubBpaRel.ManagementType = #managementType# ";
+        cmiParams.push({
+          field: "managementType",
+          value: managementType,
+        });
+      }
+      cmiQuery.params = cmiParams;
+
+      return BoFactory.loadObjectByParamsAsync(
+        "LuCustomerManagementInfo",
+        cmiQuery
+      );
+    } else {
+      return undefined;
+    }
+  })
+  .then(function (customerManagementInfoLookup) {
+    if (Utils.isDefined(customerManagementInfoLookup)) {
+      me.setLuCustomerManagementInfo(customerManagementInfoLookup);
+    }
+
+    return BoFactory.loadObjectByParamsAsync(
+      BO_WORKFLOW,
+      me.getQueryBy("pKey", me.getWfeWorkflowPKey())
+    );
+  })
+  .then(function (boWorkflow) {
+    if (Utils.isDefined(boWorkflow)) {
+      me.setBoWorkflow(boWorkflow);
+    } else {
+      me.setBoWorkflow(null);
+    }
+    return BoFactory.loadListAsync(
+      LO_ISSUERECENTSTATE,
+      me.getQueryBy("svcIssuePKey", me.getPKey())
+    );
+  })
+  .then(function (loIssueRecentStateJson) {
+    if (Utils.isDefined(loIssueRecentStateJson)) {
+      me.setLoRecentState(loIssueRecentStateJson);
+    } else {
+      me.setLoRecentState(null);
+    }
+    if (me.setObjectStatus) {
+      me.setObjectStatus(STATE.PERSISTED);
+    }
+  });
+]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

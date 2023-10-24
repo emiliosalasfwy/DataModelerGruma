@@ -1,0 +1,19 @@
+<BusinessLogic methodName="isNextStateAvailable" businessObjectClass="BoPromotion" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="stateTypes" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+var stateTypeArray = stateTypes.split(",");
+var nextStates;
+var length = stateTypeArray.length;
+
+for(var i = 0; i < length; i++) {
+  nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), stateTypeArray[i]);
+  if(nextStates.length > 0 && me.isPromotionEditable()) {
+    visible = true;
+  }
+}]]>
+</Code>
+  <Return name="result" value="visible" />
+</BusinessLogic>

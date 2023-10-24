@@ -1,0 +1,38 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoTeamOfUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_TEAMOFUSER, jsonQuery)
+  .then(function(items) {
+  me.addItems(items, jsonQuery);
+
+  var liCurrentUser = {
+    "userPKey": ApplicationContext.get('user').getPKey(),
+    "userName": ApplicationContext.get('user').getFirstName() + ' ' + ApplicationContext.get('user').getLastName(),
+    "isSelf": "1",
+    "groupAttribute": ' ',
+    "currentlySelectedImageId": 'AgendaUserCurrentlySelected_Yes',
+    "sort": '**' + ApplicationContext.get('user').getLastName()
+  };
+
+  for (var index in jsonQuery.params) {
+    switch (jsonQuery.params[index].field) 
+    {
+      case "currentResponsiblePKey":                       
+        if (jsonQuery.params[index].value !== ApplicationContext.get('user').getPKey())
+        {
+          liCurrentUser.currentlySelectedImageId = "AgendaUserCurrentlySelected_No";
+        }
+        break;
+    }				
+  }
+
+  me.addListItems([liCurrentUser]);
+  me.orderBy({"sort": "ASC"});
+    
+  return me;
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

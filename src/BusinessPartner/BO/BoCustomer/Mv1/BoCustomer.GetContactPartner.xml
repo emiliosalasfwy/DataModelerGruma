@@ -1,0 +1,102 @@
+<BusinessLogic methodName="getContactPartner" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attachments;
+var loadAttachments = function (jsonQuery) {
+  return BoFactory.loadObjectByParamsAsync("LoBpaAttachment", jsonQuery).then(
+    function (loBpaAttachment) {
+      if (Utils.isDefined(loBpaAttachment)) {
+        attachments = [];
+        if (loBpaAttachment.getCount() > 0) {
+          attachments = loBpaAttachment.getAllItems();
+        }
+      }    
+    });
+};
+
+var contactPartners = me.getLoContactPartner().getAllItems();
+var contactPartnerCount = contactPartners.length;
+var customerContactInfo = {};
+var name = "";
+var mainFunction = "";
+var phone = "";
+var mobile = "";
+var count = 0;
+var visible = false;
+var contactPartnerPKey = "";
+var customerPKey = me.getPKey();
+var customerParams = [];
+var customerQuery = {};
+var contactParams = [];
+var contactQuery = {};
+var addCond = "";
+
+//Check if Store Manager is available. If not, then take the first contact partner
+
+if (contactPartnerCount > 0) {
+  for (var i = 0; i < contactPartnerCount; i++) {
+    if (contactPartners[i].mainFunction === "StoreManager") {
+      name = contactPartners[i].name;
+      mainFunction = "StoreManager";
+      phone = contactPartners[i].phone1;
+      mobile = contactPartners[i].phone2;
+      contactPartnerPKey = contactPartners[i].getToPKey();
+      visible = true;
+      count = 1;
+      break;
+    }
+  }
+
+  if (count !== 1) {
+    name = contactPartners[0].name;							
+    mainFunction = contactPartners[0].mainFunction;
+    phone = contactPartners[0].phone1;
+    mobile = contactPartners[0].phone2;
+    contactPartnerPKey = contactPartners[0].getToPKey();
+    visible = true;
+  }
+}
+
+customerContactInfo.name = name;
+customerContactInfo.mainFunction = Utils.getToggleText("DomBpaFunction", mainFunction);
+customerContactInfo.phone = phone;
+customerContactInfo.mobile = mobile;
+customerContactInfo.visible = visible;
+
+// Get first found image maintained for customer and associated contact partner with usage Icon
+
+if(Utils.isSfBackend()){
+  addCond = "AND SF_File.Usage__c = 'Icon' ";
+}
+else {
+  addCond = "AND BpaAttachment.Usage = 'Picture' "; 
+}
+
+customerParams.push({ "field": "addCond", "value": addCond });
+customerParams.push({ "field": "referencePKey", "value": customerPKey });
+customerQuery.params = customerParams;
+
+if (contactPartnerCount > 0) {
+  contactParams.push({ "field": "addCond", "value": addCond });
+  contactParams.push({ "field": "referencePKey", "value": contactPartnerPKey });
+  contactQuery.params = contactParams;
+}
+
+var promise = loadAttachments(customerQuery).then(
+  function() {
+    if(attachments.length > 0) {
+      customerContactInfo.customerProfilePicture = attachments[0].getMediaPath();
+      customerContactInfo.customerPictureFileType = attachments[0].getType();
+    }
+    return contactPartnerCount > 0 ? loadAttachments(contactQuery) : customerContactInfo;
+  }).then(
+  function() {
+    if(attachments.length > 0 && contactPartnerCount > 0) {
+      customerContactInfo.contactProfilePicture = attachments[0].getMediaPath();
+      customerContactInfo.contactPictureFileType = attachments[0].getType();
+    }
+    return customerContactInfo;
+  });]]>
+</Code>
+  <Return name="customerContactInfo" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,21 @@
+<BusinessLogic methodName="loadLoListingClassificationAsync" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(bReload == "1" || !Utils.isDefined(me.getLoListingClassification())) {
+  promise = BoFactory.loadListAsync(LO_LISTINGCLASSIFICATION, me.getQueryBy("bpaMainPKey", me.getPKey())).then(
+    function (loListingClassificationJson) {
+      var objectState = me.getObjectStatus();
+      me.setLoListingClassification(loListingClassificationJson);
+      me.setObjectStatus(objectState);
+    });
+}
+else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoCustomer_LoListingClassificationAsync" value="promise" />
+</BusinessLogic>

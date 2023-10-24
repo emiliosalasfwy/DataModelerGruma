@@ -1,0 +1,135 @@
+<BusinessLogic methodName="cpCalculate" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="initial" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (initial) {
+  //for initial calculation:
+  // update the items with target qty and calculate for initial calculation to set Book Inventory
+  for (var i = 0; i < me.getLoItems().getAllItems().length; i++) {
+    var orderItem = me.getLoItems().getAllItems()[i];
+
+    if (Utils.isDefined(orderItem) && CP.PricingHandler.getInstance().hasOrderItem(orderItem.getPKey())) {
+      CP.PricingHandler.getInstance().updateProduct(orderItem, "Quantity");
+    }
+  }
+}
+
+var promise = CP.PricingHandler.getInstance().calculateOrderValue().then(
+  function (result) {
+    if (result.CSTAT === true && Utils.isDefined(me.getLoItems())) {
+
+      me.setCalculationStatus("1");
+      me.setPricingJSON(result.Debug);
+      me.getLoItems().suspendListRefresh();
+      if (Utils.isDefined(result.SdoConditions)) {
+        me.setSdoConditionsJson(JSON.stringify(result.SdoConditions));
+      }
+
+      if (initial) {
+        if (!isNaN(result.GrossTotalValueReceipt)) {
+          me.setBookInventoryValue(result.GrossTotalValueReceipt);
+        }
+      } else {
+        if (!isNaN(result.GrossTotalValueReceipt)) {
+          me.setGrossTotalValueReceipt(result.GrossTotalValueReceipt);
+          me.setAmountDifference(result.GrossTotalValueReceipt - me.getBookInventoryValue());
+        }
+      }
+
+      var length = result.Items.length;
+
+      for (var i = 0; i < length; i++) {
+        var resultPkey = result.Items[i].PKey;
+        var orderItem = me.getLoItems().getItemByPKey(resultPkey);
+
+        if (Utils.isDefined(orderItem)) {
+          var mainItem = me.getLoItems().getFirstOrderUnitItemForMainItem(orderItem);
+
+          orderItem.beginEdit();
+
+          if (!isNaN(result.Items[i].Value)) {
+            orderItem.setValue(result.Items[i].Value);
+          }
+
+          if (initial) {
+            if (!isNaN(result.Items[i].Value)) {
+              orderItem.setTargetValue(result.Items[i].Value);
+            }
+
+            if (orderItem.getQuantity() !== orderItem.getTargetQuantity() && CP.PricingHandler.getInstance().hasOrderItem(orderItem.getPKey())) {
+              //set qty back to original        
+              CP.PricingHandler.getInstance().updateProduct(mainItem, "Quantity");
+            }
+          }
+
+          if (!isNaN(result.Items[i].Value)) {
+            orderItem.setValueDifference(result.Items[i].Value - orderItem.getTargetValue());
+          }
+
+          orderItem.endEdit();
+        }
+      }
+
+      if (initial) {
+        return CP.PricingHandler.getInstance().calculateOrderValue().then(
+          function (result) {
+            if (result.CSTAT === true) {
+              me.setPricingJSON(result.Debug);
+              if (Utils.isDefined(result.SdoConditions)) {
+                me.setSdoConditionsJson(JSON.stringify(result.SdoConditions));
+              }
+              if (!isNaN(result.GrossTotalValueReceipt)) {
+                me.setGrossTotalValueReceipt(result.GrossTotalValueReceipt);
+                me.setAmountDifference(result.GrossTotalValueReceipt - me.getBookInventoryValue());
+              }
+
+              var length = result.Items.length;
+              var targetQtyItems = [];
+
+              for (var i = 0; i < length; i++) {
+                var resultPkey = result.Items[i].PKey;
+
+                var orderItem = me.getLoItems().getItemByPKey(resultPkey);
+
+                if (Utils.isDefined(orderItem)) {
+                  orderItem.beginEdit();
+                  if (!isNaN(result.Items[i].Value)) {
+                    orderItem.setValue(result.Items[i].Value);
+                    orderItem.setValueDifference(result.Items[i].Value - orderItem.getTargetValue());
+                  }
+                  orderItem.endEdit();
+                }
+              }
+            }
+
+            return me.cpCreateSdoConditionRecords(false).then(
+              function () {
+                if (Utils.isDefined(me.getLoItems())) {
+                  me.getLoItems().resumeListRefresh(true);
+                }
+              }
+            );
+          }
+        );
+      } else {
+        //In CGCloud we create pricing info JSON on cpCalculate and Sdo Conditions are built in preparePrint method now. Thus this method is not ready to use when truckload is enabled in CGCloud.
+        //For a consistent JSON structure as in Order this method needs an update.
+        return me.cpCreateSdoConditionRecords(false).then(
+          function () {
+            if (Utils.isDefined(me.getLoItems())) {
+              me.getLoItems().resumeListRefresh(true);
+            }
+          }
+        );
+      }
+    } else {
+      if (Utils.isDefined(me.getLoItems())) {
+        me.getLoItems().resumeListRefresh(true);
+      }
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

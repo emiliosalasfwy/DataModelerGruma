@@ -1,0 +1,65 @@
+<BusinessLogic methodName="setOnlyOpenFilterAfterComplete" businessObjectClass="LoToDoOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="todoDetail" type="BoTodo" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Get the current ListItem
+var liSvcRequestTodo = me.getCurrent();
+
+if (liSvcRequestTodo && Utils.isDefined(liSvcRequestTodo)) {
+  // Preset attributes
+  liSvcRequestTodo.setPKey(todoDetail.getPKey());
+  liSvcRequestTodo.setIssuePhase(todoDetail.getIssuePhase());
+  liSvcRequestTodo.setInitiationDate(todoDetail.getInitiationDate());
+  liSvcRequestTodo.setBusinessModified(Utils.createAnsiDateTimeNow());
+  liSvcRequestTodo.setDueDate(todoDetail.getDueDate());
+  liSvcRequestTodo.setPriority(todoDetail.getPriority());
+  liSvcRequestTodo.setResponsiblePKey(todoDetail.getResponsiblePKey());
+  liSvcRequestTodo.setResponsibleName(todoDetail.getLuResponsible().getName());
+  liSvcRequestTodo.setText(todoDetail.getText());
+  liSvcRequestTodo.setOwnerPKey(todoDetail.getOwnerPKey());
+  liSvcRequestTodo.setOwnerName(todoDetail.getLuOwner().getName());
+  liSvcRequestTodo.setInitiatorPKey(todoDetail.getInitiatorPKey());
+  liSvcRequestTodo.setSvcMetaPKey(todoDetail.getSvcRequestMetaPKey());
+  liSvcRequestTodo.setIsPrivate(
+    todoDetail.getBoSvcRequestMeta().getIsPrivate()
+  );
+  liSvcRequestTodo.setIsActive(todoDetail.getBoSvcRequestMeta().getActive());
+  liSvcRequestTodo.setWfeWorkflowPKey(todoDetail.getWfeWorkflowPKey());
+  liSvcRequestTodo.setActualStatePKey(todoDetail.getActualStatePKey());
+
+  //Update filter condition
+  if (
+    todoDetail.getIssuePhase().toLowerCase() === "initial" ||
+    todoDetail.getIssuePhase().toLowerCase() === "released"
+  ) {
+    liSvcRequestTodo.setFilterOpen("1");
+  } else {
+    liSvcRequestTodo.setFilterOpen("0");
+  }
+}
+
+var userPKey = ApplicationContext.get("user").getPKey();
+var filterArray = [];
+var FilterMap = me.getFilterMap();
+
+if (
+  Utils.isDefined(FilterMap.filterOpen) &&
+  Utils.isDefined(FilterMap.responsiblePKey)
+) {
+  me.resetFilterArray(["filterOpen", "responsiblePKey"]);
+  filterArray.push({ filterOpen: "1", op: "EQ" });
+  filterArray.push({ responsiblePKey: userPKey, op: "EQ" });
+  me.setFilterArray(filterArray);
+}
+var items = me.getItemObjects();
+
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+} else {
+  me.setCurrentByPKey(undefined);
+}
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

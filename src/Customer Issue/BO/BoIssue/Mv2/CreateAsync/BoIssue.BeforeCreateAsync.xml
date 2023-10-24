@@ -1,0 +1,215 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jParams;
+var jQuery;
+var newParams;
+var pKey = PKey.next();
+me.setPKey(pKey);
+
+if (Utils.isDefined(context.jsonQuery)) {
+  newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+
+me.updateProperties(context.jsonQuery);
+me.setInitiationDate(Utils.createAnsiDateTimeToday());
+
+var user = ApplicationContext.get("user");
+me.setInitiatorPKey(user.getPKey());
+me.setDueDate(context.jsonQuery.dueDate);
+me.setSalesOrg(user.getBoUserSales().getSalesOrg());
+
+// Set responsible to substituted user if the selected customer is a substituted customer
+if (Utils.isSfBackend()) {
+  if (
+    Utils.isDefined(newParams) &&
+    !Utils.isEmptyString(newParams.substitutedUsrPKey)
+  ) {
+    me.setResponsiblePKey(newParams.substitutedUsrPKey);
+  } else {
+    me.setResponsiblePKey(user.getPKey());
+  }
+} else {
+  if (
+    Utils.isDefined(newParams) &&
+    Utils.isDefined(newParams.isManagedCustomer) &&
+    !Utils.isEmptyString(newParams.substitutedUsrPKey) &&
+    newParams.isManagedCustomer.getId() == "0"
+  ) {
+    me.setResponsiblePKey(newParams.substitutedUsrPKey);
+  } else {
+    me.setResponsiblePKey(user.getPKey());
+  }
+}
+
+// Check whether ClbMainPKey is defined, if not set to blank
+// else copy to FromClbMainPKey to be consistent with Web Edition
+
+if (Utils.isEmptyString(me.getClbMainPKey())) {
+  me.setClbMainPKey(" ");
+  me.setFromClbMainPKey(" ");
+} else {
+  me.setFromClbMainPKey(me.getClbMainPKey());
+}
+
+jParams = [];
+jQuery = {};
+
+jParams.push({
+  field: "svcIssuePKey",
+  value: me.getPKey(),
+});
+jQuery.params = jParams;
+
+var promise = BoFactory.createObjectAsync("BoIssueNote", jQuery)
+  .then(function (object) {
+    if (Utils.isSfBackend()) {
+      object.setPKey(me.getPKey());
+    }
+    //Set Issue Note
+    me.setBoIssueNote(object);
+    me.getBoIssueNote().setObjectStatus(STATE.NEW | STATE.DIRTY);
+
+    return BoFactory.loadObjectByParamsAsync(
+      "BoSvcRequestMeta",
+      me.getQueryBy("pKey", me.getSvcRequestMetaPKey())
+    );
+  })
+  .then(function (object) {
+    // Assign loaded meta business object to BoIssue
+    me.setBoSvcRequestMeta(object);
+    me.setMetaType(me.getBoSvcRequestMeta().getMetaType());
+
+    if (me.getBoSvcRequestMeta().getIsPrivate() == "0") {
+      //To populate the OwnerPkey as per Usecase we are making use of LuIssueOwnerForCreate lookup
+      var jsonParams = [];
+      jsonParams.push({
+        field: "managementType",
+        value: me.getBoSvcRequestMeta().getManagementType(),
+      });
+      jsonParams.push({
+        field: "customerPKey",
+        value: me.getOwnerBpaMainPKey(),
+      });
+
+      var jsonQuery = {};
+      jsonQuery.params = jsonParams;
+
+      return BoFactory.loadObjectByParamsAsync(
+        "LuIssueOwnerForCreate",
+        jsonQuery
+      );
+    } else {
+      return undefined;
+    }
+  })
+  .then(function (lookupIssueOwner) {
+    if (
+      Utils.isDefined(lookupIssueOwner) &&
+      !Utils.isEmptyString(lookupIssueOwner.getUsrMainPKey())
+    ) {
+      me.setOwnerPKey(lookupIssueOwner.getUsrMainPKey());
+    } else {
+      me.setOwnerPKey(me.getResponsiblePKey());
+    }
+    var jsonParams = me.prepareLookupsLoadParams(me);
+    return Facade.loadLookupsAsync(jsonParams);
+  })
+  .then(function (lookups) {
+    me.assignLookups(lookups);
+
+    if (
+      !Utils.isEmptyString(me.getOwnerBpaMainPKey()) &&
+      me.getBoSvcRequestMeta().getIsPrivate() === "0"
+    ) {
+      //check management / substitution info for EA-Rights
+      var cmiParams = [];
+      var cmiQuery = {};
+
+      cmiParams.push({
+        field: "customerPKey",
+        value: me.getOwnerBpaMainPKey(),
+      });
+      cmiParams.push({
+        field: "referenceDate",
+        value: Utils.createAnsiDateTimeToday(),
+      });
+      cmiParams.push({
+        field: "referenceUserPKey",
+        value: ApplicationContext.get("user").getPKey(),
+      });
+
+      cmiQuery.params = cmiParams;
+
+      return BoFactory.loadObjectByParamsAsync(
+        "LuCustomerManagementInfo",
+        cmiQuery
+      );
+    } else {
+      return undefined;
+    }
+  })
+  .then(function (customerManagementInfoLookup) {
+    if (Utils.isDefined(customerManagementInfoLookup)) {
+      me.setLuCustomerManagementInfo(customerManagementInfoLookup);
+    }
+    if (Utils.isSfBackend()) {
+      return when.resolve();
+    } else {
+      return SysNumber.getSysNumberAsync(
+        me.getBoSvcRequestMeta().getSysNumberPKey()
+      );
+    }
+  })
+  .then(function (sysnumber) {
+    //Set id (generated by number generator)
+    me.setIssueId(sysnumber);
+
+    // Prepopulate values of simple properties in BoTodo that come from the template (meta)
+    me.setWfeWorkflowPKey(me.getBoSvcRequestMeta().getWfeWorkflowPKey());
+
+    return BoFactory.loadObjectByParamsAsync(
+      "BoWorkflow",
+      me.getQueryBy("pKey", me.getWfeWorkflowPKey())
+    );
+  })
+  .then(function (boWorkflow) {
+    me.setBoWorkflow(boWorkflow);
+
+    return BoFactory.loadObjectByParamsAsync(
+      "LuInitialAndNextState",
+      me.getQueryBy("wfeWorkflowPKey", me.getWfeWorkflowPKey())
+    );
+  })
+  .then(function (luInitialAndNextState) {
+    me.setActualStatePKey(luInitialAndNextState.getInitialStatePKey());
+    me.setIssuePhase(luInitialAndNextState.getInitialStateType());
+    me.setNextStatePKey(luInitialAndNextState.getInitialStatePKey());
+
+    return BoFactory.createObjectAsync("LoIssueRecentState", {});
+  })
+  .then(function (loIssueRecentState) {
+    me.setLoRecentState(loIssueRecentState);
+    return BoFactory.createObjectAsync("LoIssueAttachments", {});
+  })
+  .then(function (loIssueAttachments) {
+    me.setLoIssueAttachments(loIssueAttachments);
+    return BoFactory.createObjectAsync("LoAtmAttachment", {});
+  })
+  .then(function (loAtmAttachment) {
+    me.setLoAtmAttachment(loAtmAttachment);
+
+    //Set State
+    me.setObjectStatus(STATE.NEW | STATE.DIRTY);
+
+    //Set edit and access rights
+    me.setEARights();
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

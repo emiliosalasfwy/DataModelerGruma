@@ -1,0 +1,46 @@
+<BusinessLogic methodName="getNextOrPreviousWorkday" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="workingDays" type="Object" />
+    <MethodInput name="nextDay" type="Boolean" />
+    <MethodInput name="currentDay" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isWorkingDay = false;
+var workDay = Utils.getMinDateAnsi();
+
+if(Utils.isDefined(workingDays) && workingDays.length > 0){
+  var weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var day; 
+  var count = 0;
+
+  while(isWorkingDay===false && count < weekday.length)
+  {
+    count++;
+    if(nextDay)
+    {
+      currentDay++ ;  
+    }
+    else
+    {
+      currentDay--;
+    }
+    day = (currentDay + 7)%7;
+    var isWeekdayWorkingDay = me.getPropertyValuesFromArray(workingDays, weekday[day])[0];
+    if(isWeekdayWorkingDay > 0)
+    {
+      if(!nextDay)
+      {
+        count = count * (-1);
+      }
+      workDay = Utils.addDays2AnsiDate(Utils.createAnsiDateToday(), count);
+      isWorkingDay = true;    
+    }
+  }
+}
+
+if(!isWorkingDay){
+  AppLog.error("No working day for date calculation found! Set date to MinDate (" + workDay + ")!");
+}]]>
+</Code>
+  <Return name="workDay" value="workDay" />
+</BusinessLogic>

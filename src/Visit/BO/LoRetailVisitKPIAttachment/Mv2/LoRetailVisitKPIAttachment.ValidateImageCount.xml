@@ -1,0 +1,23 @@
+<BusinessLogic methodName="validateImageCount" businessObjectClass="LoRetailVisitKPIAttachment" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var maxNoOfPictures = 5;
+var currentImages = me.getAllItems();
+var currentImageCount = me.getAllItems().length;
+var imageCountExceeded = false;    
+//Check the count of pictures exceeding the max count
+if (currentImageCount >= maxNoOfPictures) {
+  imageCountExceeded = true;
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("NoOfPicturesExceedsMaxCount"), buttonValues) 
+    .then(function (input) {
+    return imageCountExceeded;						
+  });
+} else {
+  promise = when.resolve(imageCountExceeded);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,13 @@
+<BusinessLogic methodName="cancel" businessObjectClass="BoTruckLoad" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+ <Parameters>
+    <MethodInput name="reasonCode" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+                
+    if (Utils.isDefined(reasonCode)) {
+        this.setCancelReason(reasonCode);
+    }
+                
+    this.setPhase("Canceled");
+    ]]></Code>
+</BusinessLogic>

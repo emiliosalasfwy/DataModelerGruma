@@ -1,0 +1,24 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoUserSettings" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(result);
+var aclBoUserSettings = me.getACL();
+
+if (me.getSyncTimeIntervall() > 0)
+{
+  //greater than zero value so enable checkbox.
+  me.setEnableSync(1);
+  aclBoUserSettings.addRight(AclObjectType.PROPERTY, "syncTimeIntervall", AclPermission.VISIBLE);
+}
+else
+{
+  //else disable checkbox.
+  me.setEnableSync(0);
+  aclBoUserSettings.removeRight(AclObjectType.PROPERTY, "syncTimeIntervall", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

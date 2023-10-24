@@ -1,0 +1,32 @@
+<BusinessLogic methodName="validatePostDating" businessObjectClass="BoDailyReportCreateNewWizard" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(Framework.getProcessContext().dateFrom) && !Utils.isEmptyString(Framework.getProcessContext().dateFrom)) {
+
+  if(me.getAllowPostdating().toString() === "0") {
+
+    var compareDate = Utils.createDateNow();
+    compareDate.setHours(0);
+    compareDate.setMinutes(0);
+    compareDate.setSeconds(0);
+    compareDate.setMilliseconds(0);
+
+    var newReportDate = Utils.convertAnsiDate2Date(Framework.getProcessContext().dateFrom);
+    newReportDate.setHours(0);
+    newReportDate.setMinutes(0);
+    newReportDate.setSeconds(0);
+    newReportDate.setMilliseconds(0);
+
+    if(newReportDate > compareDate) {
+     var newError = {"level": "error",
+                  "objectClass": "BoUserDailyReport",
+                  "messageID": "CasUsrDailyReportPostDatingNotAllowed"};
+      messageCollector.add(newError);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,35 @@
+<BusinessLogic methodName="addItemUoMsToList" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="allLogistics" type="Object" />
+    <MethodInput name="uoMs" type="Object" />
+    <MethodInput name="unitOfMeasureItems" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var freeItem = unitOfMeasureItems.find(me.isFreeItem);
+
+if(Utils.isDefined(freeItem)) {
+  freeItem.setIsOrderUnit("1");
+  mainItem.setQuantity(freeItem.getQuantity());
+  freeItem.setEditedQty(freeItem.getQuantity());
+}
+else {
+  var missingLiLogisticUnit;
+  if(unitOfMeasureItems.length > 0) {
+    var existingUoMs = unitOfMeasureItems.map(
+      function(x){return x.getQuantityLogisticUnit();}
+    );
+
+    missingLiLogisticUnit = allLogistics.filter(function(i) {return existingUoMs.indexOf(i.getUnitType()) < 0;});
+  }
+  else {
+    missingLiLogisticUnit = allLogistics; 
+  }
+
+  for(var i=0; Utils.isDefined(missingLiLogisticUnit) && i < missingLiLogisticUnit.length; i++) {
+    uoMs.push(this.createNewUoMItem(mainItem, missingLiLogisticUnit[i]));
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

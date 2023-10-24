@@ -1,0 +1,19 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoAttachmentsContextMenu" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var contextMenuItemList = [];
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "Delete",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="contextMenu" value="promise" />
+</BusinessLogic>

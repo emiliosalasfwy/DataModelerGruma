@@ -1,0 +1,27 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPrmCttProductContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQueryNew = context.jsonQuery,
+    boContract = jsonQueryNew.boContract,  
+	contextMenuItemList= [],
+    menuEntry0 = { "id" : "0000001",
+		"actionImg" : "TrashcanDarkGrey24",
+		"actionId" : "Delete",
+		"processEvent" : "Delete",
+		"actionEnabled" : "1"};
+        
+	contextMenuItemList.push(menuEntry0);
+  
+  if (!boContract.isContractEditable())
+  {     
+      menuEntry0.actionEnabled = "0";
+  }
+	 
+	 this.addItems(contextMenuItemList);
+
+	 var result = when.resolve(this);]]>
+</Code>
+  <Return name="LoPrmCttProductContextMenu" value="result" />
+</BusinessLogic>

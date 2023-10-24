@@ -1,0 +1,33 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoUsrDailyReportOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentDailyReport" type="BoUserDailyReport" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Preset attributes
+var liUsrDailyReportOverview = {
+  "pKey" : currentDailyReport.getPKey(),
+  "type" : currentDailyReport.getType(),
+  "reportId" : currentDailyReport.getId(),
+  "phase" : currentDailyReport.getPhase(),
+  "dateFrom" : currentDailyReport.getDateFrom(),
+  "user" : currentDailyReport.getUser(),
+  "responsibleName" : currentDailyReport.getResponsible(),
+  "ownerName" : currentDailyReport.getUser(),
+  "initiationDate" : currentDailyReport.getInitiationDate(),
+  "hours" : "0",
+  "minutes" : "0",
+  "responsiblePKey" : currentDailyReport.getResponsiblePKey(),
+  "ownerPKey" : currentDailyReport.getOwnerUsrMainPKey(),
+  "usrDocMetaPKey" : currentDailyReport.getUsrDocMetaPKey(),
+  "uiGroup" : currentDailyReport.getBoUserDocMeta().getUiGroup(),
+  "objectStatus" : STATE.NEW
+};
+
+// Add new Item to ListObject
+me.addListItems([liUsrDailyReportOverview]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liUsrDailyReportOverview.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

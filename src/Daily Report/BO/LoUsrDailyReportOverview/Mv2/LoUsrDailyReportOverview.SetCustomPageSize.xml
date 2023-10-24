@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setCustomPageSize" businessObjectClass="LoUsrDailyReportOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var myPageSize;
+
+if (Utils.isDefined(Framework.getProcessContext().dailyReportList.getPageSize())) {
+  myPageSize = Framework.getProcessContext().dailyReportList.getPageSize();
+} else {
+  myPageSize = 0;
+}
+
+var promise = Framework.getProcessContext().dailyReportList.loadCustomPageAsync(500 - myPageSize);]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

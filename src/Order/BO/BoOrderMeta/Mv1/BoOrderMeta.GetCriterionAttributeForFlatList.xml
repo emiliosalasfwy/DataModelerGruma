@@ -1,0 +1,25 @@
+<BusinessLogic methodName="getCriterionAttributeForFlatList" businessObjectClass="BoOrderMeta" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var criterionAttribute;
+var mappingItems = this.getLoPrdGroupLevelCriterionMapping().getItemsByParam({ "groupLevel": this.getFlatItemListGrouping() });
+
+if (mappingItems.length > 0) 
+{
+  criterionAttribute = mappingItems[0].getCriterion().toLowerCase();
+} 
+else 
+{
+  //Fallback
+  if(Utils.isSfBackend())
+  {
+    criterionAttribute = "Criterion_3_Product_Code__c";              
+  }
+  else
+  {
+    criterionAttribute = "criterion3";
+  }
+}]]>
+</Code>
+  <Return name="criterionAttribute" value="criterionAttribute" />
+</BusinessLogic>

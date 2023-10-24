@@ -1,0 +1,52 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoUsrDailyReportOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+me.orderBy({"dateFrom" : "DESC" , "initiationDate" : "DESC"});
+//Get all time cards
+var listOfTimeCards = me.getItemsByParamArray([{ "uiGroup": "TimeCard",  "op": "EQ"}]);
+// Set hours and minutes for time cards out of matching working time entries
+if (listOfTimeCards.length > 0) {
+  //Load work time entries
+  promise = BoFactory.loadListAsync("LoUsrWorkTimeEntry", {}).then(function (loUsrWorkTimeEntry) {
+    var matchingWorkingTimeEntry;
+    for (var i = 0; i < listOfTimeCards.length; i ++) {
+      var filterArray = [];
+      filterArray.push({"usrDailyReportPKey": listOfTimeCards[i].getPKey(), "op": "EQ"});
+      loUsrWorkTimeEntry.setFilterArray(filterArray);
+      if (loUsrWorkTimeEntry.getItemObjects().length > 0){
+        matchingWorkingTimeEntry = loUsrWorkTimeEntry.getItemObjects()[0];
+      }
+      loUsrWorkTimeEntry.resetAllFilters();
+      if (Utils.isDefined(matchingWorkingTimeEntry)) {
+        var workingTimeInMinutes;
+        //if work time entry is not closed
+        if (matchingWorkingTimeEntry.getSystemTimeThru() === Utils.getMinDate()) {
+          var now = Utils.createDateNow();
+          var now_utc = Utils.createSpecificDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+          var fromDate = Utils.convertAnsiDate2Date(matchingWorkingTimeEntry.getEffectiveUTCTimeFrom()); 
+          var diff = Math.abs(now_utc - fromDate);
+          workingTimeInMinutes = Math.floor((diff / 1000) / 60);
+        }
+        //if work time entry is closed
+        else {
+          workingTimeInMinutes = matchingWorkingTimeEntry.getDuration();
+        }
+        listOfTimeCards[i].setHours(Math.floor(workingTimeInMinutes/60));
+        listOfTimeCards[i].setMinutes(workingTimeInMinutes%60);
+      }
+    }
+    me.orderBy({"dateFrom" : "DESC" , "initiationDate" : "DESC"});
+    return me;
+  });
+}
+else {
+  me.orderBy({"dateFrom" : "DESC" , "initiationDate" : "DESC"});
+  promise = when.resolve(me);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

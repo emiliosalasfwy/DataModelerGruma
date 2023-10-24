@@ -1,0 +1,29 @@
+<BusinessLogic methodName="validateDate" businessObjectClass="BoWizardTimeFrameSelection" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if(!Utils.isDefined(me.getStartDate()) || !Utils.isDefined(me.getEndDate()) ||
+   Utils.isEmptyString(me.getStartDate()) || Utils.isEmptyString(me.getEndDate())){
+  newError = {
+    "level": "error",
+    "objectClass": "BoWizardTimeFrameSelection",
+    "messageID": "CasWizardTimeFrameSelectionEmpty"
+  };
+  messageCollector.add(newError);
+}
+else{
+  if (Utils.convertAnsiDate2Date(me.getStartDate()) > Utils.convertAnsiDate2Date(me.getEndDate())){
+    newError = {
+      "level": "error",
+      "objectClass": "BoWizardTimeFrameSelection",
+      "messageID": "CasWizardTimeFrameSelectionNegativeFrame"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

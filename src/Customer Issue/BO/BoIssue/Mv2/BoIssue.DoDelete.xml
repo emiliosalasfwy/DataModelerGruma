@@ -1,0 +1,20 @@
+<BusinessLogic methodName="doDelete" businessObjectClass="BoIssue" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Delete Issue note
+if (Utils.isDefined(me.getBoIssueNote())) {
+  me.getBoIssueNote().delete();
+}
+
+if (Utils.isDefined(me.getLoIssueAttachments())) {
+  me.getLoIssueAttachments().delete();
+}
+
+if (Utils.isDefined(me.getLoAtmAttachment())) {
+  me.getLoAtmAttachment().delete();
+}
+// Delete issue
+me.delete();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,18 @@
+<BusinessLogic methodName="isMultipleCheckoutTemplateAvailable" businessObjectClass="LoCashOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="templates" type="LoCashDocumentMetaType" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isMultipleTemplateAvailable = '0';
+if(Utils.isDefined(templates))
+{
+  var templateList = templates.getAllItems();
+
+  if(templateList.length > 1)
+  {
+    isMultipleTemplateAvailable = '1';
+  }
+}]]>
+</Code>
+  <Return name="isMultipleTemplateAvailable" value="isMultipleTemplateAvailable" />
+</BusinessLogic>

@@ -1,0 +1,47 @@
+<BusinessLogic methodName="getOrdersForCard" businessObjectClass="LoOrderOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CallCustomerPKey" type="DomPKey" />
+    <MethodInput name="UIPosition" type="DomString" />
+    <MethodInput name="CallPKey" type="DomPKey" />
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+jsonParams.push({"field" : "callCustomerPKey", "value" : CallCustomerPKey});
+jsonParams.push({"field" : "uIPosition", "value" : UIPosition});
+jsonParams.push({"field" : "callPKey", "value" : CallPKey});
+jsonQuery.params = jsonParams;
+
+var promise = Facade.getListAsync(LO_ORDEROVERVIEW, jsonQuery).then(
+  function (items){
+    var numberOfOrders;
+    if(!Utils.isDefined(numberOfListItems)){
+      numberOfOrders = 5;
+      if(Utils.isPhone()){
+        numberOfOrders = 3;
+      }
+    } else{
+      numberOfOrders = numberOfListItems;
+    }
+
+    me.cardItemCount = items.length;
+    items = items.splice(0, numberOfOrders);
+    me.removeAllItems();
+    me.addItems(items, jsonQuery);
+    me.preparePaymentDetails();
+
+    var jsonQuerySysSetting = {};
+    jsonQuerySysSetting.iD = "CndCpUoMRoundingFactor";
+    return BoFactory.loadObjectByParamsAsync("LuSysSettingById", jsonQuerySysSetting);
+  }).then(
+  function(luSysSettingById){
+    if(Utils.isEmptyString(luSysSettingById.getValue())){
+      CP.CalcMatrix.getInstance();
+    }else{
+      CP.CalcMatrix.getInstance(luSysSettingById.getValue());
+    }
+    return me;
+  });]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

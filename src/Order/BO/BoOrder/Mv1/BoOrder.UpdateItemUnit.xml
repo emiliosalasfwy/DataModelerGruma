@@ -1,0 +1,23 @@
+<BusinessLogic methodName="updateItemUnit" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="prdMainPKey" type="DomPKey" />
+    <MethodInput name="newUnit" type="DomPrdLogisticUnit" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[    var jsonParams = [];
+    var jsonQuery = {};
+
+    jsonParams.push( { "field" : "ProductPKey", "value" : prdMainPKey });
+    jsonParams.push( { "field" : "UnitType", "value" :newUnit });
+
+    jsonQuery.params = jsonParams;
+    
+    var result = Facade.getObjectAsync("LuLogisticUnit", jsonQuery )
+        .then(function (lookupData) {
+            var luLogisticUnit = BoFactory.instantiate("LuLogisticUnit", lookupData);    
+
+            return luLogisticUnit.getPiecesPerSmallestUnit();
+        });]]>
+</Code>
+  <Return name="piecesPerSmallestUnit" value="result" />
+</BusinessLogic>

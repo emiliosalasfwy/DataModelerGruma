@@ -1,0 +1,57 @@
+<BusinessLogic methodName="navigateToCustomer" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var latitude =  me.getLatitude();
+var longitude = me.getLongitude();
+var street   = me.getStreet();
+var zipCode = me.getPostalCode();
+var city = me.getCity();
+var isLocationFound = true;
+
+if((latitude ===0) && (longitude ===0) && Utils.isEmptyString(city) && Utils.isEmptyString(zipCode) &&Utils.isEmptyString(street)) {
+    // address is not present in the retail store.
+    isLocationFound = false; 
+
+}
+
+// Lat and Long of Location.
+if(!isLocationFound) {
+  latitude = me.getLuLocation().getLatitude(); 
+  longitude = me.getLuLocation().getLongitude();
+  if((latitude !== 0) && (longitude !== 0) && !Utils.isEmptyString(longitude) && !Utils.isEmptyString(latitude))  {
+    isLocationFound = true;
+  }
+}
+
+// check for visitor address street, zipcode, city only if location is not found in retail store and location.
+
+if(!isLocationFound && (!Utils.isEmptyString(me.getLuLocation().getStreet()) ||  !Utils.isEmptyString(me.getLuLocation().getPostalCode()) || !Utils.isEmptyString(me.getLuLocation().getCity()))){
+   
+  street = me.getLuLocation().getStreet();
+  zipCode = me.getLuLocation().getPostalCode();
+  city = me.getLuLocation().getCity();
+  isLocationFound = true;
+    
+}
+
+
+
+if(!isLocationFound) {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("NoRouteFound"), buttonValues);
+
+}
+else
+{
+  promise = BoFactory.createObjectAsync("BoGeoHelper", {})
+    .then(
+    function(geoHelper)
+    {
+      return geoHelper.startNavigation(latitude, longitude, street, "", zipCode, city);
+    }
+  );
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

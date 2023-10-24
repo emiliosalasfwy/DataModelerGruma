@@ -1,0 +1,16 @@
+<BusinessLogic methodName="checkAgendaMode" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var me = this;
+var tourPkey = ApplicationContext.get("currentTourPKey");
+var agendaMode;
+
+if(Utils.isDefined(tourPkey) && !Utils.isEmptyString(tourPkey))
+{
+agendaMode = "Delivery";
+}
+else
+{
+agendaMode = "Normal";
+}]]></Code>
+  <Return name="agendaMode" value="agendaMode" />
+</BusinessLogic>

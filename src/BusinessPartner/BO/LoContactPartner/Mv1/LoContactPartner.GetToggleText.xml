@@ -1,0 +1,20 @@
+<BusinessLogic methodName="getToggleText" businessObjectClass="LoContactPartner" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var itemsLength = items.length;
+var mainFunction;
+var salutation;
+
+if(itemsLength > 0){
+  for(var i = 0; i < itemsLength; i++){
+    mainFunction = Utils.getToggleText("DomBpaFunction", items[i].mainFunction);
+    salutation = Utils.getToggleText("BpaSalutation", items[i].salutation);
+    items[i].setText(mainFunction);
+    items[i].setSalutation(salutation);
+    items[i].setObjectStatus(STATE.PERSISTED);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

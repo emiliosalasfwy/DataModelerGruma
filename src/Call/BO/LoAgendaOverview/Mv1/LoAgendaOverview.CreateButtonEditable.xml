@@ -1,0 +1,7 @@
+<BusinessLogic methodName="createButtonEditable" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var editable = (me.creationAllowed() == "1");]]>
+</Code>
+  <Return name="editable" value="editable" />
+</BusinessLogic>

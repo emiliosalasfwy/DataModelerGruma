@@ -1,0 +1,39 @@
+<BusinessLogic methodName="esCreateReleaseBoBeforeSplitting" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (!Utils.isDefined(me.getReleaseProcessBo()))
+{
+  // We need to load the ReleaseProcessBo for splitting invoice
+  promise = me.determineSysReleaseProcessPKey()
+    .then(
+    function(releasePKey)
+    {
+      if(!Utils.isEmptyString(releasePKey))
+      {
+        var releaseBoParams = [];
+        var releaseBoQuery = {};
+
+        releaseBoParams.push({ "field": "pKey", "value": releasePKey });
+        releaseBoParams.push({ "field": "referenceObject", "value": me });        
+
+        releaseBoQuery.params = releaseBoParams;
+
+        return BoFactory.loadObjectByParamsAsync("BoSysReleaseProcess", releaseBoQuery)
+          .then(
+          function (object) 
+          {
+            me.setReleaseProcessBo(object);
+          });
+      }
+    }
+  );
+}
+else
+{
+	promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

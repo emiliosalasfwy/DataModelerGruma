@@ -1,0 +1,50 @@
+<BusinessLogic methodName="createDisplayInformationForItem" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="Object" />
+    <MethodInput name="orderMeta" type="Object" />
+    <MethodInput name="loSuggestedQuantity" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var orderUnitInformation = " ";
+var unitInformation = " ";
+var info;
+var unitOfMeasureItem;
+
+// Used getItemObjects() here as getAllItems() does not consider the orderBy() of the list
+// as we use no filters on the nested list here, this use is ok and does not return different result in terms of number of items
+var unitOfMeasureItems = me.getUnitOfMeasureItemsForMainItem(item);
+
+for (var i = 0; i < unitOfMeasureItems.length; i++) {
+  unitOfMeasureItem = unitOfMeasureItems[i];
+
+  info = me.createDisplayInformationForUoMItem(unitOfMeasureItem, orderMeta);
+  unitOfMeasureItem.setOQtyString(info.oQtyString);
+
+  if (unitOfMeasureItem.getIsOrderUnit() == "1") {
+    orderUnitInformation += info.unitInformation;
+  }
+  else {
+    if (!Utils.isEmptyString(unitInformation)) {
+      unitInformation += ", ";
+    }
+    unitInformation += info.unitInformation;
+  }
+
+  // for free reward products set orderUnitInformation correctly
+  if(unitOfMeasureItem.getParentType() === "Reward") {
+    unitOfMeasureItem.setOrderUnitInformation(orderUnitInformation);
+    unitOfMeasureItem.setUnitInformation(unitInformation);
+  }
+
+  unitOfMeasureItem.setLogicUnitsforDisplay(info.logicUnitsforDisplay);
+}
+
+if(Utils.isDefined(loSuggestedQuantity)) {
+  me.displayQuantitySuggestion(item, loSuggestedQuantity, orderMeta);
+}
+
+item.setOrderUnitInformation(orderUnitInformation);
+item.setUnitInformation(unitInformation);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

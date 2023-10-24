@@ -1,0 +1,34 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoPos" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!jsonQuery) {
+  jsonQuery={};
+}
+
+var promise = Facade.getObjectAsync(BO_POS, jsonQuery).then(
+  function (selfJson) {
+    me.setProperties(selfJson);
+    return BoFactory.loadObjectByParamsAsync(BO_POSMETA, me.getQueryBy("pKey", me.getBpaPosMetaPKey()));
+  }).then(
+  function (boPosMeta) {
+    me.setBoPosMeta(boPosMeta);
+    return BoFactory.loadListAsync(LO_CUSTOMERPOSRELATION, me.getQueryBy("posPKey", me.getPKey()));
+  }).then(
+  function (loCustomerPOSRelationJson) {
+    me.setLoPOSCustomerRelation(loCustomerPOSRelationJson);
+    //set customerPKey .. needed for name change validations
+    if(loCustomerPOSRelationJson.getAllItems().length > 0) {
+      me.setCustomerPKey(loCustomerPOSRelationJson.getAllItems()[0].getCustomerPKey());
+    }
+    else {
+      me.setCustomerPKey(" ");
+    }
+    //Reset dirty flag
+    me.setObjectStatus(STATE.PERSISTED);
+    return me;
+  });]]>
+</Code>
+  <Return name="BoPos_LoadAsync" value="promise" />
+</BusinessLogic>

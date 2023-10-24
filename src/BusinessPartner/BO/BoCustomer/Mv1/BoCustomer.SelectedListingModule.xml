@@ -1,0 +1,25 @@
+<BusinessLogic methodName="selectedListingModule" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var selectedListingModule = null;
+
+if(Utils.isDefined(me.getLoListingModules())) {
+  var items = me.getLoListingClassification().getAllItems();
+  var length = items.length;
+  var currentPrdCategory = me.getLoListingClassification().getCurrent().value;
+
+  for(var i=0; i<length; i++){
+    if (items[i].value === currentPrdCategory){
+      if(Utils.isDefined(items[i].listingModuleName)){
+        var filteredItem = me.getLoListingModules().getItemsByParam({"listingModuleName" : items[i].listingModuleName});
+        if(Utils.isDefined(filteredItem) && filteredItem.length > 0) {
+          me.getLoListingModules().setCurrentByPKey(filteredItem[0].pKey);
+          selectedListingModule = filteredItem[0].pKey;
+        }
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="selectedListingModule" value="selectedListingModule" />
+</BusinessLogic>

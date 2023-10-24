@@ -1,0 +1,19 @@
+<BusinessLogic methodName="getInfoForCard" businessObjectClass="LoVisitsByDate" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="limitOfCardItems" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var info = "";
+var totalVisits = me.getAllItemsCount();
+var numberOfVisibleVisits = limitOfCardItems;
+if(totalVisits <= numberOfVisibleVisits)
+  {
+    numberOfVisibleVisits = totalVisits;
+  }
+if(numberOfVisibleVisits != "0")
+  {
+    info = numberOfVisibleVisits.toString() + " / " + totalVisits;
+  } ]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

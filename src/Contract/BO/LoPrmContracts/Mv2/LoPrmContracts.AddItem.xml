@@ -1,0 +1,27 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoPrmContracts" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="boContract" type="BoContract" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liCustomerContractOverview = {
+  "pKey": boContract.getPKey(),
+  "customerName": boContract.getLuCustomer().getName(),
+  "responsiblePKey": boContract.getLuResponsible().getPKey(),
+  "responsibleUserName": boContract.getLuResponsible().getName(),
+  "ownerPKey": boContract.getLuOwner().getPKey(),
+  "ownerUserName": boContract.getLuOwner().getName(),
+  "dateFrom": boContract.getDateFrom(),
+  "dateThru": boContract.getDateThru(),
+  "phase": boContract.getWfeStateText(),
+  "prmText": boContract.getBoSlogan().getText(),
+  "objectStatus" :STATE.NEW
+};
+
+// Add new Item to ListObject
+me.addListItems([liCustomerContractOverview]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liCustomerContractOverview.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

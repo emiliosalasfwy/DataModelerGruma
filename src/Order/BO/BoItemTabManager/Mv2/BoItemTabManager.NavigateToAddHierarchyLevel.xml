@@ -1,0 +1,38 @@
+<BusinessLogic methodName="navigateToAddHierarchyLevel" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise =me.getBoOrder().getBoOrderMeta().getProductHierarchyForAddItem("Id", productPKey, me.getNumberOfLevels())
+.then(function (hierarchyInformation) {
+  var bHierarchyLevelValid = true;
+  var values = hierarchyInformation.values;
+
+  // Check whether the object is valid, i.e. has ids for all levels
+  for (var i = 0; i < values.length; i++) {
+    if (Utils.isEmptyString(values[i])) {
+      bHierarchyLevelValid = false;
+      break;
+    }
+  }
+
+  if (bHierarchyLevelValid === true) {
+    // Leave basket mode if basket mode is active
+    if ((me.getIsShowCategories() == "0") && (me.getIsShowCategoriesBasketMode() == "1")) {   
+      me.setIsShowCategories("1");
+      me.setIsShowCategoriesBasketMode("0");
+      me.getBoOrder().getLoItems().setFilter("pKey","");
+      me.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "0", "GT");
+    }
+
+    me.setAddProduct_HierarchyInformation(hierarchyInformation);                                   
+  } else {
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+
+    return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("OrderAddProductHierarchyInformationInvalid"), buttonValues);
+  }        
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,146 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoCallAttachments" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mediaPath" type="String" />
+    <MethodInput name="boCall" type="BoCall" />
+    <MethodInput name="jDTPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var positionPromise = when.resolve();
+var type = Utils.getFileExtensionFromMediaPath(mediaPath);
+
+var pKeyAttachment = PKey.next();
+//to calculate the next number for the attachmentText
+var loCallAttList = boCall.getLoCallAttachments().getAllItems();
+var maxAttachmentNumber = 0;
+
+for (var i in loCallAttList) {
+  var currentAttachmentNumber;
+  var currentFileName = loCallAttList[i].getFileName();
+  
+  if (Utils.isDefined(currentFileName)) {
+    currentAttachmentNumber = currentFileName.split(".")[0];
+  }
+  
+  if (!isNaN(currentAttachmentNumber)) {
+    currentAttachmentNumber = parseInt(currentAttachmentNumber, 10);
+    if (currentAttachmentNumber > maxAttachmentNumber){
+      maxAttachmentNumber = currentAttachmentNumber;
+    }
+  }
+}
+
+//if maxAttachmentNumber is still zero that means there are no numbers in the list.
+if (maxAttachmentNumber === 0) {
+  maxAttachmentNumber = loCallAttList.length + 1;
+} else {
+  maxAttachmentNumber++;
+}
+
+//padding number with leading zeros
+var fileName = "0000" + maxAttachmentNumber;
+fileName = fileName.substr(fileName.length - 4);
+
+//Get the Meta Lookup Object
+var objMetaLookup = boCall.getLuCallMeta();
+
+//default values
+var creationDate;
+var creationTime;
+if (Utils.isSfBackend()) {
+  creationDate = Utils.createAnsiDateToday();
+  creationTime = Utils.createAnsiTimeNow();
+}
+else {
+  creationDate = Utils.getMinDateAnsi();
+  creationTime = Utils.convertTime2Ansi(Utils.convertAnsiDate2Date(Utils.getMinDateTimeAnsi()));
+}
+var currentLatitude = 0;
+var currentLongitude = 0;
+var customerLatitude = 0;
+var customerLongitude = 0;
+var deviation = 0;
+var deviationThreshold = 0;
+var locationDeviation = "Unknown";
+var distanceUnit = " ";
+
+if (objMetaLookup.getTagMediaDateTime() == "1") {
+  creationDate = Utils.createAnsiDateToday();
+  creationTime = Utils.createAnsiTimeNow();
+}
+
+if (objMetaLookup.getTagMediaGeoLocation() == "1") {
+  positionPromise = Utils.getCurrentPosition();
+}
+
+var promise = positionPromise.then(function (currentPosition) {
+
+  //Get the customer BpaAddress latitude and longitude to compare deviation.
+  if (objMetaLookup.getTagMediaGeoLocation() == "1" && Utils.isDefined(currentPosition) && Utils.isDefined(currentPosition.latitude) && Utils.isDefined(currentPosition.longitude)) {
+
+    currentLatitude = currentPosition.latitude;
+    currentLongitude = currentPosition.longitude;
+
+    customerLatitude = boCall.getLuCustomer().getLatitude();
+    customerLongitude = boCall.getLuCustomer().getLongitude();
+
+    //Get the Distance Unit to measure
+    distanceUnit = ApplicationContext.get('user').getDistanceUnit();
+
+    //Calculate the deviation in measured unit
+    deviation = Utils.distanceBetween(currentLatitude, currentLongitude, customerLatitude, customerLongitude, distanceUnit);
+
+    //get the Deviation Threshold from clbMeta
+    deviationThreshold = objMetaLookup.getDeviationThreshold();
+
+    //Sets the Location Deviation in Table.
+    if (customerLatitude === 0 && customerLongitude === 0){
+      locationDeviation = "UnknownCustomerLocation";
+    }
+    else if (currentLatitude === 0 && currentLongitude === 0){
+      locationDeviation = "UnknownUserLocation";
+    }
+    else if (deviation < deviationThreshold){
+      locationDeviation = "WithinThreshold";
+    }
+    else if (deviation > deviationThreshold){
+      locationDeviation = "ExceedsThreshold";
+    }
+    else{
+      locationDeviation = "Unknown";
+    }
+  }
+
+  var attachmentData = {
+    "pKey" : PKey.next(),
+    "creationDate" : creationDate,
+    "creationTime" : creationTime,
+    "fileName" : fileName + '.' + type,
+    "fileType" : type,
+    "fileSize" : 0,
+    "latitude" : currentLatitude,
+    "longitude" : currentLongitude,
+    "locationDeviation" : locationDeviation,
+    "attachmentTextPKey" : PKey.next(),
+    "attachmentText" : fileName,
+    "attachmentBlobPKey" : PKey.next(),
+    "attachmentBlob" : mediaPath,
+    "objectStatus": STATE.NEW | STATE.DIRTY
+  };
+
+  if(Utils.isDefined(jDTPKey)){
+    attachmentData.clbMainPKey = jDTPKey;
+  } else{
+    attachmentData.clbMainPKey = boCall.getPKey();
+  }
+
+  me.addListItems([attachmentData]);
+  me.orderBy({
+    "creationDate" : "DESC",
+    "creationTime" : "DESC",
+    "fileName" : "DESC"
+  });
+  return attachmentData;
+});]]>
+</Code>
+  <Return name="liCallAttachments" value="promise" />
+</BusinessLogic>

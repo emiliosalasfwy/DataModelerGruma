@@ -1,0 +1,53 @@
+<BusinessLogic methodName="startMobileLinkTransition" businessObjectClass="LoSysMobileLink" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="card" type="String" />
+    <MethodInput name="schemeName" type="Object" />
+    <MethodInput name="assetType" type="Object" />
+    <MethodInput name="assetId" type="Object" />
+    <MethodInput name="orgId" type="Object" />
+    <MethodInput name="loginHost" type="Object" />
+    <MethodInput name="dashboardState" type="Object" />
+    <MethodInput name="accountNumber" type="Object" />
+    <MethodInput name="quickAccessURL" type="DomLongText" />
+    <MethodInput name="accountId" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Note: Regex needed to replace mocros in URL. Might be that same macro is used several times in the URL.
+
+var url;
+var macroReplacedData;
+
+if(card === "QuickAccess"){  
+  macroReplacedData = quickAccessURL;
+}
+else{
+  macroReplacedData = dashboardState;
+}
+
+macroReplacedData = macroReplacedData.replace(/\$EMPLOYEENUMBER\$/g, ApplicationContext.get('user').getEmployeeNumber()); 
+macroReplacedData = macroReplacedData.replace(/\$SALESORG\$/g, ApplicationContext.get('user').getSalesOrg()); 
+if(Utils.isDefined(accountNumber)) {
+  macroReplacedData = macroReplacedData.replace(/\$ACCOUNTNUMBER\$/g, accountNumber);
+}
+if(Utils.isDefined(accountId)) {
+  macroReplacedData = macroReplacedData.replace(/\$ACCOUNTID\$/g, accountId);
+}
+
+if(card === "QuickAccess"){  
+  //Use the following format to make a request to external app.
+  //<scheme_name>://<url>  
+  url = schemeName + '://' + macroReplacedData;
+}
+else{
+  macroReplacedData = SalesforceTools.encodeForSalesforceAnalytics(macroReplacedData);
+  //Use the following format to make a request to an CRM Analytics app.
+  //<scheme_name>://<assetType>/<assetID>?orgId=<orgId>&loginHost=<loginHost>&dashboardState=<url-encoded json>
+  url = schemeName + '://' + assetType.toLowerCase() + '/' +  assetId + '?orgId=' + orgId + '&loginHost=' +loginHost + '&dashboardState=' + macroReplacedData;
+}
+
+/*Using URL scheme is a not secure transport layer, therefore no sensitive or personal identifiable information must be transferred via the channel.
+    The core implementation is considering that, for customizations please reach out to your legal team and security lead.*/
+var promise = Facade.startThirdPartyAsync(url,{});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

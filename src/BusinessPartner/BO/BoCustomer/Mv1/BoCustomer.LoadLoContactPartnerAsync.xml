@@ -1,0 +1,24 @@
+<BusinessLogic methodName="loadLoContactPartnerAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+if(bReload == "1" || !Utils.isDefined(me.getLoContactPartner())) {
+  promise = BoFactory.loadListAsync(LO_CONTACTPARTNER, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (loContactPartnerJson) {
+      loContactPartnerJson.orderBy({"lastName":"ASC"});
+      //set contact partner list and reset object status for save handling 
+      //(make not BoCustomer DIRTY after reloading data via tab click)
+      var objectState = me.getObjectStatus();
+      me.setLoContactPartner(loContactPartnerJson);
+      me.setObjectStatus(objectState);
+      me.getLoContactPartner().getToggleText();
+    });
+}
+else{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoCustomer_LoadLoContactPartnerAsync" value="promise" />
+</BusinessLogic>

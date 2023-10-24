@@ -1,0 +1,92 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoOrderMeta" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getObjectAsync(BO_ORDERMETA, context.jsonQuery).then(
+  function (selfJson) {
+    context.selfJson = selfJson;
+
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+
+    if(Utils.isSfBackend()){
+      if( context.jsonQuery.considerModule == "1"){
+        me.setListing("None");
+        me.setListingWithModules("Hit");
+      }
+      else{
+        me.setListing("Hit");
+        me.setListingWithModules("None");
+      }
+    }
+    return BoFactory.loadListAsync(LO_ORDERITEMMETAS, me.getQueryBy("sdoMetaPKey", me.getPKey()));
+  }).then(
+  function (loOrderItemMetasJson) {
+    if (Utils.isDefined(loOrderItemMetasJson.getMainItemTemplate()) ||
+        [BLConstants.Order.PHASE_READY , BLConstants.Order.PHASE_RELEASED , BLConstants.Order.PHASE_CANCELED].includes(context.jsonQuery.phase) || context.jsonQuery.createOrOpenOrder != "1" || context.jsonQuery.syncStatus === BLConstants.Order.NOT_SYNCABLE) {
+      me.setLoOrderItemMetas(loOrderItemMetasJson);
+
+      return BoFactory.loadListAsync(LU_ORDERMETAFORFREEITEMS, me.getQueryBy("sdoMetaPKey", me.getPKey())).then(
+        function (luOrderMetaForFreeItems) {
+          me.setLuOrderMetaForFreeItems(luOrderMetaForFreeItems);
+
+          return BoFactory.loadListAsync(LO_INVENTORYMETABYITEMMETA, me.getQueryBy("sdoMetaPKey", me.getPKey()));
+        }).then(
+        function (loInventoryMetaByItemMetaJson) {
+          me.setLoInventoryMetaByItemMeta(loInventoryMetaByItemMetaJson);
+
+          var cashFloatInventory = {recordType: "Cash_Float"};
+          return Facade.selectSQL("DsLuRecordType", "Inventory", cashFloatInventory);
+        }).then(
+        function (recordType) {
+          if (Utils.isDefined(recordType) && recordType.length > 0) {
+            me.setCashFloatRecordTypeId(recordType[0].pKey);
+          }
+
+          var productInventory = {recordType: "Inventory"};
+          return Facade.selectSQL("DsLuRecordType", "Inventory", productInventory);
+        }).then(
+        function (recordType) {
+          if (Utils.isDefined(recordType) && recordType.length > 0) {
+            me.setProductInventoryRecordTypeId(recordType[0].pKey);
+          }
+
+          return BoFactory.loadListAsync("LoInventoryMetaByPaymentMeta", me.getQueryBy("sdoMetaPKey", me.getPKey()));
+        }).then(
+        function (loInventoryMetaByPaymentMetaJson) {
+          me.setLoInventoryMetaByPaymentMeta(loInventoryMetaByPaymentMetaJson);
+
+          return BoFactory.loadListAsync(LO_PRDGROUPLEVELCRITERIONMAPPING, context.jsonQuery);
+        }).then(
+        function (loPrdGroupLevelCriterionMappingJson) {
+          me.setLoPrdGroupLevelCriterionMapping(loPrdGroupLevelCriterionMappingJson);
+
+          if ((me.getItemListOption() == "Hierarchy") && (me.getMobilityRelevant() == "1")) {
+            return BoFactory.loadListAsync(LO_ORDERMETAPRDSELECTOR, me.getQueryBy("sdoMetaPKey", me.getPKey()));
+          } else {
+            return undefined;
+          }
+        }).then(
+        function (loOrderMetaPrdSelectorJson) {
+          me.setLoProductSelector(loOrderMetaPrdSelectorJson);
+          return me;
+        });
+    }
+    else {
+      var buttonValues = {};
+      buttonValues[Localization.resolve("OK")] = "ok";
+
+      return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), "Sorry, no valid main item template found!", buttonValues).then(function() {
+        return undefined;
+      });
+    }
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

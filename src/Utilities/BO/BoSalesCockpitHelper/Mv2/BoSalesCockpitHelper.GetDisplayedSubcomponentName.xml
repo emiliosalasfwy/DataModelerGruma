@@ -1,0 +1,14 @@
+<BusinessLogic methodName="getDisplayedSubcomponentName" businessObjectClass="BoSalesCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loItems" type="Object" />
+    <MethodInput name="type" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var sDisplayedSubcomponentName = type;
+
+if(loItems.getCount() == 0){
+  sDisplayedSubcomponentName = "CardNoDataMessageUiPlugin";
+}]]>
+</Code>
+  <Return name="result" value="sDisplayedSubcomponentName" />
+</BusinessLogic>

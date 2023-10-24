@@ -1,0 +1,21 @@
+<BusinessLogic methodName="updateToDoStatus" businessObjectClass="LoToDoOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="todoDetail" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var pKey = me.getCurrent().getPKey();
+var liToDo = me.getItemByPKey(pKey);
+var objectStatusNewDirty = (STATE.NEW | STATE.DIRTY);
+
+if (Utils.isDefined(liToDo) && todoDetail.getObjectStatus() == objectStatusNewDirty) {
+  liToDo.delete();
+  todoDetail.delete();
+}
+else {
+  liToDo.setObjectStatus(STATE.PERSISTED);
+  todoDetail.setObjectStatus(STATE.PERSISTED);
+}
+me.setFilter("objectStatus", STATE.DELETED, 'NCB');]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

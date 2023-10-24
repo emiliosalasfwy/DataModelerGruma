@@ -1,0 +1,12 @@
+<BusinessLogic methodName="resetCounter" businessObjectClass="LoPOS" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var listItems = this.getItemObjects();
+
+for (var idxPos = 0; idxPos < listItems.length; idxPos++)
+{
+  var liPos = listItems[idxPos];
+  liPos.setSurveyCount(0);
+  liPos.setQuestionCount(0);
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

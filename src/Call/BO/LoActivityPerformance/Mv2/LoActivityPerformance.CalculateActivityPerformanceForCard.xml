@@ -1,0 +1,131 @@
+<BusinessLogic methodName="calculateActivityPerformanceForCard" businessObjectClass="LoActivityPerformance" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="boJobManager" type="Object" />
+    <MethodInput name="loQuestions" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonParams = [];
+
+jsonParams.push({
+  'field': 'clbMainPKey',
+  'operator': 'EQ',
+  'value': boJobManager.getClbMainPKey(),
+},{
+  'field': 'clbMetaPKey',
+  'operator': 'EQ',
+  'value': boJobManager.getClbMetaPKey(),
+},{
+  'field': 'bpaMainPKey',
+  'operator': 'EQ',
+  'value': boJobManager.getBpaMainPKey(),
+},{
+  'field': 'validFrom',
+  'operator': 'EQ',
+  'value': Utils.convertForDBParam(boJobManager.getReferenceDate(), 'DomDate'),
+},{
+  'field': 'validThru',
+  'operator': 'EQ',
+  'value': Utils.convertForDBParam(boJobManager.getReferenceDate(), 'DomDate'),
+},{
+  'field': 'ownerPKey',
+  'operator': 'EQ',
+  'value': boJobManager.getOwnerPKey(),
+});
+
+var jsonQuery = {};
+jsonQuery.params = jsonParams;
+var relevantActivity = [];
+
+var promise = BoFactory.loadObjectByParamsAsync('LoActivityPerformance',jsonQuery)
+.then(function(loActivityPerformance) {
+  var performanceRelevantActivities = loActivityPerformance.getAllItems();
+  var activityScoreDict = Utils.createDictionary();
+  var initialBadgeActivityIconDict = Utils.createDictionary();
+  var fulfilledBadgeActivityIconDict = Utils.createDictionary();
+  var relevantActivityDict = Utils.createDictionary();
+
+  performanceRelevantActivities.forEach(function(activity) {
+    activityScoreDict.add(activity.getPKey(), 0);
+    if(activity.getUsage() == 'InitialBadge' && (!initialBadgeActivityIconDict.containsKey(activity.getPKey()))) {
+      initialBadgeActivityIconDict.add(activity.getPKey(), activity);
+    }
+    else if(activity.getUsage() == 'FulfilledBadge' && (!fulfilledBadgeActivityIconDict.containsKey(activity.getPKey()))){
+      fulfilledBadgeActivityIconDict.add(activity.getPKey(), activity);
+    }
+  });
+
+  //Calculate sum of answered activity score questions
+  var questions = loQuestions.getAllItems();
+  questions.forEach(function(question) {
+    var questionDoneAndVisible = (question.getVisible() == '1' && question.getDone() == '1');
+    var scoreRelevantToggleQuestion = (question.getConsiderScore() == 'Yes' && !Utils.isEmptyString(question.getScoreAnswers()) && question.getDataType() == 'Toggle');
+
+    if (activityScoreDict.containsKey(question.getJobDefListPKey()) && questionDoneAndVisible && scoreRelevantToggleQuestion) {
+      // Split score answers string to check if answer value (including empty answer) is a valid score answer
+      var scoreAnswers = question.getScoreAnswers().slice(0, question.getScoreAnswers().length - 1).split(';');
+      for (var selectedAnswer = 0; selectedAnswer < scoreAnswers.length; selectedAnswer++) {
+        var answerAndValueEmptyString = (Utils.isEmptyString(question.getValue()) && Utils.isEmptyString(scoreAnswers[selectedAnswer]));
+        if (answerAndValueEmptyString || question.getValue() == scoreAnswers[selectedAnswer]) {
+          activityScoreDict.data[question.getJobDefListPKey()] = activityScoreDict.get(question.getJobDefListPKey())  + question.getScore();
+          break;
+        }
+      }
+    }
+  });
+
+  // Calculate threshold for each performance related activity
+  performanceRelevantActivities.forEach(function(activity) {
+    if(activityScoreDict.containsKey(activity.getPKey()) && (!relevantActivityDict.containsKey(activity.getPKey()))) {
+      var threshold = Utils.round(((activityScoreDict.get(activity.getPKey()) / activity.getActivityScore()) * 100), 0, 1);
+      var thresholdText = threshold + ' %';
+      var mediaPath = ' ';
+      var fileType = ' ' ;
+      var usage = ' ' ;
+      activity.setThresholdText(thresholdText);
+
+      if(threshold >= activity.getThresholdFulfilled()) {
+        activity.setThresholdIcon('IndicatorGreen');
+        if(fulfilledBadgeActivityIconDict.containsKey(activity.getPKey())) {
+          mediaPath = fulfilledBadgeActivityIconDict.get(activity.getPKey()).getMediaPath();
+          fileType = fulfilledBadgeActivityIconDict.get(activity.getPKey()).getFileType();
+          usage = fulfilledBadgeActivityIconDict.get(activity.getPKey()).getUsage();
+        }
+      }
+      else if (threshold >= activity.getThresholdPartiallyFulfilled() && threshold < activity.getThresholdFulfilled()) {
+        activity.setThresholdIcon('IndicatorYellow');
+        if(initialBadgeActivityIconDict.containsKey(activity.getPKey())) {
+          mediaPath = initialBadgeActivityIconDict.get(activity.getPKey()).getMediaPath();
+          fileType = initialBadgeActivityIconDict.get(activity.getPKey()).getFileType();
+          usage = initialBadgeActivityIconDict.get(activity.getPKey()).getUsage();
+        }
+      }
+      else if (threshold < activity.getThresholdPartiallyFulfilled()) {
+        activity.setThresholdIcon('IndicatorRed');
+        if(initialBadgeActivityIconDict.containsKey(activity.getPKey())) {
+          mediaPath = initialBadgeActivityIconDict.get(activity.getPKey()).getMediaPath();
+          fileType = initialBadgeActivityIconDict.get(activity.getPKey()).getFileType();
+          usage = initialBadgeActivityIconDict.get(activity.getPKey()).getUsage();
+        }
+      }
+
+      if(Utils.isDefined(activity.getPromotionId()) && !Utils.isEmptyString(activity.getPromotionId()) && Utils.isDefined(activity.getPromotionDescription()) && !Utils.isEmptyString(activity.getPromotionDescription())) {
+        var promotionDateFrom = Localization.localize(activity.getPromotionDateFrom(), 'date');
+        var promotionDateThru = Localization.localize(activity.getPromotionDateThru(), 'date');
+        var displayText = promotionDateFrom + ' - ' + promotionDateThru ;
+        activity.setPromotionDateText(displayText);
+      }
+      activity.setMediaPath(mediaPath);
+      activity.setFileType(fileType);
+      activity.setUsage(usage);
+      relevantActivityDict.add(activity.getPKey(), activity);
+      relevantActivity.push(activity);
+    }
+  });
+
+  me.cardItemCount = relevantActivity.length;
+  me.removeAllItems();
+  me.addItems(relevantActivity);
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

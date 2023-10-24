@@ -1,0 +1,14 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoOrderMeta" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Application crashes if PKey is undefined during LoOrderMeta load
+if (Utils.isDefined(context.jsonQuery.params[0]) && !Utils.isDefined(context.jsonQuery.params[0].value)){
+  context.jsonQuery.params[0].value = ' ';
+}
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

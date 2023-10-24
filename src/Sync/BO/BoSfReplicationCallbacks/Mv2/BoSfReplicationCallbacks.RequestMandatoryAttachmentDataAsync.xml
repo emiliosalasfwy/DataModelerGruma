@@ -1,0 +1,12 @@
+<BusinessLogic methodName="requestMandatoryAttachmentDataAsync" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve([]);
+
+if (Utils.isSfBackend())
+{
+  promise = Facade.selectSQL("DsBoSfReplicationCallbacks", "AllMandatoryAttachmentsForSync", {});
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

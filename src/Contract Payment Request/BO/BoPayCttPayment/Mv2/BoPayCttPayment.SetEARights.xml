@@ -1,0 +1,24 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoPayCttPayment" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aclBO = me.getACL();
+var usrMainPKey = ApplicationContext.get('user').getPKey();
+var luManagement = me.getLuCustomerManagementInfo();
+
+//User is not Responsible or Phase is committed -> ReadOnly Contract
+if((me.getPhase() == "Committed") || (me.getPhase() == "Cancelled") ||
+   ((luManagement.getHasSubstitute() == "1") && (luManagement.getHasSubstituteUsrMainPKey() != usrMainPKey)) ||
+   ((luManagement.getHasSubstitute() == "0") && (me.getResponsiblePKey() != usrMainPKey))) {
+  aclBO.removeRight(AclObjectType.OBJECT, "BoPayCttPayment", AclPermission.EDIT);
+}
+//User is Responsible + Phase not Planning -> Only Text is editable
+else if ((me.getResponsiblePKey() === usrMainPKey) && ((me.getPhase() == "ForApproval") || (me.getPhase() == "Committed"))) {
+  aclBO.removeRight(AclObjectType.OBJECT, "BoPayCttPayment", AclPermission.EDIT);
+}
+
+var txtAclBO = me.getBoPayCttMemoData().getACL();
+txtAclBO.addRight(AclObjectType.PROPERTY, "paytext", AclPermission.EDIT);
+txtAclBO.addRight(AclObjectType.PROPERTY, "paytext", AclPermission.VISIBLE);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

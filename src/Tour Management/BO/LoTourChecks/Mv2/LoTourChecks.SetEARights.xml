@@ -1,0 +1,39 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoTourChecks" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tmgStatus" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(tmgStatus)){
+  tmgStatus = ApplicationContext.get('currentTourStatus');
+}
+
+var liTourCheckItems = me.getAllItems();
+
+if(liTourCheckItems.length > 0){
+  for (var i = 0; i < liTourCheckItems.length; i++) {
+    var liTourCheckItem=liTourCheckItems[i];
+    var acl = liTourCheckItem.getACL();
+
+    if (tmgStatus ==="Initial" || tmgStatus ==="Open"){
+      if(liTourCheckItem.getUsage() =="S"){
+        acl.addRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+      }
+      else{
+        acl.removeRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+      }
+    }
+
+    if (tmgStatus ==="Running"){
+      if(liTourCheckItem.getUsage() =="E"){
+        acl.addRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+      }
+      else{
+        acl.removeRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+      }
+    }
+
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

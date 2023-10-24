@@ -1,0 +1,41 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPrmContractContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQueryNew = context.jsonQuery;
+var contractPhase = jsonQueryNew.phase;
+var hasSubstitute = jsonQueryNew.hasSubstitute;
+var isSubstituted = jsonQueryNew.isSubstituted;
+var responsiblePKey = jsonQueryNew.responsiblePKey;
+var hasSubstituteSubBpaRelUsrPKey = jsonQueryNew.hasSubstituteSubBpaRelUsrPKey;
+var usrMainPKey = ApplicationContext.get('user').getPKey();
+
+var contextMenuItemList= [];
+
+var menuEntry0 = { "id" : "0000001",
+                  "actionImg" : "CopyDarkGrey24",
+                  "actionId" : "Copy",
+                  "processEvent" : "Copy",
+                  "actionEnabled" : "1"};
+var menuEntry1 = { "id" : "0000002",
+                  "actionImg" : "TrashcanDarkGrey24",
+                  "actionId" : "Delete",
+                  "processEvent" : "Delete",
+                  "actionEnabled" : "1"};
+
+
+contextMenuItemList.push(menuEntry0);
+contextMenuItemList.push(menuEntry1);
+
+if (contractPhase == "Committed" || !((responsiblePKey == usrMainPKey && hasSubstitute == "0") || (hasSubstitute == "1" && hasSubstituteSubBpaRelUsrPKey == usrMainPKey)))
+{     
+  menuEntry1.actionEnabled = "0";
+}
+
+this.addItems(contextMenuItemList);
+
+var result = when.resolve(this);]]>
+</Code>
+  <Return name="loPrmContractContextMenu" value="result" />
+</BusinessLogic>

@@ -1,0 +1,67 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//#########################################################
+// If the respective user document template is not Mobility
+// Relevant, the user can not edit any daily report data.
+// #########################################################
+var acl = me.getACL();
+
+// If the backend is SalesForce, Id field should not be displayed.
+if (Utils.isSfBackend()){
+  acl.removeRight(AclObjectType.PROPERTY, "id", AclPermission.VISIBLE);
+}
+else{
+  acl.addRight(AclObjectType.PROPERTY, "id", AclPermission.VISIBLE);
+}
+
+if (me.getBoUserDocMeta().getMobilityRelevant() === "0" || me.getPhase().toLowerCase() === "approved" ||
+    me.getResponsiblePKey() != ApplicationContext.get('user').getPKey()) {
+  acl.removeRight(AclObjectType.OBJECT, "BoUserDailyReport", AclPermission.EDIT);
+
+  //Annotation should be editable
+  var aclAnnotation = me.getBoUserDRAnnotation().getACL();
+  aclAnnotation.addRight(AclObjectType.OBJECT, "BoUserDRAnnotation", AclPermission.EDIT);
+  var activitiesAcl = me.getLoUsrDRActivity().getACL();
+  activitiesAcl.removeRight(AclObjectType.PROPERTY, "hours", AclPermission.EDIT);
+  activitiesAcl.removeRight(AclObjectType.PROPERTY, "minutes", AclPermission.EDIT);
+
+}else{
+  acl.setAce({
+    "objectType" : AclObjectType.OBJECT,
+    "objectName" : "BoUserDailyReport",
+    "rights" : AclPermission.ALL,
+    "grant" : true
+  });
+}
+
+if(me.getBoUserDocMeta().getUiGroup() === "TimeCard"){
+  if(ApplicationContext.get('user').hasRole('TourUser')){
+    acl.addRight(AclObjectType.PROPERTY,"tourId", AclPermission.VISIBLE);
+  }
+  else{
+    acl.removeRight(AclObjectType.PROPERTY,"tourId", AclPermission.VISIBLE);
+  }
+  acl.addRight(AclObjectType.PROPERTY,"productiveTime", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY,"nonProductiveTime", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"totalLineString", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"workTimeFrom", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"workTimeThru", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"dateFrom", AclPermission.EDIT);
+  acl.addRight(AclObjectType.OBJECT, "BoUserDailyReport", AclPermission.VISIBLE);
+  me.getLoUsrTimeEntryByVisitType().setVisible(true);
+  me.getLoUsrDRActivity().setVisible(false);
+}
+else{
+  acl.removeRight(AclObjectType.PROPERTY,"tourId", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"productiveTime", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY,"nonProductiveTime", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.OBJECT, "BoUserDailyReport", AclPermission.VISIBLE);
+  me.getLoUsrTimeEntryByVisitType().setVisible(false);
+  me.getLoUsrDRActivity().setVisible(true);
+}
+
+BindingUtils.refreshEARights(false);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

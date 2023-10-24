@@ -1,0 +1,7 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoCssBLProcessingSchedule" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+
+      Facade.saveListAsync(this);
+
+    ]]></Code>
+</BusinessLogic>

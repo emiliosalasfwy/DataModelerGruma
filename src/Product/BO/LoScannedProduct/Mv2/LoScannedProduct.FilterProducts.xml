@@ -1,0 +1,91 @@
+<BusinessLogic methodName="filterProducts" businessObjectClass="LoScannedProduct" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fieldStateFilter" type="String" />
+    <MethodInput name="allowForeignProducts" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var scannedProductResult = "ONEPRODUCT";
+var bIsForeignProduct = false;
+var bIsInvalidProduct = false;
+var sProductId;
+
+if (me.getAllItems().length === 0){
+  scannedProductResult = "NOPRODUCTS";
+}
+else{
+  me.resetAllFilters();
+
+  // Look for products not field state available
+  if (fieldStateFilter == "1"){
+    me.setFilter("fieldStateValid", "1");
+
+    if (me.getItemObjects().length === 0){
+      bIsInvalidProduct = true;
+    }
+
+    me.resetFilter("fieldStateValid");
+  }
+
+  // Look for foreign products
+  if (allowForeignProducts === "0"){
+    me.setFilter("foreignProduct", "0");
+
+    if (me.getItemObjects().length === 0){
+      bIsForeignProduct = true;
+    }
+
+    me.resetFilter("foreignProduct");
+  }
+
+  // Set all configured filter to do multiple products check
+  if (fieldStateFilter == "1"){
+    me.setFilter("fieldStateValid", "1");
+  }
+
+  if (allowForeignProducts === "0"){
+    me.setFilter("foreignProduct", "0");
+  }
+
+  // Check for multiple products
+  var items = me.getItemObjects();
+
+  if (items.length > 1){
+    var products = [];
+    var maxLength = 0;
+
+    for (var index = 0; index < items.length; index++){
+      var productId = items[index].getProductId();
+      if (products.indexOf(productId) === -1){
+        products.push(productId);
+
+        me.setFilter("productId", productId, "EQ");
+        maxLength = Math.max(maxLength, me.getItemObjects().length);
+        me.resetFilter("productId");
+      }
+    }
+
+    if (products.length === 1 && maxLength > 1){
+      scannedProductResult = "ONEPRODUCTWITHMULTIPLEUOMS";
+    }
+    else if (products.length > 1 && maxLength === 1){
+      scannedProductResult = "MULTIPLEPRODUCTS";
+    }
+    else if (products.length > 1 && maxLength > 1){
+      scannedProductResult = "MULTIPLEPRODUCTSWITHMULTIPLEUOMS";
+    }
+  }
+  else if (items.length == 1){
+    scannedProductResult = "ONEPRODUCT";
+  }
+  else{
+    if (bIsInvalidProduct){
+      scannedProductResult = "INVALIDPRODUCT";
+    }
+    else if (bIsForeignProduct){
+      scannedProductResult = "FOREIGNPRODUCT";
+    }
+  }
+}]]>
+</Code>
+  <Return name="scannedProductResult" value="scannedProductResult" />
+</BusinessLogic>

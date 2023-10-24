@@ -1,0 +1,14 @@
+<BusinessLogic methodName="setOnlyUnreadFilter" businessObjectClass="LoUsrNotification" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.setFilter("isRead", "0");
+var items = me.getItemObjects();
+
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+}else{
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

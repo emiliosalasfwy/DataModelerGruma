@@ -1,0 +1,40 @@
+<BusinessLogic methodName="copyAsync" businessObjectClass="BoTodo" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="originalObject" type="Object" />
+    <MethodInput name="ownerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+var user = ApplicationContext.get('user');
+
+jsonParams.push({"field" : "text", "value" : originalObject.getText()});
+jsonParams.push({"field" : "dueDate","value" : Utils.getMinDate()});
+jsonParams.push({"field" : "classification", "value" : originalObject.getClassification()});
+
+//In SF Core application will always use IsPrivate=0, but there might already exist customizations where isPrivate could be 1
+if (originalObject.getBoSvcRequestMeta().getIsPrivate() === '1') {
+  ownerPKey = user.getPKey();
+}
+
+//find corresponding "User_Accountable__c" record for selected or defaulted Owner(aka Accountable)
+var promise = Facade.getListAsync("LoTeamUserOverview", Utils.convertDsParamsNewToOld({ "teamList" : [ownerPKey]} ))
+  .then(function (teamLookup) {
+    if(Utils.isDefined(teamLookup) && teamLookup.length > 0 && Utils.isDefined(teamLookup[0].userAccountableId)){
+      jsonParams.push({"field" : "userAccountable", "value" : teamLookup[0].userAccountableId});   
+    }
+    jsonParams.push({"field" : "ownerPKey", "value" : ownerPKey});   
+    jsonParams.push({"field" : "initiatorPKey", "value" : user.getPKey()});   
+
+    // svcRequestMetaPKey contains the RecordTypeId in CGCloud (for 'User_Task' in this case)
+    jsonParams.push({"field" : "svcRequestMetaPKey", "value" : originalObject.getSvcRequestMetaPKey()});
+    jsonQuery.params = jsonParams;
+    return BoFactory.createObjectAsync("BoTodo", jsonQuery);
+  }).then(function(newBoTodoObject){         
+    newBoTodoObject.getBoTodoNote().setSvcTodoPKey(newBoTodoObject.getPKey());
+    newBoTodoObject.getBoTodoNote().setText(me.getBoTodoNote().getText());
+    return newBoTodoObject;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

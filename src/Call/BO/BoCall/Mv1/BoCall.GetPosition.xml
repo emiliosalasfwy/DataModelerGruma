@@ -1,0 +1,33 @@
+<BusinessLogic methodName="getPosition" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Capture Location
+var promise = Utils.getCurrentPosition().then(function (position) {
+  if (!Utils.isDefined(position)) {
+    position = { longitude: 0, latitude: 0 };
+  }
+  if (Utils.isSfBackend()) {
+    me.setGeolocationLatitude(position.latitude);
+    me.setGeolocationLongitude(position.longitude);
+  } else {
+    var loCallLoc = BoFactory.instantiate("LoCallLocation");
+    /* <!-- CW-REQUIRED: LI instantiation --> */
+    var liCallLoc = {
+      pKey: PKey.next(),
+      logDate: Utils.createAnsiDateTimeToday(),
+      locationStatus: "Ok",
+      signalDate: Utils.createAnsiDateTimeToday(),
+      latitude: position.latitude,
+      longitude: position.longitude,
+      referencePKey: me.getPKey(),
+      usage: "ClbMain",
+      referenceObjectPhase: me.getClbStatus(),
+      objectStatus: STATE.NEW | STATE.DIRTY,
+    };
+    loCallLoc.addListItems([liCallLoc]);
+    me.setLoCallLocation(loCallLoc);
+  }
+});]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

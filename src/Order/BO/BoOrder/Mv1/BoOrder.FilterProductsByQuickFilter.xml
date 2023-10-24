@@ -1,0 +1,86 @@
+<BusinessLogic methodName="filterProductsByQuickFilter" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterBy" type="String" />
+    <MethodInput name="items" type="Object" />
+    <MethodInput name="filterValue" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loProductQuickFilter;
+var currentItemFilter = me.getLoItemFilter().getCurrent().getFilterCode();
+var categoryId = me.getBoItemTabManager().getCurrentFilterId();
+
+var currentPromotion  = "";
+if (filterBy === "Group") {
+  currentPromotion = me.getLoSelectablePromotion().getCurrent();
+  if (!(Utils.isDefined(filterValue) && filterValue[0].filter !== filterBy)) {
+    me.getLoItems().resetFilter("groupName");
+  }
+  ApplicationContext.set('registerFilter', items[0].text);
+  loProductQuickFilter = me.getLoProductQuickFilter();
+}
+else if (filterBy === "Category") {
+  if (me.getBoOrderMeta().getConsiderSelectablePromotion() == '1' && Utils.isDefined(me.getLoSelectablePromotion().getCurrent())) {
+    currentPromotion = me.getLoSelectablePromotion().getCurrent(); 
+  }
+  if (!(Utils.isDefined(filterValue) && filterValue[0].filter !== filterBy)) {
+    me.getLoItems().resetFilter("category");
+  }
+  ApplicationContext.set('categoryFilter', items[0].text);
+  loProductQuickFilter = me.getLoProductCategoryFilter();
+}
+
+var previousAppliedGroup = [];
+var currentAppliedGroup = [];
+
+if (Utils.isDefined(loProductQuickFilter)) {
+  previousAppliedGroup = loProductQuickFilter.getItemsByParam({"isSelected": true});
+  currentAppliedGroup = loProductQuickFilter.getItemsByParam({"text": items[0].text});
+}
+
+//Update LoProductQuickFilter with current filter
+if (previousAppliedGroup.length > 0 && previousAppliedGroup[0].getText() !== items[0].text) {
+  previousAppliedGroup[0].setIsSelected(false);
+  if (items[0].specialOption !== "CLEAR") {
+    currentAppliedGroup[0].setIsSelected(true);
+  }
+}
+else if (previousAppliedGroup.length === 0 && items[0].specialOption !== "CLEAR") {
+  currentAppliedGroup[0].setIsSelected(true);
+}
+
+//Apply filter on order item list
+if (items[0].specialOption !== "CLEAR") {
+  if (!Utils.isDefined(filterValue)) {
+    me.getLoItems().resetAllFilters();
+  }
+  if (filterBy === "Group") {
+    me.getLoItems().setItemFilter(currentItemFilter, categoryId, currentPromotion.getPKey());
+    me.setGroupQuickFilterCache(items[0].text);
+  }
+  else if (filterBy === "Category") {
+    if (me.getBoOrderMeta().getConsiderSelectablePromotion() == '1' && Utils.isDefined(me.getLoSelectablePromotion().getCurrent())) {
+      me.getLoItems().setItemFilter(currentItemFilter, categoryId, currentPromotion.getPKey());
+    }
+    else {
+      me.getLoItems().setItemFilter(currentItemFilter, categoryId, "");
+    }
+    me.setCategoryQuickFilterCache(items[0].text);
+  }
+}
+else {
+  //Reset stored register and category filters on Clear Filter option selection
+  me.setGroupQuickFilterCache(null);
+  ApplicationContext.set('registerFilter', null);
+  me.setCategoryQuickFilterCache(null);
+  ApplicationContext.set('categoryFilter', null);
+  filterValue = null;
+  if (filterBy === "Category") {
+    me.getLoItems().resetFilter("category");
+  }
+  else if (filterBy === "Group") {
+    me.getLoItems().resetFilter("groupName");
+  }
+}]]>
+</Code>
+  <Return name="items" value="items" />
+</BusinessLogic>

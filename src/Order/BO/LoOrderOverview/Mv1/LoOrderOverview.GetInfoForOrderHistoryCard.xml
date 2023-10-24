@@ -1,0 +1,21 @@
+<BusinessLogic methodName="getInfoForOrderHistoryCard" businessObjectClass="LoOrderOverview" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Code language="JavaScript"><![CDATA[
+  
+var count = me.cardItemCount;
+var numberVisibleOrders = 5;
+
+if(Utils.isPhone()) {
+	numberVisibleOrders = 3;
+}
+
+if(count <= numberVisibleOrders){
+  numberVisibleOrders = count;
+}
+
+var info = " ";
+if(numberVisibleOrders != "0"){
+	info = numberVisibleOrders.toString() + " / " + count;
+}		
+   ]]></Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

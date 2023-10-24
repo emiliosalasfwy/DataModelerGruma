@@ -1,0 +1,61 @@
+<BusinessLogic methodName="setItemFilterCountsByCategory" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderItems = me.getLoItems().getAllItems();
+var orderItem;
+var currentFilterId = me.getBoItemTabManager().getCurrentFilterId();
+var countAll = 0;
+var countPromoted = 0;
+var countNew = 0;
+var countHistoric = 0;
+var countOutOfStock = 0;
+var countBasket = 0;
+var lastRefPKey;
+var i;
+
+for (i = 0; i < orderItems.length; i++) {
+  orderItem = orderItems[i];
+
+  //Count items per category for itemfilter
+  if (orderItem.getGroupId() == currentFilterId && orderItem.getRefPKey() != lastRefPKey) {
+    countAll++;
+    if (orderItem.getPromoted() == "1") {
+      countPromoted++;
+    }
+    if (orderItem.getNewState() == "Available") {
+      countNew++;
+    }
+    if (orderItem.getHistory() == "1") {
+      countHistoric++;
+    }
+    if (orderItem.getOutOfStock() == "1") {
+      countOutOfStock++;
+    }
+  }
+  lastRefPKey = orderItem.getRefPKey();
+}
+
+//Set count values of itemfilter
+var filter = me.getLoItemFilter().getItemObjects();
+for (i = 0; i < filter.length; i++) {
+  switch (filter[i].getFilterCode()) {
+    case "All":
+      filter[i].setCount(countAll);
+      break;
+    case "Promotion":
+      filter[i].setCount(countPromoted);
+      break;
+    case "New":
+      filter[i].setCount(countNew);
+      break;
+    case "History":
+      filter[i].setCount(countHistoric);
+      break;
+    case "OutOfStock":
+      filter[i].setCount(countOutOfStock);
+      break;
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

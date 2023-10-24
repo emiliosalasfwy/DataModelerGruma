@@ -1,0 +1,154 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loadPromise;
+var params = jsonParams.params;
+var filterByBpaAssortment;
+var customerPKey;
+var filterBySdoAssortment;
+var sdoMetaPKey;
+var considerListing;
+var commitDate;
+var listing;
+var listingWithModules;
+var addCond_ProductPKeys;
+var criterionAttribute;
+var hitClosedListing;
+var collectClosedListing;
+var useClosedListing;
+var considerPromotion;
+var useConsiderModule;
+var index = 0;
+
+for (index in params) {
+
+  switch (params[index].field) {
+    case "filterByBpaAssortment":
+      filterByBpaAssortment = params[index].value;
+      break;
+    case "customerPKey":
+      customerPKey = params[index].value;
+      break;
+    case "filterBySdoAssortment":
+      filterBySdoAssortment = params[index].value;
+      break;
+    case "sdoMetaPKey":
+      sdoMetaPKey = params[index].value;
+      break;
+    case "considerListing":
+      considerListing = params[index].value;
+      break;
+    case "useClosedListing":
+      useClosedListing = params[index].value;
+      break;
+    case "commitDate":
+      commitDate = params[index].value;
+      break;
+    case "listing":
+      listing = params[index].value;
+      break;
+    case "listingWithModules":
+      listingWithModules = params[index].value;
+      break;
+    case "addCond_ProductPKeys":
+      addCond_ProductPKeys = params[index].value;
+      break;
+    case "criterionAttribute":
+      criterionAttribute = params[index].value;
+      break;
+    case "considerPromotion":
+      considerPromotion = params[index].value;
+      break;
+    case "hitClosedListing":
+      hitClosedListing = params[index].value;
+      break;
+    case "collectClosedListing":
+      collectClosedListing = params[index].value;
+      break;
+    case "useConsiderModule":
+      useConsiderModule = params[index].value;
+      break;
+  }
+}
+var useMergeEngine = jsonParams.useMergeEngine;
+
+if (Utils.isCasBackend() || !useMergeEngine) {
+  // Load items from temporary table containing the merge result
+  loadPromise = Facade.getListAsync("LoProductForAdd", jsonParams);
+}
+else {
+  //Get merge engine parameters
+  var mergeEngineParams = me.getMEParams(filterByBpaAssortment, customerPKey, filterBySdoAssortment, sdoMetaPKey, considerListing,
+                                         listing, listingWithModules, commitDate, addCond_ProductPKeys, criterionAttribute, considerPromotion,
+                                         useClosedListing, hitClosedListing, collectClosedListing, useConsiderModule);
+
+  //Call merge engine
+  loadPromise = Facade.getMergedListAsync(mergeEngineParams);
+}
+
+var promise = loadPromise.then(
+  function (items) {
+    me.addItems(items);
+    me.orderBy({"text1":"ASC"});
+    if(considerListing == '1' && useClosedListing == '1') {
+      me.setClosedListingFilter(listing, listingWithModules, hitClosedListing,collectClosedListing);
+    }
+    // SF/CASDIF
+    if (Utils.isCasBackend()) {
+      jsonParams.params.push({
+        "field" : "listing",
+        "value" : listing
+      });
+      jsonParams.params.push({
+        "field" : "listingWithModules",
+        "value" : listingWithModules
+      });
+      jsonParams.params.push({
+        "field" : "hitClosedListing",
+        "value" : hitClosedListing
+      });
+      jsonParams.params.push({
+        "field" : "collectClosedListing",
+        "value" : collectClosedListing
+      });
+      jsonParams.params.push({
+        "field" : "considerListing",
+        "value" : considerListing
+      });
+      jsonParams.params.push({
+        "field" : "useClosedListing",
+        "value" : useClosedListing
+      });
+      jsonParams.params.push({
+        "field" : "asoName",
+        "value" : "AsoProductForAdd"
+      });
+      return me.addAsoInformation(jsonParams);
+    }
+    else if(!useMergeEngine && Utils.isSfBackend()) {
+      jsonParams.params.push({
+        "field" : "listing",
+        "value" : listing
+      });
+      jsonParams.params.push({
+        "field" : "listingWithModules",
+        "value" : listingWithModules
+      });
+      jsonParams.params.push({
+        "field" : "asoName",
+        "value" : "AsoProductForAdd"
+      });
+      return me.addAsoInformation(jsonParams);
+    }
+    else {
+      return when.resolve();
+    }
+  })
+.then(function() {
+  return me;
+});]]>
+</Code>
+  <Return name="loProductForAdd" value="promise" />
+</BusinessLogic>

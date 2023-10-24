@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getFirstNextStatePKey" businessObjectClass="BoWfeFlyoutNextStateByType" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var list = me.getNextStateList().getAllItems();
+var nextStatePKey = "";
+
+if (list.length > 0) {
+  nextStatePKey = list[0].getPKey();
+}]]>
+</Code>
+  <Return name="nextStatePKey" value="nextStatePKey" />
+</BusinessLogic>

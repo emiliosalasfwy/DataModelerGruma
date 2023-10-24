@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateSub" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (me.getHasSubstitute() == "1")
+{
+  messageCollector.add({
+    "level" : "error",
+    "objectClass" : "BoPrmCttFlyoutCreateContract",
+    "messageID" : "CasClbCannotCreateContractWhileSubstituted"
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

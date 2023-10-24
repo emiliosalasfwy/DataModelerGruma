@@ -1,0 +1,14 @@
+<BusinessLogic methodName="checkNewTimeEntryButtonVisibility" businessObjectClass="BoUserDailyReport" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+    var me = this;
+		var newTimeEntryBtnVisible = true;
+		var currentUser = ApplicationContext.get('user').getPKey();
+
+        if(me.getOwnerUsrMainPKey() !== currentUser  || me.getResponsiblePKey() !== currentUser || me.getPhase().toLowerCase() == "approved" || me.getPhase().toLowerCase() == "released"){
+			newTimeEntryBtnVisible = false;
+		}
+
+
+ ]]></Code>
+  <Return name="result" value="newTimeEntryBtnVisible" />
+</BusinessLogic>

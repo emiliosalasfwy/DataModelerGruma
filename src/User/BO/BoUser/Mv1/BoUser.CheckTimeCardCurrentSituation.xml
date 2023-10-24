@@ -1,0 +1,82 @@
+<BusinessLogic methodName="checkTimeCardCurrentSituation" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeCard" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var messageCollector = new MessageCollector();
+var runningTimeEntry;
+var blCloseTimeEntry = false;
+
+if (!Utils.isDefined(timeCard)) {
+  if (me.getShowTimecardInfo() === '1') {
+    messageCollector.add({
+      "level" : "warning",
+      "objectClass" : "BoUser",
+      "messageID" : "CasBoUserNoOpenTimeCard"
+    });
+  }
+}
+else if (Utils.isDefined(timeCard.getLoUsrTimeEntry())) {
+  var loTimeEntries = timeCard.getLoUsrTimeEntry().getItemObjects();
+
+  for (var idxloTimeEntries = 0; idxloTimeEntries < loTimeEntries.length; idxloTimeEntries++) {
+    //Find Running TimeEntry
+    var timeEntriesSystemTimeThruIsMinDate = loTimeEntries[idxloTimeEntries].getSystemTimeThru() === Utils.getMinDate();
+    if (loTimeEntries[idxloTimeEntries].getUsrTimeEntryMetaPKey() !== timeCard.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey() && timeEntriesSystemTimeThruIsMinDate) {
+      if (loTimeEntries[idxloTimeEntries].getUsrTimeEntryMetaPKey() === timeCard.getBoUserDocMeta().getBreakUsrTimeEntryMetaPKey()) {
+        var breakReturn = {
+          "timeEntryPKey" : loTimeEntries[idxloTimeEntries].getPKey(),
+          "effectiveUTCTimeFrom" : loTimeEntries[idxloTimeEntries].getEffectiveUTCTimeFrom(),
+          "running" : "1"
+        };
+
+        breakReturn.getTimeEntryPKey = function () {return me.timeEntryPKey;};
+        breakReturn.getEffectiveUTCTimeFrom = function () {return me.effectiveUTCTimeFrom;};
+        breakReturn.getRunning = function () {return me.running;};
+        messageCollector.destroy();
+        promise = when.resolve(breakReturn);
+        break;
+      }
+
+      runningTimeEntry = loTimeEntries[idxloTimeEntries];
+      break;
+    }
+
+  }
+
+  if (!Utils.isDefined(promise) && Utils.isDefined(runningTimeEntry) && runningTimeEntry.getUsrTimeEntryMetaPKey() !== timeCard.getBoUserDocMeta().getBreakUsrTimeEntryMetaPKey()) { //Created by Call.
+    messageCollector.add({
+      "level" : "warning",
+      "objectClass" : "BoUser",
+      "messageID" : "CasBoUserRunningTimeEntryByCall",
+      "messageParams" : {
+        "subject" : runningTimeEntry.getDescription(),
+        "startTime" : runningTimeEntry.getEffectiveTimeFrom()
+      }
+    });
+    blCloseTimeEntry = true;
+  }
+}
+
+if(!Utils.isDefined(promise)){
+  if (messageCollector.getCount() > 0) {
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    var messages = messageCollector.getMessages().join("<br>");
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"), messages, buttonValues).then(
+      function () {
+        messageCollector.destroy();
+        if (blCloseTimeEntry) {
+          timeCard.closeTimeEntry(runningTimeEntry.getPKey(), false);
+          timeCard.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+        }
+      });
+  } else {
+    messageCollector.destroy();
+    promise = when.resolve();
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

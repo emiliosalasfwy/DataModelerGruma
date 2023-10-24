@@ -1,0 +1,30 @@
+<BusinessLogic methodName="esCopyNotes" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingDocument" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//create empty LoOrderNotes
+splittingDocument.setLoNotes(BoFactory.instantiate("LoOrderNotes"));
+
+//get the notes
+if(Utils.isDefined(me.getLoNotes())){
+  var notes = me.getLoNotes().getAllItems();
+  var newNotes = [];
+  var processNotes = function(note){
+    var newNoteData = note.getData();
+    newNoteData.pKey = PKey.next();
+    newNoteData.sdoMainPKey = splittingDocument.getPKey();
+    newNotes.push(newNoteData);
+  };
+
+  var setNoteNewDirtyFunction = function(note){
+    note.setObjectStatus(STATE.NEW | STATE.DIRTY);
+  };
+
+  notes.forEach(processNotes);
+  splittingDocument.getLoNotes().addItems(newNotes);
+  splittingDocument.getLoNotes().getAllItems().forEach(setNoteNewDirtyFunction);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

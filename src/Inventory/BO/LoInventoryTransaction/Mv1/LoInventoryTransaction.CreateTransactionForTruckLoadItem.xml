@@ -1,0 +1,119 @@
+<BusinessLogic methodName="createTransactionForTruckLoadItem" businessObjectClass="LoInventoryTransaction" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemObj" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var item = itemObj.item;
+var ivcMetasByItemMeta = itemObj.ivcMetasByItemMeta;
+var checkUserInventoryOver = itemObj.itemMeta.checkUserInventoryOver;
+var checkQuotaOver =  itemObj.itemMeta.checkQuotaOver;
+var prdMainPKey = item.getPrdMainPKey();
+var validationError;
+var loUnitFactorForProduct;
+
+var promise = BoFactory.loadObjectByParamsAsync("LoUnitFactorForProduct", {"productPKey" : prdMainPKey})
+.then(function (loUnitFactorForProduct) {
+
+  return BoFactory.loadObjectByParamsAsync("LuLogisticUnit", {"ProductPKey": prdMainPKey, "UnitType" : item.getQuantityLogisticUnit()})
+
+.then(function(luLogUnit){
+
+  var validationError;
+
+  for(var i=0;i<itemObj.ivcInformation.length && !Utils.isDefined(validationError);i++){
+    var ivcMeta = itemObj.ivcInformation[i];
+    var jsonIvcTaData = {};
+
+    jsonIvcTaData.pKey = PKey.next();
+    jsonIvcTaData.ivcMainPKey = ivcMeta.ivcMainPKey;
+    jsonIvcTaData.ivcTaMetaPKey = ivcMeta.ivcTaMetaPKey;
+    jsonIvcTaData.sdoMainPKey = item.getSdoMainPKey();
+    jsonIvcTaData.sdoItemPKey = item.getPKey();
+    jsonIvcTaData.accounted = "0";
+    jsonIvcTaData.initiationDate = Utils.createDateToday();
+    jsonIvcTaData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+    jsonIvcTaData.initiatorUsrMainPKey = ApplicationContext.get('user').getPKey();
+    jsonIvcTaData.chargeDate = Utils.createDateNow();
+
+
+    //Convert inventory balance to unit of item 
+    var convertedTransactionValue; 
+
+    //Determine amount and algebraic sign 
+    switch(ivcMeta.tAControl){
+
+      case "Add":
+      case "Neutral":
+        convertedTransactionValue = loUnitFactorForProduct.convertLogisticUnitToIvcMeasure(ivcMeta.ivcMeasure, item.getQuantity(), item.getQuantityLogisticUnit(), luLogUnit.getPiecesPerSmallestUnit());
+        jsonIvcTaData.amount = convertedTransactionValue;
+        break;
+
+      case "Withdraw":
+        convertedTransactionValue = loUnitFactorForProduct.convertLogisticUnitToIvcMeasure(ivcMeta.ivcMeasure, item.getQuantity(), item.getQuantityLogisticUnit(), luLogUnit.getPiecesPerSmallestUnit());
+        jsonIvcTaData.amount = convertedTransactionValue * (-1);
+        break;
+
+      case "Audit":
+        convertedTransactionValue = loUnitFactorForProduct.convertLogisticUnitToIvcMeasure(ivcMeta.ivcMeasure, item.getQuantity() - item.getTargetQuantity(), item.getQuantityLogisticUnit(), luLogUnit.getPiecesPerSmallestUnit());
+        jsonIvcTaData.amount = convertedTransactionValue;
+        break;
+    }
+
+
+
+    //Validate inventory overdrawn
+    var balanceAfterTransaction = ivcMeta.balance + jsonIvcTaData.amount;
+
+    if (balanceAfterTransaction < 0 && itemObj.documentType == "TruckIvcTransferOutward") {
+      var valueForMessage = loUnitFactorForProduct.convertIvcMeasureToLogisticUnit(ivcMeta.ivcMeasure, Math.abs(balanceAfterTransaction),
+                                                                                   item.getQuantityLogisticUnit(), luLogUnit.getPiecesPerSmallestUnit());
+
+      //Validate user inventory over
+      if ((ivcMeta.metaId == "UserInventory") && (checkUserInventoryOver != "0")) {
+        if (checkUserInventoryOver == "1") {     
+          validationError = {
+            "level": "error",
+            "objectClass": "BoTruckLoad",
+            "messageID": "CasSdoMainQuantityExceedsUserInventorySummary",
+            "messageParams": { "summary": item.getText1() + " (" + valueForMessage + " " + item.getQuantityLogisticUnit() + ")" }
+          };
+        } else {     
+          validationError = {
+            "level": "warning",
+            "objectClass": "BoTruckLoad",
+            "messageID": "CasSdoMainQuantityExceedsUserInventoryWarningSummary",
+            "messageParams": { "summary": item.getText1() + " (" + valueForMessage + " " + item.getQuantityLogisticUnit() + ")" }
+          };
+        }
+      }
+
+      //Validate quota over
+      if ((ivcMeta.metaId == "Quota") && (checkQuotaOver != "0")) {
+        if (checkQuotaOver == "1") {
+          validationError = {
+            "level": "error",
+            "objectClass": "BoTruckLoad",
+            "messageID": "CasSdoMainQuantityExceedsQuotaSummary",
+            "messageParams": { "summary": item.getText1() + " (" + valueForMessage + " " + item.getQuantityLogisticUnit() + ")" }
+          };
+        } else {
+          validationError = {
+            "level": "warning",
+            "objectClass": "BoTruckLoad",
+            "messageID": "CasSdoMainQuantityExceedsQuotaWarningSummary",
+            "messageParams": { "summary": item.getText1() + " (" + valueForMessage + " " + item.getQuantityLogisticUnit() + ")" }
+          };
+        }
+      }
+    }
+
+    me.addItems([jsonIvcTaData]);
+    me.getItemsByParam({ "pKey": jsonIvcTaData.pKey })[0].setObjectStatus(this.self.STATE_NEW_DIRTY);
+  }
+
+  return validationError;
+  });
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

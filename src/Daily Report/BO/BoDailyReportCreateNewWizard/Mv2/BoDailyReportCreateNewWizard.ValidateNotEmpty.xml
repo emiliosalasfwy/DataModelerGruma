@@ -1,0 +1,15 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoDailyReportCreateNewWizard" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Check if date is filled
+if(Utils.isEmptyString(Framework.getProcessContext().dateFrom)) {
+  var newError = {"level": "error",
+              "objectClass": "BoUserDailyReport",
+              "messageID": "CasUsrDailyReportFillInAllValues"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

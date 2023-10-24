@@ -1,0 +1,40 @@
+<BusinessLogic methodName="validateInventory" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var objectStatus;
+
+// If phase has been set to released, then process inventory actions and collect validation messages
+if (me.getValidateForRelease() == "1"){
+  if(me.getReleaseValidationDone() == "0"){
+    promise = me.processInventoryActions().then(
+      function (validationMessages){
+        var i;
+        for (i = 0; i < validationMessages.length; i++){
+          messageCollector = me.addMessageToContainer(messageCollector, validationMessages[i]);
+        }
+        if(me.getSetPhaseInBeforeSave() == "1" && validationMessages[i].level == "error"){
+          me.setSetPhaseInBeforeSave("0");
+        }
+      });
+  }
+} else{
+  // Reset list objects for inventory handling in order not to write prepared transaction in case of release abort
+  objectStatus = me.getObjectStatus();
+  me.setLoInventories(undefined);
+  me.setLoInventoryTransactions(undefined);
+  me.setObjectStatus(objectStatus);
+}
+
+if(me.getSetPhaseInBeforeSave() != "1"){
+  // Reset list objects for inventory handling in order not to write prepared transaction in case of release abort
+  objectStatus = me.getObjectStatus();
+  me.setLoInventories(undefined);
+  me.setLoInventoryTransactions(undefined);
+  me.setObjectStatus(objectStatus);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

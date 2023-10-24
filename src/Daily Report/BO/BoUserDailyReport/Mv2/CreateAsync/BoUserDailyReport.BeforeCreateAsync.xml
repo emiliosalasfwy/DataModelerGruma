@@ -1,0 +1,14 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(context.jsonQuery.tourTemplatePKey) && !Utils.isDefined(context.jsonQuery.responsiblePKey))
+{
+  context.jsonQuery.responsiblePKey = ' ';
+}
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,55 @@
+<BusinessLogic methodName="resetCalculationResult" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var itemsMain = me.getLoItems();
+var promise = when.resolve();
+
+if(Utils.isDefined(itemsMain)) {
+  var items = itemsMain.getAllItems();
+  var index;
+
+  me.getLoItems().suspendListRefresh();
+
+  for (index = 0; index < items.length; index++) {
+    var currentItem = items[index];
+
+    if (me.getBoOrderMeta().getComputePrice() == BLConstants.Order.BUTTON_MODE || me.getBoOrderMeta().getComputePrice() == BLConstants.Order.EDIT_MODE) {
+      currentItem.setValue(0);
+      currentItem.setBasePrice(0);
+      currentItem.setGrossValue(0);
+      currentItem.setPriceReceipt(0);
+      currentItem.setValueReceipt(0);
+      currentItem.setGrossValueReceipt(0);
+      currentItem.setPrice(0);
+      currentItem.setBasePriceReceipt(0);
+      currentItem.setPricingInformation("");
+    }
+  }
+  me.getLoItems().resumeListRefresh(true);
+
+  me.setGrossTotalValue(0);
+  me.setGrossTotalValueReceipt(0);
+  me.setMerchandiseValue(0);
+  me.setMerchandiseValueReceipt(0);
+  me.setTotalValue(0);
+  me.setTotalValueReceipt(0);
+  me.setPaidAmount(0); 
+  me.setAbsolutePaidAmount(0);
+  me.setDebitCredit('Debit');
+  me.setPaidAmountReceipt(0);
+  me.setPricingInformation("");
+  
+  me.getLoItems().resumeListRefresh(true);
+
+  if(Utils.isDefined(me.getLoItemFilter())) {
+    me.updateItemFilterTotalValue();
+  }
+
+  var splittingGroups = me.getLoSplittingGroups();
+  if (Utils.isDefined(splittingGroups)) {
+    splittingGroups.removeAllItems();
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

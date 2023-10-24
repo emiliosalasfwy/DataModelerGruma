@@ -1,0 +1,47 @@
+<BusinessLogic methodName="addChartContainers" businessObjectClass="BoChartHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="d3Container" type="Object" />
+    <MethodInput name="parentName" type="String" />
+    <MethodInput name="addHeader" type="String" />
+    <MethodInput name="addTitle" type="String" />
+    <MethodInput name="color" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var mainContainer = d3Container;
+var mainDiv;
+
+if(Utils.isDefined(color)) {
+    mainContainer = d3Container.append("div").attr("id", "colorContainer").style("height", "100%").style("width", "100%");
+	mainDiv = mainContainer[0][0];
+	mainDiv.style.backgroundColor = color;
+}
+else {
+    mainContainer = d3Container.append("div").attr("id", "colorContainer").style("height", "100%").style("width", "100%");
+	mainDiv = mainContainer[0][0];
+	mainDiv.style.backgroundColor = "#e5e5e5";
+}
+
+mainContainer.on("click", function() {
+me.hideChartToolTip(parentName);
+});
+
+if(addTitle == "1") {
+  var titleElem = "chartTitle_" + parentName;
+  var titleSelector = "#"+titleElem;
+  mainContainer.append("div").attr("id", "titleDiv").append("svg").attr("id",titleElem);
+  d3.select(titleSelector).append("text");
+}
+
+if(addHeader == "1") {
+  var header = mainContainer.append("div").attr("id", "header");
+}
+
+var chartElem = "chart_" + parentName;
+var chartDiv = mainContainer.append("div").attr("id",chartElem).style("height", "100%").style("width", "100%");
+
+chartDiv.on("click", function() {
+me.hideChartToolTip(parentName);
+});]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,12 @@
+<BusinessLogic methodName="checkPrdUsageIconVisibility" businessObjectClass="BoProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var bVisible = true;
+
+var lookup= this.getLuPrdUsageIcon();
+if(lookup.getPKey().trim() === ""){
+  bVisible = false;
+}]]>
+</Code>
+  <Return name="result" value="bVisible" />
+</BusinessLogic>

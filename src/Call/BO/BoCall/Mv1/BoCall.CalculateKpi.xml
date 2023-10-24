@@ -1,0 +1,96 @@
+<BusinessLogic methodName="calculateKpi" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+var setAccountExtensionKPIs = function(){
+  promise = BoFactory.loadObjectByParamsAsync("BoCustomer", me.getQueryBy('pKey', me.getBpaMainPKey()))
+    .then(function(boCustomer){
+    boCustomer.setAccountDi(me.getDistributionIssue());
+    boCustomer.setAccountOi(me.getOutOfStockIssue());
+    return boCustomer.saveAsync();
+  });
+};
+
+var calculate = function(totalSurveyProducts, surveys){
+  var distributionRate = 0;
+  var oosRate = 0;
+  var notDistributedProducts = 0;
+  var outOfStockProducts = 0;
+
+  surveys.forEach(function(survey){
+    if(survey.getValue() == "NotDistributed"){
+      //number of products for current call with Call job value as 'Not Distributed'
+      notDistributedProducts++;
+    } else if(survey.getValue() == "OutOfStock"){
+      //number of products for current call with Call job value as 'Out of Stock'
+      outOfStockProducts++;
+    }
+  });
+
+  if(totalSurveyProducts > 0){
+    distributionRate = (totalSurveyProducts - notDistributedProducts)/ totalSurveyProducts;
+    oosRate = outOfStockProducts/totalSurveyProducts;
+
+    distributionRate = (Utils.round(distributionRate, 4, 1))*100;
+    oosRate = (Utils.round(oosRate, 4, 1))*100;
+
+    var dIssue = (distributionRate <= 92) ? "1" : "0";
+    var oIssue = (oosRate > 12) ? "1" : "0";
+
+    //Set All calculated values to call fields here.
+    me.setDistributionRate(parseFloat(distributionRate.toFixed(2)));
+    me.setDistributionIssue(dIssue);
+    me.setOutOfStockRate(parseFloat(oosRate.toFixed(2)));
+    me.setOutOfStockIssue(oIssue);
+  }
+};
+
+
+if(Utils.isDefined(me.getBoJobManager().getLoJobDefinitions())){
+  var totalSurveyProducts;
+  var surveys;
+  var jobDefsWithSavePresetting = me.getBoJobManager().getLoJobDefinitions().getItemsByParamArray([
+    {"savePresetting" : "1", "op" : "EQ"},
+    {"jobMetaId" : "Survey", "op" : "EQ"},
+    {"toggleId" : "PrdDistributed", "op" : "EQ"},
+    {"presetting" : "None", "op" : "NE"}
+  ]);
+  var isCallCompleted = ((me.getClbStatus() == "Completed") && (me.getClbStatus() != me.getOriginalClbStatus())) ? 1 : 0;
+
+  if(me.getClbStatus() == "Planned"){
+    //Take data from LoCurrentSurvey
+    if(Utils.isDefined(me.getBoJobManager().getLoCurrentSurveyProducts())){
+      totalSurveyProducts = me.getBoJobManager().getLoCurrentSurveyProducts().getAllItems().length;
+
+      if (Utils.isDefined(me.getBoJobManager().getLoCurrentSurveys())){
+        surveys = me.getBoJobManager().getLoCurrentSurveys().getAllItems().filter(function(i){
+          return i.hide != "1";
+        });
+        calculate(totalSurveyProducts, surveys);
+      }
+    }
+  }
+  else if((isCallCompleted) && (jobDefsWithSavePresetting.length > 0)){
+    //Take data from LoPos
+    var loCurrentPOS = me.getBoJobManager().getLoPOS().getItemsByParam({"posId" : " "});
+    if(Utils.isDefined(loCurrentPOS)){
+      var liCurrentPOS = loCurrentPOS[0];
+      totalSurveyProducts = liCurrentPOS.getSurveyCount();
+
+      if(Utils.isDefined(liCurrentPOS.getSurveys())){
+        surveys = liCurrentPOS.getSurveys().getAllItems().filter(function(i){
+          return i.hide != "1";
+        });
+        calculate(totalSurveyProducts, surveys);
+        setAccountExtensionKPIs();
+      }
+    }
+  }
+  else if(isCallCompleted){
+    setAccountExtensionKPIs();
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

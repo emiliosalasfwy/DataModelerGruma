@@ -1,0 +1,39 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoSalesCockpitHelper" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//DSD Mode
+if(Utils.isDefined(context.jsonQuery.mode) && context.jsonQuery.mode === "DSD") {
+  me.dsdMode = "1";
+}
+else {
+  me.dsdMode = "0";
+}
+
+//Welcome card date
+var dateText = " ";
+if(me.dsdMode == "1") {
+  dateText = Localization.localize(Utils.createDateNow(), "date", "dddd, MMMM D");
+}
+me.setCardUserWelcome_DateText(dateText);
+me.collapseState_CardCustomerTasks = true;
+me.collapseState_CardUserNotifications = true;
+me.collapseState_CardTasks = true;
+
+//No Data Message functionality moved to RefreshSalesCockpitData method
+
+//visible items
+//Default:  5 items
+//Phone:    3 items
+//Note: more then 5 items are not allowed in the card list. So never set to value bigger 5
+me.numberOfListItems = 5;
+if(Utils.isPhone()) {
+  me.numberOfListItems = 3;
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

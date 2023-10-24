@@ -1,0 +1,16 @@
+<BusinessLogic methodName="releaseButtonActive" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var CALC_OFFLINE_BUTTON = "4";
+
+var isInitial = (me.getPhase() === "Initial");
+
+var productDocumentType = (me.getDocumentType() === "ProductCheckOut" || me.getDocumentType() === "ProductCheckIn");
+var calculationModeOfflineButton = me.getBoOrderMeta().getComputePrice() === CALC_OFFLINE_BUTTON;
+var noTruckloadValue = (me.getBookInventoryValue() == "0" && me.getGrossTotalValueReceipt() == "0");
+var emptyTruckloadDocument = productDocumentType && calculationModeOfflineButton && noTruckloadValue;
+
+var active = isInitial && !emptyTruckloadDocument;]]>
+</Code>
+  <Return name="editable" value="active" />
+</BusinessLogic>

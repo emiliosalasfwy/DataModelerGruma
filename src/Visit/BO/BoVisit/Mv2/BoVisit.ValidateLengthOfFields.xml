@@ -1,0 +1,11 @@
+<BusinessLogic methodName="validateLengthOfFields" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Note: TypedInputValidation will come before trimming, so user can already decide to go back and fix; but if he decides to continue, we automatically cut
+me.setInstructionDescription( me.getInstructionDescription().substring(0,1000));
+me.setStatusRemarks( me.getStatusRemarks().substring(0,1000));]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

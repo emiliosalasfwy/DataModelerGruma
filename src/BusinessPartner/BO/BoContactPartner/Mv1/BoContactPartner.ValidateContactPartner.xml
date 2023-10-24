@@ -1,0 +1,27 @@
+<BusinessLogic methodName="validateContactPartner" businessObjectClass="BoContactPartner" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getLastName()) && me.getObjectStatus() !== STATE.PERSISTED){
+  messageCollector.add({
+    "level": "error", 
+    "objectClass": "BoContactPartner", 
+    "messageID": "CasBpaMainContactPartnerLastNameMustNotBeEmpty",
+    "messageParams": {}
+  });
+}
+
+var email1 = me.getEmail1();
+if (me.getEmailEditable() == '1' && !Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1))
+{
+  messageCollector.add({
+    "level": "error", 
+    "objectClass": "BoContactPartner", 
+    "messageID": "CasBpaMainContactPartnerEmailInvalid",
+    "messageParams": {}
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

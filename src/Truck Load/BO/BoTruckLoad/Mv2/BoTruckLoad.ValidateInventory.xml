@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateInventory" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(me.getValidateInventories() == "1" || (me.getDocumentType() === "TruckIvcTransferOutward" || me.getDocumentType() === "TruckIvcTransferInward") && me.getPhase() === "Initial" && me.getReleaseTriggered() == "1"){
+  promise = me.processInventoryActions().then(
+    function (validationMessages) {
+      for (var i = 0; i < validationMessages.length; i++) {
+        messageCollector = me.addMessageToContainer(messageCollector, validationMessages[i]);
+        me.setReleaseTriggered("0");
+      }
+
+      return messageCollector;
+    }
+  );
+} else {
+  promise = when.resolve(messageCollector);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

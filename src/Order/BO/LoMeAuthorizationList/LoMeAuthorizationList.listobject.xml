@@ -1,0 +1,5 @@
+<ListObject name="LoMeAuthorizationList" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoMeAuthorizationList" />
+  <Item objectClass="LiMeAuthorizationList" />
+  <Methods></Methods>
+</ListObject>

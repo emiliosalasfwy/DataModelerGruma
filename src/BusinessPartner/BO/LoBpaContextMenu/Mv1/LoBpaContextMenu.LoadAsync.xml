@@ -1,0 +1,75 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoBpaContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+// Variables
+var index;
+var context;
+var continued;
+var menuItem;
+var contextMenuItemList= [];
+
+// Initializations
+index = 0;
+context = "";
+
+for (index in jsonQuery.params)
+{               
+  switch (jsonQuery.params[index].field) 
+  {                   
+    case "context":     
+      context = jsonQuery.params[index].value;
+      break;
+
+    case "continued":     
+      continued= jsonQuery.params[index].value;
+      break;
+  }
+}
+
+switch (context)
+{
+  case "OpeningHours":
+    menuItem = me.createMenuItem("0000001","TrashcanDarkGrey24","Delete", "DeleteOpeningHour", "1");
+    if (Utils.isDefined(menuItem))
+    {
+      contextMenuItemList.push(menuItem);
+    }          
+    break;
+  case "Address":
+    menuItem = me.createMenuItem("0000001","TrashcanDarkGrey24","Delete", "DeleteAddress", "1");
+    if (Utils.isDefined(menuItem))
+    {
+      contextMenuItemList.push(menuItem);
+    }              
+    break;
+  case "Contact":
+    menuItem = me.createMenuItem("0000001","TrashcanDarkGrey24","Delete", "DeleteContact", "1");
+    if (Utils.isDefined(menuItem))
+    {
+      contextMenuItemList.push(menuItem);
+    }              
+    break;
+  case "POS":
+    menuItem = me.createMenuItem("0000001","TrashcanDarkGrey24","Delete", "DeletePOS", "1");
+    if (Utils.isDefined(menuItem))
+    {
+      contextMenuItemList.push(menuItem);
+    }  
+    menuItem = me.createMenuItem("0000002","CancelDarkGrey24","Discontinue", "DiscontinuePOS", continued);
+    if (Utils.isDefined(menuItem))
+    {
+      contextMenuItemList.push(menuItem);
+    }             
+    break;
+}     
+
+me.addItems(contextMenuItemList);
+
+var result = when.resolve(me);]]>
+</Code>
+  <Return name="LoBpaContextMenu" value="result" />
+</BusinessLogic>

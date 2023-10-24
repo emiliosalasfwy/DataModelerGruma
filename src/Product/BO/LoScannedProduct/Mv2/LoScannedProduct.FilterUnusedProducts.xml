@@ -1,0 +1,31 @@
+<BusinessLogic methodName="filterUnusedProducts" businessObjectClass="LoScannedProduct" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loProductsForAdd" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(loProductsForAdd)){
+  var items = me.getAllItems();
+  var item;
+  var index;
+  var parameters;
+  var foundItem;
+  var foundItemArray = [];
+
+  for(index = 0; index < items.length; index++){
+    item = items[index];
+    parameters = {"prdId":item.getProductId()};
+    foundItem = loProductsForAdd.getItemsByParam(parameters);
+    if(foundItem.length === 0){
+      if(foundItemArray.indexOf(item.getPKey()) === -1){
+        foundItemArray.push(item.getPKey());
+      }
+    }
+  }
+
+  for(index = 0; index < foundItemArray.length; index++){
+    me.removeItemByPKey(foundItemArray[index]);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

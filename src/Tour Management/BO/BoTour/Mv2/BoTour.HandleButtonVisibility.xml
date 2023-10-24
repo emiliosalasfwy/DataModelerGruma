@@ -1,0 +1,74 @@
+<BusinessLogic methodName="handleButtonVisibility" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="navigationMode" type="String" />
+    <MethodInput name="tourMode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(navigationMode) && Utils.isDefined(tourMode)){
+  var compareString = navigationMode + tourMode;
+
+  switch (compareString){
+      //#########################
+      //### Start of day Mode ###
+      //#########################
+    case "StartOfDayReleased":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(true);
+      me.setCompleteButton(false);
+      me.setCompleteInfoButton(false);
+      break;
+
+    case "StartOfDayNotReleased":
+      me.setReleaseButton(true);
+      me.setReleaseInfoButton(false);
+      me.setCompleteButton(false);
+      me.setCompleteInfoButton(false);
+      break;
+
+      //#######################
+      //### End of day Mode ###
+      //#######################
+    case "EndOfDayCompleted":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(false);
+      me.setCompleteButton(false);
+      me.setCompleteInfoButton(true);
+      break;
+
+    case "EndOfDayNotCompleted":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(false);
+      me.setCompleteButton(true);
+      me.setCompleteInfoButton(false);
+      break;
+
+      //#####################
+      //### Overview Mode ###
+      //#####################
+    case "OverviewReleased":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(true);
+      me.setCompleteButton(true);
+      me.setCompleteInfoButton(false);
+      break;
+
+    case "OverviewCompleted":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(true);
+      me.setCompleteButton(false);
+      me.setCompleteInfoButton(false);
+      break;
+
+    case "OverviewNotCompleted":
+      me.setReleaseButton(false);
+      me.setReleaseInfoButton(true);
+      me.setCompleteButton(true);
+      me.setCompleteInfoButton(false);
+      break;
+  }
+
+  BindingUtils.refreshEARights();
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,13 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aclBO = me.getACL();
+var usrMainPKey = ApplicationContext.get('user').getPKey();
+
+//User is not Responsible -> ReadOnly Contract
+if(!me.isContractEditable()) {
+  aclBO.removeRight(AclObjectType.OBJECT, "BoPrmContract", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

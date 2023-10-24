@@ -1,0 +1,7 @@
+<BusinessLogic methodName="getReleaseTitle" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var title = me.getTourId();]]>
+</Code>
+  <Return name="title" value="title" />
+</BusinessLogic>

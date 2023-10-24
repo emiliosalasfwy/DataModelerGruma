@@ -1,0 +1,23 @@
+<BusinessLogic methodName="onDRActivityItemChanged" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+    var duration = 0;
+
+
+    //Update duration of activity item if hours or minutes was changed manually in the ui
+    for (var i = 0; i < handlerParams.modified.length; i++) {
+        if(handlerParams.modified[i] === "hours" || handlerParams.modified[i] === "minutes"){
+            //calculate duration
+            duration = handlerParams.listItem.getHours()*60 + parseInt(handlerParams.listItem.getMinutes(), 10);
+            handlerParams.listItem.setDuration(duration);
+        }
+    }
+    
+    me.calculateTotalActivityDuration();
+    var promise=when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

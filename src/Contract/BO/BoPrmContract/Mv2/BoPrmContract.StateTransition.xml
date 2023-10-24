@@ -1,0 +1,97 @@
+<BusinessLogic methodName="stateTransition" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="stateType" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var boWorkflow = me.getBoWorkflow();
+
+var nextStates = boWorkflow.getNextStatesByStateType(
+  me.getActualStatePKey(),
+  stateType
+);
+if (Utils.isDefined(nextStates) && nextStates.length > 0) {
+  //Set new responsible
+  promise = boWorkflow
+    .getNextResponsible(
+      nextStates[0].getPKey(),
+      me.getResponsiblePKey(),
+      me.getOwnerPKey()
+    )
+    .then(function (nextResponsible) {
+      if (Utils.isDefined(nextResponsible)) {
+        //Transition to next State
+        me.setNextStatePKey(nextStates[0].getPKey());
+        me.setResponsiblePKey(nextResponsible);
+
+        if (boWorkflow.getRecentStatePolicy() == "1") {
+          var newDate = Utils.createDateNow();
+          newDate.setHours(0, 0, 0, 0);
+          var liRecentState = {
+            pKey: PKey.next(),
+            prmContractPKey: me.getPKey(),
+            usrUserPKey: ApplicationContext.get("user").getPKey(),
+            wfeStatePKey: me.getActualStatePKey(),
+            salesOrg: me.getSalesOrg(),
+            done: newDate,
+            objectStatus: STATE.NEW | STATE.DIRTY,
+          };
+
+          me.getLoRecentState().addListItems([liRecentState]);
+        }
+        me.setWfeStateText(stateType);
+        me.setPhase(stateType);
+
+        if (stateType == "Committed") {
+          var liProcessingSchedule = {
+            pKey: PKey.next(),
+            registerTime: Utils.createDateNow(),
+            workState: "Initial",
+            objectPKey: me.getPKey(),
+            workerFunction: "PayWorker.CreateContractPayment",
+            objectStatus: STATE.NEW | STATE.DIRTY,
+          };
+
+          me.getLoCssBLProcessingSchedule().addListItems([
+            liProcessingSchedule,
+          ]);
+        }
+
+        //Finish transition
+        me.setActualStatePKey(nextStates[0].getPKey());
+
+        var jsonParamsForLookup = me.prepareLookupsLoadParams({
+          bpaCustomerPKey: me.getBpaCustomerPKey(),
+          prmMetaPKey: me.getPrmMetaPKey(),
+          initiatorPKey: me.getInitiatorPKey(),
+          ownerPKey: me.getOwnerPKey(),
+          responsiblePKey: me.getResponsiblePKey(),
+          pKey: me.getPKey(),
+          customerPKey: me.getBpaCustomerPKey(),
+          referenceUserPKey: me.getResponsiblePKey(),
+          referenceDate: Utils.createAnsiDateTimeToday(),
+        });
+
+        return Facade.loadLookupsAsync(jsonParamsForLookup).then(function (
+          lookups
+        ) {
+          me.assignLookups(lookups);
+          //Refresh EA-Rights
+          me.setEARights();
+        });
+      } else {
+        var buttonValues = {};
+        buttonValues[Localization.resolve("OK")] = "ok";
+        return MessageBox.displayMessage(
+          Localization.resolve("MessageBox_Title_Error"),
+          Localization.resolve("NoResponsibleFoundByWorkflow"),
+          buttonValues
+        );
+      }
+    });
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,41 @@
+<BusinessLogic methodName="copyAsync" businessObjectClass="BoIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="originalObject" type="Object" />
+    <MethodInput name="ownerBpaMainPKey" type="DomPKey" />
+    <MethodInput name="substitutedUsrPKey" type="DomPKey" />
+    <MethodInput name="isManagedCustomer" type="DomBool" />
+    <MethodInput name="clbMainPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+jsonParams.push({"field" : "text","value" : originalObject.getText()});
+jsonParams.push({"field" : "dueDate","value" : Utils.getMinDate()});
+jsonParams.push({"field" : "classification","value" : originalObject.getClassification()});
+jsonParams.push({"field" : "ownerBpaMainPKey","value" : ownerBpaMainPKey});
+
+jsonParams.push({"field" : "svcRequestMetaPKey","value" : originalObject.getBoSvcRequestMeta().getPKey()});
+
+jsonParams.push({"field" : "isManagedCustomer","value" : isManagedCustomer});
+jsonParams.push({"field" : "substitutedUsrPKey","value" : substitutedUsrPKey});
+
+if (!Utils.isEmptyString(clbMainPKey)) {
+  jsonParams.push({"field" : "clbMainPKey","value" : clbMainPKey});
+}
+
+jsonQuery.params = jsonParams;
+
+var promise = BoFactory.createObjectAsync("BoIssue",jsonQuery).then(
+  function(newBoIssueObject){
+    if (Utils.isCasBackend())
+    {
+      newBoIssueObject.getBoIssueNote().setSvcIssuePKey(newBoIssueObject.getPKey());
+      newBoIssueObject.getBoIssueNote().setText(me.getBoIssueNote().getText());
+    }
+
+    return newBoIssueObject;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,40 @@
+<BusinessLogic methodName="getComparableTicksFromTime" businessObjectClass="BoTimeSlot" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timestring" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/** This is a helper function which converts a given time 
+    12h or 24h format into coparable ticks
+**/
+
+var ticks;
+
+if(Utils.isDefined(timestring)){
+  var tmpDate = Utils.createDateByString(Utils.getMinDate());
+
+  var timestringParts = timestring.split(' ');
+  var time = timestringParts[0];
+  var ampm = timestringParts[1];
+  var timePart = time.split(':');
+  var hrs = timePart[0];
+  var minutes = timePart[1];
+
+  if(Utils.isDefined(ampm)){
+    ampm = ampm.toUpperCase();
+    if (hrs === '12') {
+      hrs = '00';
+    }
+  }
+
+
+  if (ampm === 'PM') {
+    hrs = parseInt(hrs, 10) + 12;
+  }
+
+  tmpDate.setHours(hrs);
+  tmpDate.setMinutes(minutes);
+  ticks = tmpDate.getTime();
+}]]>
+</Code>
+  <Return name="ticks" value="ticks" />
+</BusinessLogic>

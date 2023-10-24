@@ -1,0 +1,87 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promises = [];
+var historicalQuestionKeyMapping = Utils.createDictionary();
+
+if (Utils.isDefined(me.getLoPOS())) {
+
+  if(!Utils.isSfBackend()) {
+    promises.push(Facade.saveListAsync(me.getLoPOS()));
+  }
+
+  // save surveys that belong to the POS
+  var aPOS = me.getLoPOS().getAllItems();
+  var idxPOS;
+  var loSurveys;
+  //LoCurrentSurveys is undefined when call is comepleted from outside, so suspend/resume list only when its available. 
+  if (Utils.isDefined(me.getLoCurrentSurveys())) {
+    me.getLoCurrentSurveys().suspendListRefresh();
+  }
+  for (idxPOS = 0; idxPOS < aPOS.length; idxPOS++) {
+    aPOS[idxPOS].setQuestionsInitialized("0");
+    loSurveys = aPOS[idxPOS].getSurveys();
+
+    if (Utils.isDefined(loSurveys)) {
+      loSurveys.forEach(function(survey){
+        if((survey.getObjectStatus() === 5 || survey.getObjectStatus() === 13) && survey.getDone() == "0"){
+          survey.setObjectStatus(1);
+        }
+      });
+      promises.push(Facade.saveListAsync(loSurveys));
+    }
+  }
+  if (Utils.isDefined(me.getLoCurrentSurveys())) {
+    me.getLoCurrentSurveys().resumeListRefresh(true);
+  }
+}
+
+if (Utils.isDefined(me.getLoMagnetizedJobList())) {
+  promises.push(Facade.saveListAsync(me.getLoMagnetizedJobList()));
+}
+
+if (Utils.isDefined(me.getLoQuestions())) {
+  var questions = me.getLoQuestions().getAllItems();
+  var newHistoricalQuestionKey = "";
+
+  me.getLoQuestions().suspendListRefresh();
+  for(var idxQuestions = 0; idxQuestions < questions.length; idxQuestions++) {
+
+    //Historical Questions still have on "old" PKey of previous call with prefix "Local___xxx"
+    //Replace old key with valid new one and store mapping in dictionary
+    if(questions[idxQuestions].getDone() == "1" && questions[idxQuestions].getVisible() == "1" && Utils.startsWith(questions[idxQuestions].getPKey(), 'Local___xxx')){
+      newHistoricalQuestionKey = PKey.next();
+      historicalQuestionKeyMapping.add(questions[idxQuestions].getPKey(), newHistoricalQuestionKey);
+      questions[idxQuestions].setPKey(newHistoricalQuestionKey);
+    }
+
+    else if(questions[idxQuestions].getDone() == "0" || questions[idxQuestions].getVisible() == "0"){
+      if(questions[idxQuestions].getDone() == "0" && Utils.startsWith(questions[idxQuestions].getPKey(), 'Local___xxx') &&
+         (questions[idxQuestions].getObjectStatus() === 1 || questions[idxQuestions].getObjectStatus() === 5 || questions[idxQuestions].getObjectStatus() === 13)){
+        questions[idxQuestions].setObjectStatus(1);
+      }
+      else{
+        questions[idxQuestions].delete();
+      }
+    }
+
+    else if(questions[idxQuestions].getDataType() === "Date" && questions[idxQuestions].getValue() === Utils.getMinDate()){ 
+      questions[idxQuestions].setValue(" ");
+    }
+  }
+
+  me.getLoQuestions().resumeListRefresh(true);
+  promises.push(Facade.saveListAsync(me.getLoQuestions()));
+}
+
+if (Utils.isDefined(me.getLoHistoricalProducts())) {
+  promises.push(Facade.saveListAsync(me.getLoHistoricalProducts()));
+}
+
+var promise = when.all(promises)
+.then(function(){
+  return historicalQuestionKeyMapping;
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

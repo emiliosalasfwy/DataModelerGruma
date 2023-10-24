@@ -1,0 +1,23 @@
+<BusinessLogic methodName="loadManagementInformation" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Determine substitution Info
+var managementInfoParams = [];
+var managementInfoQuery = {};
+
+managementInfoParams.push({ "field" : "customerPKey", "value" : me.getLuCustomer().getPKey() });
+managementInfoParams.push({ "field" : "referenceDate", "value" : Utils.convertFullDate2Ansi(Utils.createDateToday()) });
+managementInfoParams.push({ "field" : "referenceUserPKey", "value" : ApplicationContext.get('user').getPKey() });
+
+managementInfoQuery.params = managementInfoParams;
+
+var promise = BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", managementInfoQuery).then(
+  function (customerManagementInfoLookup) {
+    if (customerManagementInfoLookup) {
+      me.setHasSubstitute(customerManagementInfoLookup.getHasSubstitute());
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

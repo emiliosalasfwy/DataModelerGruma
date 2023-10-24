@@ -1,0 +1,19 @@
+<BusinessLogic methodName="loadProductForAdd" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="etpWarehousePKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(!Utils.isDefined(me.getLoEtpWarehouseProducts())){
+  promise = BoFactory.loadObjectByParamsAsync(LO_ETPWAREHOUSEPRODUCTS, etpWarehousePKey).then(
+    function (LO_ETPWAREHOUSEPRODUCTS) {
+      me.setLoEtpWarehouseProducts(LO_ETPWAREHOUSEPRODUCTS);
+    }
+  );
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

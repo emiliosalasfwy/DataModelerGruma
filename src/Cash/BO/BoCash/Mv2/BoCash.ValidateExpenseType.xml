@@ -1,0 +1,19 @@
+<BusinessLogic methodName="validateExpenseType" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (me.getDocumentType() === "Expenses" && me.getExpenseType() === " ") {
+  var newError = {
+    "level" : "error",
+    "objectClass" : "BoCash",
+    "simpleProperty" : "expenseType",
+    "messageID" : "CasCashExpenseTypeNeeded",
+    "messageParams":{}
+  };
+  messageCollector.add(newError);
+  me.cancelRelease();
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

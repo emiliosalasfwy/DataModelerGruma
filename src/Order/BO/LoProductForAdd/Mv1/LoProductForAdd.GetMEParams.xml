@@ -1,0 +1,60 @@
+<BusinessLogic methodName="getMEParams" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterByBpaAssortment" type="DomBool" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="filterBySdoAssortment" type="DomBool" />
+    <MethodInput name="sdoMetaPKey" type="DomPKey" />
+    <MethodInput name="considerListing" type="DomBool" />
+    <MethodInput name="listing" type="DomSdoPdaListingFinding" />
+    <MethodInput name="listingWithModules" type="DomSdoPdaListingFinding" />
+    <MethodInput name="commitDate" type="DomDate" />
+    <MethodInput name="addCond_ProductPKeys" type="String" />
+    <MethodInput name="criterionAttribute" type="Object" />
+    <MethodInput name="considerPromotion" type="DomBool" />
+    <MethodInput name="useClosedListing" type="Object" />
+    <MethodInput name="hitClosedListing" type="Object" />
+    <MethodInput name="collectClosedListing" type="Object" />
+    <MethodInput name="useConsiderModule" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// OBSOLETE!! - No longer called by core - Data is retrieved via datasource from temp table containing the merge result
+
+var mergePropertyFilter = "FILTER";
+var mergePropertyExclude = "EXCLUDE";
+var mergePropertyNone = "NONE";
+
+var mergeEngineParams = [];
+
+//Customer Assortment is not implemented for CGCloud
+if(!(Utils.isSfBackend())){
+  //Filter by Customer Selling Assortment
+  if (filterByBpaAssortment == 1){
+    mergeEngineParams.push(this.getDSForCustomerAssortment(mergePropertyFilter, customerPKey, addCond_ProductPKeys));
+  }
+}
+
+//Filter by Sales Document Assortment
+if (filterBySdoAssortment == 1){
+  mergeEngineParams.push(this.getDSForSdoAssortment(mergePropertyFilter, sdoMetaPKey, commitDate, addCond_ProductPKeys));
+} 
+
+//Handle closed listing
+if (considerListing == 1){
+  if((useClosedListing == 1) && (hitClosedListing == 1 || collectClosedListing == 1)){
+    mergeEngineParams.push(this.getDSForAuthorizationList(mergePropertyFilter, customerPKey, listing, listingWithModules, addCond_ProductPKeys));
+  }
+  else{   
+    mergeEngineParams.push(this.getDSForAuthorizationList(mergePropertyNone, customerPKey, listing, listingWithModules, addCond_ProductPKeys));
+  }
+}
+
+//Promotion
+if (considerPromotion == 1){
+  mergeEngineParams.push(this.getDSForPromotion(mergePropertyNone, customerPKey, commitDate));
+}
+
+//Products
+mergeEngineParams.push(this.getDSForProducts(mergePropertyFilter, commitDate, addCond_ProductPKeys, criterionAttribute));]]>
+</Code>
+  <Return name="meParams" value="mergeEngineParams" />
+</BusinessLogic>

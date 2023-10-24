@@ -1,0 +1,11 @@
+<BusinessLogic methodName="sortTimeEntries" businessObjectClass="BoDateTimeHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryList" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[timeEntryList.sort(function (a, b) {
+    return (me.getUTCDate(a.getEffectiveUTCTimeFrom()).getTime() === me.getUTCDate(b.getEffectiveUTCTimeFrom()).getTime()) ? 0 : ((me.getUTCDate(a.getEffectiveUTCTimeFrom()).getTime() < me.getUTCDate(b.getEffectiveUTCTimeFrom()).getTime()) ? -1 : 1);
+});]]>
+</Code>
+  <Return name="timeEntryList" value="timeEntryList" />
+</BusinessLogic>

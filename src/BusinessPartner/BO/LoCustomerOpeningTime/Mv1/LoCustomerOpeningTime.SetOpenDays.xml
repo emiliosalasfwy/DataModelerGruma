@@ -1,0 +1,9 @@
+<BusinessLogic methodName="setOpenDays" businessObjectClass="LoCustomerOpeningTime" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.getAllItems().forEach(function(item){
+  me.setOpenDaysForItem(item.getPKey(), "noUpdate");
+});]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,39 @@
+<BusinessLogic methodName="getCameraSettings" businessObjectClass="LoCallAttachments" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="settingsType" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var cameraSettings = {};
+
+if (settingsType === "picture") {
+
+  //validation code in the toggle will be like "320-240-80" 
+  var user = ApplicationContext.get('user');
+  var arrUserPictureQuality = user.getBoUserSettings().getPictureQualityValues().split("-");
+  var targetWidth = parseInt(arrUserPictureQuality[0], 10);
+  var targetHeight = parseInt(arrUserPictureQuality[1], 10);
+  var quality = parseInt(arrUserPictureQuality[2], 10);
+  
+  var MAX_TARGET_WIDTH = 2048;
+  var MAX_TARGET_HEIGHT = 1536;
+  var MAX_QUALITY = 90;
+
+  cameraSettings.targetWidth = targetWidth > MAX_TARGET_WIDTH ? MAX_TARGET_WIDTH : targetWidth;
+  cameraSettings.targetHeight = targetHeight > MAX_TARGET_HEIGHT ? MAX_TARGET_HEIGHT : targetHeight;
+  cameraSettings.quality = quality > MAX_QUALITY ? MAX_QUALITY : quality;
+  cameraSettings.encodingType = Utils.isSfBackend() ? 'image/jpeg' : 'jpeg';
+  
+  if(targetWidth > MAX_TARGET_WIDTH || targetHeight > MAX_TARGET_HEIGHT || quality > MAX_QUALITY) {
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbAdjustPictureDimension"), buttonValues) 
+      .then(function (input) {
+      return cameraSettings;					
+    });
+  }
+
+} else if (settingsType === "video") {
+  cameraSettings.quality = 40;
+  cameraSettings.encodingType = "mp4";
+}]]></Code>
+  <Return name="cameraSettings" value="cameraSettings" />
+</BusinessLogic>

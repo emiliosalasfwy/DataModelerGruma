@@ -1,0 +1,9 @@
+<BusinessLogic methodName="checkButtonVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tourOrDay" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = tourOrDay === "TourVisible" || tourOrDay === "DayVisible";]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

@@ -1,0 +1,19 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoCustomerOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="boCustomer" type="BoCustomer" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liCustomerOverview = {
+  "pKey" : boCustomer.getPKey(),
+  "customerId" : boCustomer.getCustomerId(),
+  "objectStatus" : STATE.NEW
+};
+
+// Add new Item to ListObject
+me.addListItems([liCustomerOverview]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liCustomerOverview.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

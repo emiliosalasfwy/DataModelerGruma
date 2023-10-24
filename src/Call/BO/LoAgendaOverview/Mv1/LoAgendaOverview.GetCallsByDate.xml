@@ -1,0 +1,157 @@
+<BusinessLogic methodName="getCallsByDate" businessObjectClass="LoAgendaOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="setDateFunction" type="String" />
+    <MethodInput name="filterCalls" type="String" />
+    <MethodInput name="currentDateStart" type="Date" />
+    <MethodInput name="currentDateEnd" type="Date" />
+    <MethodInput name="currentResponsiblePKey" type="String" />
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="cardMode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dDateFromStart;
+var dDateFromEnd;
+var jsonQuery = {};
+var jsonParams = [];
+
+var dateDefer = when.resolve();
+
+if (setDateFunction.toUpperCase() === "TODAY") {
+  dDateFromStart = Utils.createDateNow();
+  dDateFromEnd = Utils.createDateNow();
+}
+else if (setDateFunction.toUpperCase() === "NEXTDAY") {
+  dDateFromStart = Utils.convertAnsiDate2Date(currentDateStart);
+  dDateFromEnd = Utils.convertAnsiDate2Date(currentDateEnd);
+  dDateFromStart.setDate(dDateFromStart.getDate() + 1);
+  dDateFromEnd.setDate(dDateFromEnd.getDate() + 1);
+} 
+else if (setDateFunction.toUpperCase() === "PREVDAY") {
+  dDateFromStart = Utils.convertAnsiDate2Date(currentDateStart);
+  dDateFromEnd = Utils.convertAnsiDate2Date(currentDateEnd);
+  dDateFromStart.setDate(dDateFromStart.getDate() - 1);
+  dDateFromEnd.setDate(dDateFromEnd.getDate() - 1);
+} 
+else {
+var currentTourPKey = ApplicationContext.get('currentTourPKey');
+var currentTourPKeyDefined = Utils.isDefined(currentTourPKey) && !Utils.isEmptyString(currentTourPKey);
+var currentTourStatus = ApplicationContext.get('currentTourStatus');
+  if(currentTourPKeyDefined && Utils.isDefined(currentTourStatus) && currentTourStatus === "Running") {
+
+    dateDefer = BoFactory.loadObjectByParamsAsync("LoTourRelatedCalls", {"TmgMainPKey" : currentTourPKey})
+      .then(function(loTourRelCalls){
+      if(Utils.isDefined(loTourRelCalls) && loTourRelCalls.getAllItems().length > 0){
+        var items = loTourRelCalls.getAllItems().sort(function(a,b) {    
+          return (Utils.convertAnsiDate2Date(a.getDateFrom()) === Utils.convertAnsiDate2Date(b.getDateFrom())) ? 0 : ((Utils.convertAnsiDate2Date(a.getDateFrom()) < Utils.convertAnsiDate2Date(b.getDateFrom())) ? -1 : 1);
+        }); 
+
+        dDateFromStart = Utils.convertAnsiDate2Date(items[0].getDateFrom());
+        dDateFromEnd = Utils.convertAnsiDate2Date(items[items.length -1].getDateThru());
+
+      }
+      else {
+        if(!Utils.isDefined(dDateFromStart)) {
+          dDateFromStart = Utils.convertAnsiDate2Date(currentDateStart);
+        }
+        if(!Utils.isDefined(dDateFromEnd)) {
+          dDateFromEnd = Utils.convertAnsiDate2Date(currentDateEnd);
+        } 
+      }
+    });
+  }
+  else {
+    dDateFromStart = Utils.convertAnsiDate2Date(currentDateStart);
+    dDateFromEnd = Utils.convertAnsiDate2Date(currentDateEnd);
+  }
+}
+
+var currentDate;
+var promise = dateDefer.then(
+  function() {
+    dDateFromStart.setHours(0, 0, 0, 0);
+    dDateFromEnd.setHours(0, 0, 0, 0);
+
+    currentDate = dDateFromStart;
+
+    if (filterCalls !== "All") {
+      jsonParams.push({
+        "field" : "ClbStatus",
+        "operator" : "EQ",
+        "value" : (filterCalls == "Open") ? "Planned" : filterCalls
+      });
+    }
+
+    //this mode is for fetching the data for the unsuccesful visit card report --> if mode is activated some additional additions were added in DS
+    //visit rate mode only count the number of completed and planned calls
+    if (Utils.isDefined(cardMode) && (cardMode.toLowerCase() === "unsuccessfulvisits" || cardMode.toLowerCase() === "visitrate")) {
+      {
+        jsonParams.push({
+          "field" : "cardMode",
+          "operator" : "EQ",
+          "value" : cardMode
+        });
+      }
+    }
+
+    jsonParams.push({
+      "field" : "dateFromStart",
+      "operator" : "EQ",
+      "value" : dDateFromStart
+    });
+    jsonParams.push({
+      "field" : "dateFromEnd",
+      "operator" : "EQ",
+      "value" : dDateFromEnd
+    });
+    jsonParams.push({
+      "field" : "responsibleUserPKey",
+      "operator" : "EQ",
+      "value" : currentResponsiblePKey
+    });
+    jsonQuery.params = jsonParams;
+
+    return BoFactory.loadObjectByParamsAsync("LuCurrentAddress", {});
+  }).then(function(luCurrentAddress) {
+  jsonQuery.params.push({ "field": "currentLatitude", "value": luCurrentAddress.latitude });
+  jsonQuery.params.push({ "field": "currentLongitude", "value": luCurrentAddress.longitude });            
+  return Facade.getListAsync("LoAgendaOverview", jsonQuery);    
+}).then(function (list) {
+  me.suspendListRefresh();
+  me.removeAllItems();
+
+  if(Utils.isDefined(numberOfListItems)){
+    //reduce number if items ... needed for Cockpit cards
+    me.cardItemCount = list.length;
+    list = list.splice(0, numberOfListItems);
+  } 
+
+  var loadParams;
+  var prepend = false;
+  var noItemSelectedEvent = true;
+  var markerIdx = 1;
+  me.addItems(list, loadParams, prepend, noItemSelectedEvent);
+  me.orderBy({"dateFrom": "ASC", "timeFrom": "ASC"});
+
+  me.forEach(function(call) {
+    if (!Utils.isEmptyString(call.getBpaMainPKey()) && call.getClbStatus() === "Planned" && call.getCompanyRequired() !== "Not required" && call.getClbMetaType() !== "Phone") {
+      if (markerIdx > 23) {
+        call.setMapPinImage("BlueGoogleMarkerEmpty");
+      } else {
+        call.setMapPinImage("BlueGoogleMarker" + markerIdx);
+      }
+      call.setMapPinId(markerIdx);
+      call.setToolTipText("<b>" + call.getName() + "</b><br />" + call.getAddress()); 
+      call.setVisibleInMap("1"); 
+      markerIdx++;    
+    } 
+    else {
+      call.setVisibleInMap("0");
+    }
+  });
+
+  me.resumeListRefresh();  
+  return Utils.convertDate2Ansi(currentDate);
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

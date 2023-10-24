@@ -1,0 +1,60 @@
+<BusinessLogic methodName="validateTourDate" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (me.getTmgStatus().toLowerCase() === "open") {
+
+  if (!Utils.isDefined(me.getDateFrom()) ||Utils.isEmptyString(me.getDateFrom()) || !Utils.isDefined(me.getTimeFrom()) || Utils.isEmptyString(me.getTimeFrom())) {
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoTour",
+      "messageID" : "CasTmgFillTourStartDateTime"
+    };
+    messageCollector.add(newError);
+  }
+
+  if (!Utils.isDefined(me.getDateThru()) ||Utils.isEmptyString(me.getDateThru()) || !Utils.isDefined(me.getTimeThru()) || Utils.isEmptyString(me.getTimeThru())) {
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoTour",
+      "messageID" : "CasTmgFillTourEndDateTime"
+    };
+    messageCollector.add(newError);
+  }
+  if (me.getDateFrom() > me.getDateThru()) {
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoTour",
+      "simpleProperty" : "dateThru",
+      "messageID" : "CasTmgDateFromGreaterDateThru"
+    };
+  }
+}
+
+if (me.getTmgStatus().toLowerCase() === "running") {
+
+  if (!Utils.isDefined(me.getDateFrom()) || !Utils.isDefined(me.getDateThru()) || !Utils.isDefined(me.getTimeFrom()) || !Utils.isDefined(me.getTimeThru())) {
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "messageID" : "CasTmgFillInTourDateTimeValues"
+    };
+    messageCollector.add(newError);
+  }
+
+  if (me.getDateFrom() > me.getDateThru()) {
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoTour",
+      "simpleProperty" : "dateThru",
+      "messageID" : "CasTmgDateFromGreaterDateThru"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

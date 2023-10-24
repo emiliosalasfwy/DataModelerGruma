@@ -1,0 +1,24 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// update week number
+if (!Utils.isEmptyString(me.getDateFrom())){
+  var weekNumber = ""+Utils.getCalendarWeek(me.getDateFrom());
+  me.setWeek(weekNumber);
+}
+
+//Update CreationMode
+if (Utils.isEmptyString(me.getCreationMode())){
+  me.setCreationMode('Manually');
+}
+
+var promise = when.resolve(context);
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') !== "Running" && me.getClbStatus() !== "Abandoned"){
+  me.setObjectStatus(STATE.PERSISTED);
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,84 @@
+<BusinessLogic methodName="handleRegisterUnknownAsset" businessObjectClass="LoCallAssetOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="serialNumber" type="String" />
+    <MethodInput name="assetScanned" type="Bool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+//first check if item already exists
+var found = false;
+var items = me.getAllItems();
+var itemToSelect;
+
+for (var i = 0; i < items.length; i++) {
+  if (items[i].getSerialNumber() === serialNumber) {
+    found = true;
+    itemToSelect = items[i];
+    //Mark asset as "Scanned" and change to Asset Method to "Scanner"
+
+    if (assetScanned.getId() == "1") {
+      deferreds.push(itemToSelect.setMethod("S"));
+      deferreds.push(itemToSelect.setPresence("3"));
+      //Set EA Rights
+      itemToSelect
+        .getACL()
+        .removeRight(AclObjectType.PROPERTY, "presence", AclPermission.EDIT);
+    } else {
+      deferreds.push(itemToSelect.setMethod("M"));
+      deferreds.push(itemToSelect.setPresence("1"));
+    }
+    deferreds.push(itemToSelect.setPresent("1"));
+    deferreds.push(itemToSelect.setHidden("0"));
+
+    // Update Sighted date as current date
+    deferreds.push(
+      itemToSelect.setLatestSurveyDate(Utils.createAnsiDateTimeNow())
+    );
+    break;
+  }
+}
+
+//if not found, create one
+if (!found) {
+  //add a new list item
+  var li = {
+    pKey: PKey.next(),
+    serialNumber: serialNumber,
+    surveyAvailable: "0",
+    astSurveyCreationDate: Utils.createAnsiDateTimeToday(),
+    latestSurveyDate: Utils.createAnsiDateTimeNow(),
+    present: "1",
+    hidden: "0",
+    astSurveyCondition: " ",
+    astSurveyUsage: " ",
+    astSurveyLocation: " ",
+    objectStatus: STATE.NEW | STATE.DIRTY,
+  };
+
+  me.addListItems([li], undefined, true /* prepend to keep order */);
+
+  if (assetScanned.getId() == "1") {
+    li.method = "S";
+    li.presence = "3";
+    //Set EA Rights
+    li.getACL().removeRight(
+      AclObjectType.PROPERTY,
+      "presence",
+      AclPermission.EDIT
+    );
+  } else {
+    li.method = "M";
+    li.presence = "1";
+  }
+
+  itemToSelect = li;
+}
+
+me.resetFilter("present");
+me.resetFilter("blindMode");
+me.setCurrentByPKey(itemToSelect.getPKey());
+var promise = when.all(deferreds);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

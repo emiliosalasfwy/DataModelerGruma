@@ -1,0 +1,39 @@
+<BusinessLogic methodName="onItemTabEntered" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var values = this.getLastDisplayedHierarchyLevel().values;
+var lastHierarchyLevelValid = true;
+
+// Check whether the object is valid, i.e. has ids for all levels
+for (var i = 0; i < values.length; i++) {
+  if (Utils.isEmptyString(values[i])) {
+    lastHierarchyLevelValid = false;
+    break;
+  }
+}
+
+// If the last hierarchy level is not valid, no SKU level is displayed 
+// => Set filter to hide the detail area - PKey filter is used to avoid resetting by the automatic "select first" of the UI
+// => Resetting of PKey filter is done at BoItemTabManager.updateLastDisplayedHierarchyLevel() and BoItemTabManager.showAllItems()
+if ((this.getIsShowCategories() == "1") && (lastHierarchyLevelValid == false)) {
+  this.getBoOrder().getLoItems().setFilter("pKey", " ");
+  this.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "0", "GT");
+} else if ((this.getIsShowCategories() == "0") && (this.getIsShowCategoriesBasketMode() == "1")) {    
+  this.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "0", "GT");
+} else if (this.getIsShowCategories() == "0") {
+  this.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "2", "LT");
+}
+
+// Reset add product hierarchy information in order to avoid jumping to the wrong level
+this.setAddProduct_HierarchyInformation(undefined);
+
+if(me.getCurrentItemFilterId() === "Basket"){
+  me.updateShowInBasket();
+}
+
+
+// Return value for process context that enables/disables the navigate to last level after item selected event
+var navigateToLastLevelActive = "1";]]>
+</Code>
+  <Return name="result" value="navigateToLastLevelActive" />
+</BusinessLogic>

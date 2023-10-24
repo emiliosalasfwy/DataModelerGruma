@@ -1,0 +1,9 @@
+<BusinessLogic methodName="isReadOnly" businessObjectClass="BoCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var callStatus = (me.getClbStatus() === "Completed" || me.getClbStatus() === "Abandoned");
+var customerManagementInfo = (me.getReadOnlyBySubstitution() == "1" || (!Utils.isEmptyString(me.getBpaMainPKey()) && me.getLuCustomerManagementInfo().getIsSubstituted() == "0" && me.getResponsiblePKey() !== me.getLuCustomerManagementInfo().getReferenceUsrMainPKey()));
+var isCallReadOnly = (callStatus || customerManagementInfo);]]>
+</Code>
+  <Return name="readOnly" value="isCallReadOnly" />
+</BusinessLogic>

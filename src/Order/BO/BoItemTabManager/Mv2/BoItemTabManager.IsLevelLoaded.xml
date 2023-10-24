@@ -1,0 +1,17 @@
+<BusinessLogic methodName="isLevelLoaded" businessObjectClass="BoItemTabManager" accessibility="PUBLIC" final="false" asynchronous="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="levelId" type="DomId" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+      var isLevelLoaded;
+
+      if ((this.getIsAllItemsLoaded() == "1") || (this.getLoadedLevels().containsKey(levelId) == true)) {
+          isLevelLoaded = "1";
+      } else {
+          isLevelLoaded = "0";
+      }
+
+    ]]></Code>
+  <Return name="result" value="isLevelLoaded" />
+</BusinessLogic>

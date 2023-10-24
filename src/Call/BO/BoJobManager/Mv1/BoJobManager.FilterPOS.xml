@@ -1,0 +1,20 @@
+<BusinessLogic methodName="filterPOS" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loadType" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isSfBackend()) {
+  switch (loadType) {
+    case "surveys":
+      me.getLoPOS().setFilter("posId", " ");
+      break;
+
+    case "questions":
+      if(me.considerPOSCheck == "0") me.getLoPOS().setFilter("posId", " ");
+      else me.getLoPOS().resetFilter("posId");
+      break;
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

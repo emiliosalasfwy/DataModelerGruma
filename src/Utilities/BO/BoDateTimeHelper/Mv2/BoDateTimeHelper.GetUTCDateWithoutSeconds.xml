@@ -1,0 +1,23 @@
+<BusinessLogic methodName="getUTCDateWithoutSeconds" businessObjectClass="BoDateTimeHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="AnsiUTCDate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Removes seconds of given UTC string and returns date object
+//e.g. input: "2015-02-01 09:01:33"  returns: Sun Feb 01 2015 10:01:00 GMT+0100 (Central Europe Standard Time)
+
+var UTCDateWithoutSeconds = Utils.createDateNow();
+var splittedDateTime = AnsiUTCDate.split(" ");
+var splittedDate = splittedDateTime[0].split("-");
+var splittedTime = splittedDateTime[1].split(":");
+
+UTCDateWithoutSeconds.setUTCFullYear(splittedDate[0]);
+UTCDateWithoutSeconds.setUTCMonth(splittedDate[1] - 1);
+UTCDateWithoutSeconds.setUTCDate(splittedDate[2]);
+UTCDateWithoutSeconds.setUTCHours(splittedTime[0]);
+UTCDateWithoutSeconds.setUTCMinutes(splittedTime[1]);
+UTCDateWithoutSeconds.setUTCSeconds(0);
+UTCDateWithoutSeconds.setUTCMilliseconds(0);]]>
+</Code>
+  <Return name="UTCDateWithoutSeconds" value="UTCDateWithoutSeconds" />
+</BusinessLogic>

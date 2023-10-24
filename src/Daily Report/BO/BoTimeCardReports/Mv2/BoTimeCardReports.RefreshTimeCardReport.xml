@@ -1,0 +1,96 @@
+<BusinessLogic methodName="refreshTimeCardReport" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="team" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chartHelper = me.getChartHelper();
+var d3Container = chartHelper.getUIContainer(containerName, false);
+var chart = me.getChartHelper().getChartFromStorage(containerName);
+var chartString = "chart_" + containerName;
+var chartSelector = "#" + chartString;
+var title;
+
+// Set title
+if(team == "1"){
+  title = Localization.resolve("Report_TimeCard_Title_Team");
+}
+else{
+  title = Localization.resolve("Report_TimeCard_Title");
+}
+
+chartHelper.setChartTitle(d3Container, title, containerName);
+
+// Compute ratio
+var dimensions = chartHelper.computeContainerSize(containerName, 1, 1);
+var isPortraitMode = dimensions.height > dimensions.width;
+// custom legend
+var legendDiv = d3Container.selectAll(".legendDiv");
+var legendSvg = legendDiv.select("svg");
+var legendGroup = legendSvg.select("g");
+
+if(isPortraitMode){
+  if(Utils.isPhone()){
+    legendDiv.style("height", "40%").style("width", "100%").style("left", "0px").style("top", "60%");
+  }
+  else{
+    legendDiv.style("height", "45%").style("width", "100%").style("left", "0px").style("top", "55%");
+  }
+}
+else{
+  legendDiv.style("height", "100%").style("width", "50%").style("left", "50%").style("top", "0px");
+}
+legendSvg.style("height", "100%").style("width", "100%");
+
+
+var processNewSizes = function(){
+  // Define attributes for chart
+  var sizeJson;
+  if(isPortraitMode){
+    if(Utils.isPhone()){
+      sizeJson = chartHelper.computeContainerSize(containerName, 0.40, 1);
+    }
+    else{
+      sizeJson = chartHelper.computeContainerSize(containerName, 0.5, 1);
+    }
+  }
+  else{
+    sizeJson = chartHelper.computeContainerSize(containerName, 0.8, 0.5);
+  }
+  chart.resize(sizeJson);
+
+  //positioning of legend
+  if(Utils.isPhone()){
+    legendGroup.attr("transform", "scale(0.68)");
+  }
+
+  var legendGroupWidth = legendGroup.node().getBoundingClientRect().width;
+  var legendGroupHeight = legendGroup.node().getBoundingClientRect().height;
+  var legendSvgWidth = legendSvg.node().getBoundingClientRect().width;
+  var legendSvgHeight = legendSvg.node().getBoundingClientRect().height;
+
+  if(Utils.isPhone()){
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +") scale(0.68)");
+  }
+  else{
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +")"); 
+  }
+
+  if(!Utils.isPhone()){
+    var arcs = d3Container.selectAll(".c3-chart-arcs");
+    var texts = arcs.selectAll("text");
+    texts.style("font-size", "1.5em");
+  }
+};
+
+var svg = d3Container.select(chartSelector);
+var text = svg.selectAll("text");
+text.style("font-size", "1.4em");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+setTimeout(function(){
+  processNewSizes();
+}, 100);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

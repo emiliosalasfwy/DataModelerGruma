@@ -1,0 +1,58 @@
+<BusinessLogic methodName="resetMergeEngineInvalidated" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="addProductCriterionAttribute" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/* This method is called only for non-Initial orders,
+since in this case temp table returns missing information for those persisted reward products which are not part of tactic.
+Hence, we will set the missing information of such products in this function.
+
+This function receives Criterion Attribute as an input which is used to load product information. */
+
+var promise = when.resolve();
+var jsonParams = [];
+var jsonQuery = {};
+var columnName = "";
+
+if(Utils.isSfBackend()){
+  columnName = "Order_Item__c.Id";
+}
+else{
+  columnName = "SdoItem.PKey";
+}
+
+var invalidItems = me.getAllItems().filter(function(item){return item.mergeEngine_invalidated == '1';});
+var invalidItemPKeys = invalidItems.map(function(item){return item.getPKey();});
+var addCondSdoItemPKeys = columnName + " IN ('" + invalidItemPKeys.toString() + "') ";
+
+jsonParams.push({
+  "field" : "addCondSdoItemPKeys",
+  "value" : addCondSdoItemPKeys.split(",").join("','")
+});
+jsonParams.push({
+  "field" : "criterionAttribute",
+  "value" : addProductCriterionAttribute
+});
+
+jsonQuery.params = jsonParams;
+promise = BoFactory.loadObjectByParamsAsync("LoProductInformationForInvalidated", jsonQuery).then(function(productInformation){
+
+  var productInformationDic = Utils.createDictionary();
+  productInformation.forEach(function(item){
+    productInformationDic.add(item.getPKey(), item);
+  });
+
+  invalidItems.forEach(function(invalidItem){
+    var currentPrdInfo = productInformationDic.get(invalidItem.getPKey());
+    if(Utils.isDefined(currentPrdInfo)){
+      invalidItem.setText1(currentPrdInfo.getText1());
+      invalidItem.setShortId(currentPrdInfo.getShortId());
+      invalidItem.setGroupText(currentPrdInfo.getGroupText());
+      invalidItem.setGroupId(currentPrdInfo.getGroupId());
+      invalidItem.setMergeEngine_invalidated('0');
+    }
+  });
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

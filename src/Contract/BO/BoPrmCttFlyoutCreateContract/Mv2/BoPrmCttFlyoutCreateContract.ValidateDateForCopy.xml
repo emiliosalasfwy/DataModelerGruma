@@ -1,0 +1,14 @@
+<BusinessLogic methodName="validateDateForCopy" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getDateFrom())) {
+  var newError = {"level": "error",
+                  "objectClass": "BoPrmCttFlyoutCreateContract",
+                  "messageID": "CasPrmFillInAllValues"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,6 @@
+<BusinessLogic methodName="syncData" businessObjectClass="LoSync" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters></Parameters>
+  <Code language="JavaScript"><![CDATA[
+			Facade.startBackgroundReplication();
+		]]></Code>
+</BusinessLogic>

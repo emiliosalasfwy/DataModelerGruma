@@ -1,0 +1,107 @@
+<BusinessLogic methodName="filterSurveysByPos" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="DomPKey" />
+    <MethodInput name="isPromotionFilterSet" type="String" />
+    <MethodInput name="isDiscrepanciesFilterSet" type="String" />
+    <MethodInput name="boCall" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loCurrentPOS = me.getLoPOS().getItemsByParam({"posId" : posId});
+
+if (loCurrentPOS.length > 0) {
+  var liCurrentPOS = loCurrentPOS[0];
+  me.getLoPOS().setCurrent(liCurrentPOS);
+
+  var loProducts = liCurrentPOS.getSurveyProducts();
+
+  if (!Utils.isDefined(loProducts)) {
+    loProducts = BoFactory.instantiateLightweightList("LoJobProducts");
+    loProducts.setObjectStatus(STATE.PERSISTED);
+    loProducts.setObjectStatusFrozen(true);
+    loProducts.orderBy({
+      "prdId" : "ASC"
+    });
+    liCurrentPOS.setSurveyProducts(loProducts);
+
+    // Filter surveyColumns based on measuretype
+    // store ==> surveycolumns with measuretype store visible
+    // Pos ==> surveyColumns with measureType POS visible
+
+    var currentMeasureType = (posId == " ") ? "Store" : "POS";
+    var loSurveyColumns = me.getLoSurveyColumns().getAllItems();
+    var liSurveyColumn;
+    var idxSurveyColumn;
+    var visible;
+    var editable;
+    var acl = loProducts.getACL();
+    var columnName;
+
+    for (idxSurveyColumn = 0; idxSurveyColumn < loSurveyColumns.length; idxSurveyColumn++) {
+      liSurveyColumn = loSurveyColumns[idxSurveyColumn];
+      visible = (liSurveyColumn.getMeasureType() === currentMeasureType);
+      //Retail Process
+      if (me.getClbStatus() === "Completed" || me.getClbStatus() === "Abandoned" || me.getReadOnlyBySubstitution() == "1") {
+        editable = false;
+      }
+      else{
+        editable = true;
+      }
+
+      //DSD
+      if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') !== "Running") {
+        editable = false;
+      }
+
+      columnName = liSurveyColumn.getDisplayColumnName();
+      if (visible) {
+        acl.addRight(AclObjectType.PROPERTY, columnName, AclPermission.VISIBLE);
+      }
+      else {
+        acl.removeRight(AclObjectType.PROPERTY, columnName, AclPermission.VISIBLE);
+      }
+      if (editable) {
+        acl.addRight(AclObjectType.PROPERTY, columnName, AclPermission.EDIT);
+      }
+      else {
+        acl.removeRight(AclObjectType.PROPERTY, columnName, AclPermission.EDIT);
+      }
+    }
+
+    if(isPromotionFilterSet == "1") {
+      loProducts.setFilter("planned", "1");
+    }
+
+    if(isDiscrepanciesFilterSet == "1") {
+      loProducts.setFilter("hasDiscrepance", "1");
+    }
+
+    loProducts.refreshUI();
+    me.setLoCurrentSurveyProducts(loProducts);
+    me.addItemChangedEventListener('loCurrentSurveyProducts', me.onSurveyChanged);
+  }
+  else {
+    loProducts.resetAllFilters();
+
+    if(isDiscrepanciesFilterSet == "1") {
+      loProducts.setFilter("hasDiscrepance", "1");
+    }
+
+    if(isPromotionFilterSet == "1") {
+      loProducts.setFilter("planned", "1");
+    }
+
+    loProducts.refreshUI();
+    me.setLoCurrentSurveyProducts(loProducts);
+  }
+
+  if (loProducts.getCount() > 0) {
+    loProducts.setCurrent(loProducts.getItems()[0]);
+  }
+}
+
+if(Utils.isDefined(boCall.getLoProductQuickFilter())) {
+  boCall.getLoProductQuickFilter().onTabChange(boCall);
+}]]>
+</Code>
+  <Return name="posId" value="posId" />
+</BusinessLogic>

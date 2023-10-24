@@ -1,0 +1,27 @@
+<BusinessLogic methodName="hasRoleMetaOfId" businessObjectClass="LoBpaMetaRoleMetaRel" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="bpaRoleMetaId" type="DomId" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+			var me = this;
+			
+			// Variables		
+			var oItem;
+			var oItems;			
+			var parameters;
+			var hasRoleMeta;
+			
+			// Initialization
+			hasRoleMeta = "0";
+			parameters = {};
+			parameters.bpaRoleMetaId = bpaRoleMetaId;
+			
+			oItems = me.getItemsByParam(parameters); 
+			
+			 if (oItems.length === 1) 
+			 {
+				hasRoleMeta = "1";
+			 }
+	   ]]></Code>
+  <Return name="hasRoleMetaOfId" value="hasRoleMeta" />
+</BusinessLogic>

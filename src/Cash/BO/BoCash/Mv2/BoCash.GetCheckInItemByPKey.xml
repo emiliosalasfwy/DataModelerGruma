@@ -1,0 +1,13 @@
+<BusinessLogic methodName="getCheckInItemByPKey" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var item = me.getLoCheckInPayment().getItemByPKey(itemPKey);
+
+var promise = me.getPaymentModReasonCodes(item.getSdoPaymentMetaPKey()).then(function(){
+  return item;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

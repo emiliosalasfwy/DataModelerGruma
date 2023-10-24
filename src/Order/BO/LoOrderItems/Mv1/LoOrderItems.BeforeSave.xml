@@ -1,0 +1,39 @@
+<BusinessLogic methodName="beforeSave" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deletedFreeItems = this.getItemsByParam({"deletedFreeItem": "1"});
+for (var j=0; j<deletedFreeItems.length; j++){
+
+  if (deletedFreeItems[j].getObjectStatus()==deletedFreeItems[j].self.STATE_NEW_DIRTY){
+    deletedFreeItems[j].setObjectStatus(deletedFreeItems[j].self.STATE_NEW);
+  }
+  if (deletedFreeItems[j].getObjectStatus()==deletedFreeItems[j].self.STATE_DIRTY){
+    deletedFreeItems[j].setObjectStatus(deletedFreeItems[j].self.STATE_DELETED);
+  }
+
+}
+
+var items = this.getAllItems();
+
+
+
+/*If SdoItemMeta.SaveZeroQuantity = 'No' and SdoItem.Quantity = '0' and if SdoItem.TargetQuantity = '0' : the system removes this not longer ordered item from the disposal list (and thus from the data base).      
+(Note: Items with TargetQuantity <> '0' represent items of a delivery document taken from the ERP system; TargetQuantity is the originally ordered quantity. 
+The user or the pricing engine, respectively, must not remove these items after setting the Quantity = 0 in order to document that the item was not delivered. */
+
+for (var i=0; i<items.length; i++){
+  if ((items[i].getSaveZeroQuantity()== '0' && items[i].getTargetQuantity()== 0 && items[i].getQuantity() == 0)
+      || (!Utils.isEmptyString(items[i].getPromotionPKey()) && items[i].getQuantity() == 0)) {
+    if (items[i].getObjectStatus()==items[i].self.STATE_NEW_DIRTY){
+      items[i].setObjectStatus(items[i].self.STATE_NEW);
+    }
+    if (items[i].getObjectStatus()==items[i].self.STATE_DIRTY){
+      items[i].setObjectStatus(items[i].self.STATE_DELETED);
+    }
+  }
+} //End For (items)]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

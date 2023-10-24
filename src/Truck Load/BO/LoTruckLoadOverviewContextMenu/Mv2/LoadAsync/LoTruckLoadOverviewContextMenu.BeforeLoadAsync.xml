@@ -1,0 +1,58 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTruckLoadOverviewContextMenu" businessObjectType=" " asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newParams = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+
+var menuEntry0 = {
+  "id": "0000001",
+  "actionImg": "CancelDarkGrey24",
+  "actionId": "Cancel",
+  "processEvent": "Cancel",
+  "actionVisible": "1",
+  "actionEnabled": "0"
+};
+
+var menuEntry1 = {
+  "id": "0000002",
+  "actionImg": "TrashcanDarkGrey24",
+  "actionId": "Delete",
+  "processEvent": "Delete",
+  "actionVisible": "1",
+  "actionEnabled": "0"
+};
+
+var user = ApplicationContext.get('user');
+
+if (!(newParams.recipientPKey === user.getPKey() && newParams.documentType === "TruckIvcTransferOutward" || newParams.documentType === "TruckIvcTransferInward")) {
+  if (Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus').toLowerCase() === "running") {
+
+    if (newParams.phase === "Initial") {
+      menuEntry0.actionEnabled = "1";
+    }
+
+    if (newParams.initiatorPKey === user.getPKey() && newParams.phase === "Initial") {
+      menuEntry1.actionEnabled = "1";
+    }
+  }
+}
+
+//TourCase: Check if Truck Load documents are in current running tour context
+var currentTourPKey = ApplicationContext.get('currentTourPKey');
+if (Utils.isDefined(currentTourPKey) && !Utils.isEmptyString(currentTourPKey) && currentTourPKey != newParams.tmgMainPKey) {
+  menuEntry0.actionEnabled = "0";
+  menuEntry1.actionEnabled = "0";
+}
+
+me.addItems([menuEntry0, menuEntry1]);
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,14 @@
+<BusinessLogic methodName="resetObjectStatus" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.traverse(function(node){
+  node.setObjectStatus(STATE.PERSISTED);
+  if(node.isList) {
+    node.getAllItems().forEach(function(item){
+      item.setObjectStatus(STATE.PERSISTED);
+    });
+  }
+},function (a, b, c){});]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

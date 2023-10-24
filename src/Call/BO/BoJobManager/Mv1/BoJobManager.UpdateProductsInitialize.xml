@@ -1,0 +1,10 @@
+<BusinessLogic methodName="updateProductsInitialize" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var items = this.getLoPOS().getAllItems();
+if(items.length > 0){
+  for(var i =0 ; i < items.length; i++){
+    items[i].setProductsInitialized("0");
+  }
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

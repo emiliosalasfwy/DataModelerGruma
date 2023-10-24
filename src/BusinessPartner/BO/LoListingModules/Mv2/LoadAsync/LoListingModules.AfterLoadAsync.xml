@@ -1,0 +1,18 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoListingModules" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liListingModules = {
+  "pKey": PKey.next(),
+  "listingModuleName": null,
+  "productAssortmentPKey": PKey.next(),
+  "sort": "",
+};
+
+me.addListItems([liListingModules]);
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

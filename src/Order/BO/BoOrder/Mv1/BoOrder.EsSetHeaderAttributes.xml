@@ -1,0 +1,82 @@
+<BusinessLogic methodName="esSetHeaderAttributes" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingDoc" type="BoOrder" />
+    <MethodInput name="splittingGroup" type="LiSplittingGroupResult" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if (Utils.isDefined(splittingDoc) && Utils.isDefined(splittingGroup)) {
+
+  /*#############################################
+  //### Created or patched header attributes  ###
+  //###########################################*/
+  var pKey = PKey.next();
+  splittingDoc.setPKey(pKey);
+  splittingDoc.setSplittingParentSdoMainPKey(me.getPKey());
+
+  /*###########################
+  //### Pricing information ###
+  //###########################*/
+  splittingDoc.setGrossTotalValueReceipt(splittingGroup.getGrossTotalValueReceipt());
+  splittingDoc.setGrossTotalValue(splittingGroup.getGrossTotalValue());
+  splittingDoc.setMerchandiseValueReceipt(splittingGroup.getMerchandiseValueReceipt());
+  splittingDoc.setMerchandiseValue(splittingGroup.getMerchandiseValue());
+  splittingDoc.setTotalValueReceipt(splittingGroup.getTotalValueReceipt());
+  splittingDoc.setTotalValue(splittingGroup.getTotalValue());
+
+  promise = splittingDoc.setPaidAmountReceipt(splittingGroup.getGrossTotalValueReceipt()).then(
+    function () {
+      if (Utils.isDefined(splittingGroup.getPricingJson())) {
+        splittingDoc.setPricingJSON(splittingGroup.getPricingJson());
+      }
+      if (Utils.isDefined(splittingGroup.getSdoConditions())) {
+        splittingDoc.setSdoConditionsJson(JSON.stringify(splittingGroup.getSdoConditions()));
+      }
+      //invoice id
+      var sysNumberParams = [];
+      var sysNumberQuery = {};
+
+      sysNumberParams.push(
+        {
+          "field" : "sdoMetaPKey",
+          "value" : splittingDoc.getSdoMetaPKey()
+        }
+      );
+      sysNumberParams.push(
+        {
+          "field" : "docTaType",
+          "value" : splittingDoc.getDocTaType()
+        }
+      );
+      sysNumberQuery.params = sysNumberParams;
+
+      /*################################
+  //### setting id and invoiceId ###
+  //################################*/
+      return BoFactory.loadObjectByParamsAsync("LuSdoMetaDocTATypeSysNumber", sysNumberQuery).then(
+        function (luSdoMetaDocTATypeSysNumber) {
+          if (!Utils.isEmptyString(luSdoMetaDocTATypeSysNumber.getSysNumberPKey())) {
+            return SysNumber.getSysNumberAsync(luSdoMetaDocTATypeSysNumber.getSysNumberPKey());
+          }
+          else {
+            return SysNumber.getSysNumberAsync(splittingDoc.getBoOrderMeta().getSysNumberPKey());
+          }
+        }
+      ).then(
+        function (invoicenumber) {
+          if (Utils.isDefined(invoicenumber)) {
+            splittingDoc.setInvoiceId(invoicenumber);
+          }
+          return SysNumber.getSysNumberAsync(splittingDoc.getBoOrderMeta().getSysNumberPKey());
+        }
+      ).then(
+        function (splittingDocId) {
+          splittingDoc.setOrderId(splittingDocId);
+          splittingDoc.setObjectStatus(STATE.NEW | STATE.DIRTY);
+        });
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

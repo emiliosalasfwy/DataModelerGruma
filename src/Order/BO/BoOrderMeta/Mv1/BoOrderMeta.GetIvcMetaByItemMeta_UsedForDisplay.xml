@@ -1,0 +1,17 @@
+<BusinessLogic methodName="getIvcMetaByItemMeta_UsedForDisplay" businessObjectClass="BoOrderMeta" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="itemMetaPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+      
+      var params = { "sdoItemMetaPKey": itemMetaPKey, "usedForDisplay": "1" };
+      var liInventoryMetaByItemMetas = this.getLoInventoryMetaByItemMeta().getItemsByParam(params);
+      var liInventoryMetaByItemMetaForDisplay = undefined;
+
+      if (liInventoryMetaByItemMetas.length > 0) {
+          liInventoryMetaByItemMetaForDisplay = liInventoryMetaByItemMetas[0];
+      }
+      
+    ]]></Code>
+  <Return name="liIvcMetaByItemMeta_usedForDisplay" value="liInventoryMetaByItemMetaForDisplay" />
+</BusinessLogic>

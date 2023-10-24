@@ -1,0 +1,11 @@
+<BusinessLogic methodName="orderByDefaultOrder" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[this.orderBy([
+    { "refPKey": "ASC" },
+    { "sdoParentItemPKey": "ASC" },
+    { "isOrderUnit" : "DESC" },
+    { "sort" : "ASC" }]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,128 @@
+<BusinessLogic methodName="setInventoryBalanceOfPayment" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="paymentPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise;
+
+var ivcMetaPKeys = [];
+var usrMainPKeys = [];
+var bpaMainPKeys = [];
+var tmgTourPKeys = [];
+var etpVehiclePKeys = [];
+
+var jsonParamsForFinding = [];
+var jsonQueryForFinding = {};
+
+if (Utils.isDefined(paymentPKey)) {
+	var liOrderPayment = this.getLoPayments().getItemByPKey(paymentPKey);
+
+	//Preserve object status in order to avoid saving items just because of the setting of inventory balance
+	var objectStatus = liOrderPayment.getObjectStatus();
+
+	// Determine balance only if not already done
+	if (Utils.isEmptyString(liOrderPayment.getIvcInformationObject())) {
+
+		// Get inventory meta information with prepared search keys
+		var ivcMetasByPaymentMeta = this.getBoOrderMeta().getIvcMetasByPaymentMeta(liOrderPayment.getSdoPaymentMetaPKey());
+
+		for (var i = 0; i < ivcMetasByPaymentMeta.length; i++) {
+			ivcMetaPKeys.push(ivcMetasByPaymentMeta[i].getIvcMetaPKey());
+			usrMainPKeys.push(ivcMetasByPaymentMeta[i].getUsrMainPKey());
+			bpaMainPKeys.push(ivcMetasByPaymentMeta[i].getBpaMainPKey());
+			tmgTourPKeys.push(ivcMetasByPaymentMeta[i].getTmgTourPKey());
+			etpVehiclePKeys.push(ivcMetasByPaymentMeta[i].getEtpVehiclePKey());
+		}
+
+		jsonParamsForFinding.push({
+			"field" : "ivcMetaPKeys",
+			"value" : "'" + ivcMetaPKeys.join("','") + "'"
+		});
+		jsonParamsForFinding.push({
+			"field" : "usrMainPKeys",
+			"value" : "'" + usrMainPKeys.join("','") + "'"
+		});
+		jsonParamsForFinding.push({
+			"field" : "bpaMainPKeys",
+			"value" : "'" + bpaMainPKeys.join("','") + "'"
+		});
+    jsonParamsForFinding.push({
+      "field" : "prdMainPKeys",
+      "value" : "' '"
+    });
+    if (!Utils.isSfBackend()) {
+      jsonParamsForFinding.push({
+        "field" : "tmgTourPKeys",
+        "value" : "'" + tmgTourPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "etpVehiclePKeys",
+        "value" : "'" + etpVehiclePKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "addCond_Currency",
+        "value" : " AND IvcMain.Currency = '" + liOrderPayment.getCurrency() + "' "
+      });
+    }      
+    else {
+      jsonParamsForFinding.push({
+        "field" : "addCond_Tour",
+        "value" : " AND Inventory__c.Tour__c = ' ' "
+      });
+      jsonParamsForFinding.push({
+        "field" : "addCond_Vehicle",
+        "value" : " AND Inventory__c.Vehicle__c = ' ' "
+      });
+     jsonParamsForFinding.push({
+        "field" : "addCond_OrderCurrency",
+        "value" : " AND Inventory__c.Currency__c = '" + me.getCurrency() + "' "
+      });
+    }
+
+    jsonQueryForFinding.params = jsonParamsForFinding;
+
+    promise = BoFactory.loadObjectByParamsAsync("LoInventoryFinding", jsonQueryForFinding)
+      .then(function (loInventoryFinding) {
+
+			// Build inventory information object and store at payment
+			var liInventory;
+			var ivcInformation = {};
+			var ivcInformationObject = [];
+			var params = {};
+
+			for (var i = 0; i < ivcMetasByPaymentMeta.length; i++) {
+				params = {};
+				params.ivcMetaPKey = ivcMetasByPaymentMeta[i].getIvcMetaPKey();
+				params.usrMainPKey = ivcMetasByPaymentMeta[i].getUsrMainPKey();
+				params.bpaMainPKey = ivcMetasByPaymentMeta[i].getBpaMainPKey();
+				params.tmgTourPKey = ivcMetasByPaymentMeta[i].getTmgTourPKey();
+				params.etpVehiclePKey = ivcMetasByPaymentMeta[i].getEtpVehiclePKey();
+
+				ivcInformation = {};
+				ivcInformation.ivcMainPKey = " ";
+				ivcInformation.balance = 0;
+
+				liInventory = loInventoryFinding.getItemsByParam(params);
+
+				// If inventory found, add IvcMainPKey to IvcInformationObject
+				if (liInventory.length > 0) {
+					ivcInformation.ivcMainPKey = liInventory[0].getIvcMainPKey();
+					ivcInformation.balance = liInventory[0].getBalance();
+				}
+
+				ivcInformation.ivcMetaByPaymentMeta = ivcMetasByPaymentMeta[i];
+
+				ivcInformationObject.push(ivcInformation);
+			}
+
+			liOrderPayment.setIvcInformationObject(ivcInformationObject);
+			liOrderPayment.setObjectStatus(objectStatus);
+		});
+
+	} else {
+		promise = when.resolve();
+	}
+} else {
+	promise = when.resolve();
+}]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

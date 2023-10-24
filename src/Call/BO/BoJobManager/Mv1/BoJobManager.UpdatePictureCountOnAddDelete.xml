@@ -1,0 +1,29 @@
+<BusinessLogic methodName="updatePictureCountOnAddDelete" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="actionPerformed" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentQuestion = me.getLoQuestions().getCurrent();
+var newPictureCount = !Utils.isEmptyString(currentQuestion.getPictureCount()) ? parseInt(currentQuestion.getPictureCount(), 10) : 0 ;
+
+switch(actionPerformed){
+  case "TakePicture":
+    newPictureCount += 1;
+    break;
+
+  case "SelectPicture": //In future more than one pic can be added, so we have a seperate case which can be adapted.
+    newPictureCount += 1;
+    break;
+
+  case "Delete":
+    newPictureCount -= 1;
+    newPictureCount = (newPictureCount == 0) ? "" : newPictureCount; 
+    break;
+}
+
+me.getLoQuestions().suspendListRefresh();
+currentQuestion.setPictureCount(newPictureCount.toString());
+me.getLoQuestions().resumeListRefresh(true);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

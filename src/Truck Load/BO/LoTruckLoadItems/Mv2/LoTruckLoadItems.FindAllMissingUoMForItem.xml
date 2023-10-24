@@ -1,0 +1,43 @@
+<BusinessLogic methodName="findAllMissingUoMForItem" businessObjectClass="LoTruckLoadItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="itemMeta" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isDefined(itemMeta)) {
+  var prdMainPKey = mainItem.getPrdMainPKey();
+
+  var logisticUnitQuery = {};
+
+  logisticUnitQuery.params = [
+    { "field": "ProductPKey", "value": prdMainPKey },
+    { "field": "LogisticCategory", "value": itemMeta.getLogisticCategory() }
+  ];
+
+  promise = BoFactory.loadListAsync("LoLogisticUnit", logisticUnitQuery).then(
+    function (loLogisticUnit) {
+      var missingLiLogisticUnit;
+      var unitOfMeasureItems = me.getUnitOfMeasureItemsForMainItem(mainItem);
+
+      if (Utils.isDefined(unitOfMeasureItems)) {
+        var existingUoMs = unitOfMeasureItems.map(
+          function (x) { return x.getQuantityLogisticUnit(); }
+        );
+
+        var allLogistics = loLogisticUnit.getAllItems();
+        missingLiLogisticUnit = allLogistics.filter(function (i) { return existingUoMs.indexOf(i.getUnitType()) < 0; });
+      } else {
+        missingLiLogisticUnit = loLogisticUnit.getAllItems();
+      }
+
+      return missingLiLogisticUnit;
+    }
+  );
+} else {
+  promise = when.resolve([]);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

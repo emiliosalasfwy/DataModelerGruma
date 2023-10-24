@@ -1,0 +1,63 @@
+<BusinessLogic methodName="processTourStartInventoryActions" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var inventoryActions = function(objRel){
+  var sdoMetaPKey = objRel.getPKey();
+
+  return BoFactory.createObjectAsync("BoTruckLoad", {"sdoMetaPKey" : sdoMetaPKey, "etpWarehouasePKey" : me.getStartEtpWarehousePKey(), "tmgMainPKey" : me.getPKey()}).then(
+    function(bo){
+      if(Utils.isDefined(bo)){
+        me.setBoTruckLoad(bo);
+
+        return bo.addItemsBasedOnInventory().then(
+          function(){
+            return bo.cpInitComplexPricing();
+          }).then(
+          function(){
+            return bo.processInventoryActions();
+          }
+        );
+      }
+    }
+  );
+};
+
+var jsonQuery = {};
+
+jsonQuery.params = [
+  { "field" : "tmgMainPKey", "value" : me.getPKey() },
+  { "field" : "tmgTourObjectRelUsage", "value" : "'SdoMeta.TransferTourStart'"}
+];
+
+var promise = BoFactory.loadObjectByParamsAsync("LoTruckLoadTemplates", jsonQuery).then(
+  function(result){
+    if(Utils.isDefined(result) && result.getAllItems().length > 0){
+
+      var lu = BoFactory.instantiate("LuRunningTour", {
+        "pKey": me.getPKey(),
+        "dateFrom": me.getDateFrom(),
+        "dateThru": me.getDateThru(),
+        "id": me.getTourId(),
+        "tmgMetaPKey": me.getTmgMetaPKey(),
+        "considerMultipleWarehouses": me.getBoTourMeta().getConsiderMultipleWarehouses(),
+        "startEtpWarehousePKey": me.getStartEtpWarehousePKey(),
+        "etpVehicleTruckPKey": me.getEtpVehicleTruckPKey(),
+        "defaultEtpVehicleTruckPKey": me.getDefaultEtpVehicleTruckPKey(),
+        "driverName":me.getDriver()
+      });
+
+      ApplicationContext.set('currentTour', lu);
+
+      var deferreds = [];
+
+      for(var i = 0; i < result.getAllItems().length; i++){
+        deferreds.push(inventoryActions(result.getAllItems()[i]));
+      }
+
+      return when.all(deferreds);
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

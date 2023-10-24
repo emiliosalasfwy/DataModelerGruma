@@ -1,0 +1,44 @@
+<BusinessLogic methodName="onHeaderDeliveryDateChanged" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var doctatype = me.getDocTaType();
+var bQunatityPresent = '0';
+var items = me.getLoItems();
+
+var promise = when.resolve();
+
+if ((handlerParams.oldValue != handlerParams.newValue))
+{
+  if (Utils.isDefined(CP) && (this.getBoOrderMeta().getComputePrice() === "4" || this.getBoOrderMeta().getComputePrice() === "5") && Utils.isDefined(items)) 
+  {
+    var containsItemWithQuantity = items.containsItem({ "quantity": "0" }, [{"fieldName": "quantity", "op" : "GT" }]);
+    if (containsItemWithQuantity)
+    {
+
+      me.setCalculationStatus("3");
+      me.deleteAllFreeItems();
+
+      //direct calculation case
+      if(me.getBoOrderMeta().getComputePrice() === "5" && doctatype !== "NonValuatedDeliveryNote"){
+        
+        //set delivery date directly on BO because it is ppp relevant and calculation is triggered directly here
+        //do not use setter here ... otherwise end up in the same on changed handler again
+        //Note: This must be done before resetCalculationResult because resetCalculationResult triggers a UI refresh
+        me.deliveryDate = handlerParams.newValue;
+        
+        promise = me.resetCalculationResult().then(
+          function(){
+            return me.cpCalculate();
+          });
+      }
+      else {
+        promise = me.resetCalculationResult();
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

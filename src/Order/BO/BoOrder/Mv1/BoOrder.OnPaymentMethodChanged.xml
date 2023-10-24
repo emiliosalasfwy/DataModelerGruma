@@ -1,0 +1,11 @@
+<BusinessLogic methodName="onPaymentMethodChanged" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var oldValue = handlerParams.oldValue;
+var newValue = handlerParams.newValue;
+var promise = me.handlePaymentMethodChanged(oldValue, newValue);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

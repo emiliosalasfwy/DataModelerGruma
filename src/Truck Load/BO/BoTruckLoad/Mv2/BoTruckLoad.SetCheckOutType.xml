@@ -1,0 +1,10 @@
+<BusinessLogic methodName="setCheckOutType" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if(this.isEditable() && this.getDocumentType() === "ProductCheckOut" )
+{
+  this.setActualPrdCheckOutType("SKU");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

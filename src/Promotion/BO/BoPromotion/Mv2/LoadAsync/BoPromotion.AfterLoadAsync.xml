@@ -1,0 +1,21 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoPromotion" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(result);
+
+//If no Annotation exists yet set to new
+if(Utils.isEmptyString(me.getBoAnnotation().getPKey())) {
+  me.getBoAnnotation().setPKey(PKey.next());
+  me.getBoAnnotation().setText(" ");
+  me.getBoAnnotation().setPrmPromotionPKey(me.getPKey());
+  me.getBoAnnotation().setUsage("Comment");
+  me.getBoAnnotation().setObjectStatus(STATE.NEW);
+}  
+
+me.setEARights();]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

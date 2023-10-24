@@ -1,0 +1,40 @@
+<BusinessLogic methodName="onHierarchySelected" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="level" type="DomInteger" />
+    <MethodInput name="levelId" type="DomId" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var navigateToLastLevelActive = this.updateLastDisplayedHierarchyLevel(level, levelId);             
+
+// If the requested level is SKU level, then show products of level
+// Else load next hierarchy level     
+
+if (level == this.getNumberOfLevels()) {      
+  promise = me.showProductsOfLevel(levelId)
+    .then(function() {               
+    if (Utils.isDefined(me.getAddProductResult())) {
+      me.selectItemAfterAdd(me.getAddProductResult());
+      me.setAddProductResult(undefined);
+    }            
+    me.setAddProduct_HierarchyInformation(null);
+    return navigateToLastLevelActive;
+  });
+
+} else {
+  switch (level.toString()) {
+    case "1":            
+      promise = me.loadBreadCrumbLevel2(levelId)
+        .then(function() {
+        return navigateToLastLevelActive;
+      });
+      break;
+    default:
+      promise = when.resolve(navigateToLastLevelActive);
+      break;              
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

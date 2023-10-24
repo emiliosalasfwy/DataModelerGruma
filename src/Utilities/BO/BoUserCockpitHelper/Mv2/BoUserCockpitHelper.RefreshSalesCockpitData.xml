@@ -1,0 +1,12 @@
+<BusinessLogic methodName="refreshSalesCockpitData" businessObjectClass="BoUserCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var cardVisits_emptyMainMessage = "";
+var cardVisits_emptySubMessage = "";
+cardVisits_emptyMainMessage = Localization.resolve("CardVisits_NoDataMessageMainText");
+cardVisits_emptySubMessage = Localization.resolve("CardVisits_NoDataMessageSubText");
+me.setCardVisits_emptyMainMessage(cardVisits_emptyMainMessage);
+me.setCardVisits_emptySubMessage(cardVisits_emptySubMessage);]]>
+</Code>
+  <Return name="result" value="me" />
+</BusinessLogic>

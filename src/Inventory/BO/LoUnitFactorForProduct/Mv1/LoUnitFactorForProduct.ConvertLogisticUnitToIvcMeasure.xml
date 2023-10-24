@@ -1,0 +1,22 @@
+<BusinessLogic methodName="convertLogisticUnitToIvcMeasure" businessObjectClass="LoUnitFactorForProduct" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="ivcMeasure" type="DomIvcMeasure" />
+    <MethodInput name="amount" type="DomDecimal" />
+    <MethodInput name="quantityLogisticUnit" type="DomPrdLogisticUnit" />
+    <MethodInput name="piecesPerSmallestUnit" type="DomDecimal" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var ivcUnitInformation = me.getItemByMeasure(ivcMeasure);
+
+//Convert value
+var convertedValue = -1;
+
+if (Utils.isDefined(ivcUnitInformation))
+{
+  var amountInSmallestUnit = amount * piecesPerSmallestUnit;
+
+  convertedValue = amountInSmallestUnit / ivcUnitInformation.getPiecesPerSmallestUnit();
+}]]>
+</Code>
+  <Return name="convertedValue" value="convertedValue" />
+</BusinessLogic>

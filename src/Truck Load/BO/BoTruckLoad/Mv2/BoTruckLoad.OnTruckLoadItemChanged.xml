@@ -1,0 +1,230 @@
+<BusinessLogic methodName="onTruckLoadItemChanged" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var mainItem;
+var currentEvent;
+var sdoItemMeta;
+var isUpdateRequired = false;
+var promise;
+//variables for checking what processes need to be done
+var calculationProcessTriggers = [];
+var groupingProcessTriggers = [];
+var reasonCodeProcessTriggers = [];
+var quantityProcessTriggers = [];
+var modReasonTriggerObj;
+var groupingTriggerObj;
+var pricingTriggerObject;
+var quantityChangedTriggerObj;
+
+currentEvent = handlerParams;
+
+//setting up the environment
+mainItem = currentEvent.listItem;
+var orderUnitItem = me.getLoItems().getFirstOrderUnitItemForMainItem(mainItem);
+
+//processing all the changed attributes of the event
+for (var i = 0; i < currentEvent.modified.length; i++) {
+  //reacting on the different attributes
+  switch (currentEvent.modified[i]) {
+      /******************************************************* Quantity ***********************************************************/
+    case "quantity":
+      modReasonTriggerObj = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem
+      };
+      reasonCodeProcessTriggers.push(modReasonTriggerObj);
+
+      quantityChangedTriggerObj = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem,
+        oldValue: currentEvent.oldValues.quantity,
+        newValue: currentEvent.newValues.quantity
+      };
+      quantityProcessTriggers.push(quantityChangedTriggerObj);
+
+      groupingTriggerObj = {
+        mainItem: mainItem
+      };
+      groupingProcessTriggers.push(groupingTriggerObj);
+
+      pricingTriggerObject = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem,
+        modifiedAttribute: currentEvent.modified[i]
+      };
+      calculationProcessTriggers.push(pricingTriggerObject);
+      isUpdateRequired = true;
+
+      break;
+
+      /******************************************************* ModReason ***********************************************************/
+    case "modReason":
+      modReasonTriggerObj = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem
+      };
+      reasonCodeProcessTriggers.push(modReasonTriggerObj);
+      isUpdateRequired = true;
+
+      break;
+
+      /******************************************************* Discount ***********************************************************/
+    case "discount":
+      pricingTriggerObject = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem,
+        modifiedAttribute: currentEvent.modified[i]
+      };
+      calculationProcessTriggers.push(pricingTriggerObject);
+
+      groupingTriggerObj = {
+        mainItem: mainItem
+      };
+      groupingProcessTriggers.push(groupingTriggerObj);
+      isUpdateRequired = true;
+
+      break;
+
+      /******************************************************* Special Price ***********************************************************/
+    case "specialPriceReceipt":
+      pricingTriggerObject = {
+        mainItem: mainItem,
+        orderUnitItem: orderUnitItem,
+        modifiedAttribute: currentEvent.modified[i]
+      };
+      calculationProcessTriggers.push(pricingTriggerObject);
+
+      groupingTriggerObj = {
+        mainItem: mainItem
+      };
+      groupingProcessTriggers.push(groupingTriggerObj);
+      isUpdateRequired = true;
+
+      break;
+  }
+}
+
+/***************************************************************************************************************/
+/*                       Handling the different processes that are needed                                      */
+/***************************************************************************************************************/
+//Skipped for other events like display information changes.
+if(isUpdateRequired === true) {
+  //defining the handler functions
+  var qtyChangedDeferreds = [];
+  var qtyChangedHandler = function (x) {
+    var mainItem = x.mainItem;
+    var orderUnitItem = x.orderUnitItem;
+    var oldValue = x.oldValue;
+    var newValue = x.newValue;
+
+    //check quantity modification allowed
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    var sdoItemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(mainItem.getSdoItemMetaPKey());
+
+    if (mainItem.getEdited() == "1" && Utils.isDefined(sdoItemMeta)) {
+      var modifyPresetQuantityOption = sdoItemMeta.getModifyPresetQuantity();
+
+      if ((modifyPresetQuantityOption === "ODec" && newValue > mainItem.getSuggestedQuantity()) || (modifyPresetQuantityOption === "OInc" && newValue < mainItem.getSuggestedQuantity()) || (modifyPresetQuantityOption === "No" && newValue != mainItem.getSuggestedQuantity())) {
+
+        qtyChangedDeferreds.push(Framework.displayMessage(Localization.resolve("MessageBox_Title_Warning"), Localization.resolve("QtyEditNotAllowed"), buttonValues).then(
+          function () {
+            if(modifyPresetQuantityOption === "No") {
+              newValue = oldValue;
+              me.getLoItems().suspendListRefresh();
+              mainItem.setQuantity(newValue);
+              me.getLoItems().resumeListRefresh(true);
+            }
+            else {
+              newValue = mainItem.getTargetQuantity();
+              mainItem.setQuantity(newValue);
+            }
+            mainItem.setQtyDifference(mainItem.getQuantity() - mainItem.getTargetQuantity());
+            mainItem.setEdited("1");
+            me.createDisplayInformationForListItem(orderUnitItem, me.getBoOrderMeta());
+            if (me.getBoOrderMeta().getConsiderQuantitySuggestion() !== "No" || me.getBoOrderMeta().getItemPresettingPolicy() === "Prepopulated" || me.getBoOrderMeta().getSdoSubType() === "TruckIvcTransferOutward") {
+              mainItem.setDifferenceInfo(Localization.resolve("DifferenceId") + "  " + mainItem.getQtyDifference());
+            }
+          }
+        ));
+      }
+    }
+
+    mainItem.setQuantity(newValue);
+    mainItem.setQtyDifference(mainItem.getQuantity() - mainItem.getTargetQuantity());
+    mainItem.setEdited("1");
+
+    me.createDisplayInformationForListItem(orderUnitItem, me.getBoOrderMeta());
+
+    if (me.getBoOrderMeta().getConsiderQuantitySuggestion() !== "No" || me.getBoOrderMeta().getItemPresettingPolicy() === "Prepopulated" || me.getBoOrderMeta().getSdoSubType() === "TruckIvcTransferOutward") {
+      mainItem.setDifferenceInfo(Localization.resolve("DifferenceId") + "  " + mainItem.getQtyDifference());
+    }
+  };
+
+  var pricingUpdateDeferreds = [];
+
+  var pricingUpdateHandler = function (x) {
+    var mainItem = x.mainItem;
+
+    if (Utils.isDefined(CP) && Utils.isDefined(me.getPricingReady()) && me.getPricingReady() == "1" && (me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5") && !Utils.isEmptyString(me.getBoOrderMeta().getCndCpCalculationSchemaPKey())) // ToDo: fix ComplexPricing
+    {
+      pricingUpdateDeferreds.push(CP.PricingHandler.getInstance().updateProduct(mainItem, x.modifiedAttribute));
+    }
+  };
+
+  var resetCalculationHandler = function () {
+    if (me.getCalculationStatus() !== "3") {
+      me.setCalculationStatus("3");
+      me.resetCalculationResult();
+    }
+  };
+
+  var pricingCalculateHandler = function () {
+    promise = when.resolve();
+    if (Utils.isDefined(CP) && Utils.isDefined(me.getPricingReady()) && me.getPricingReady() == "1" && (me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5") && !Utils.isEmptyString(me.getBoOrderMeta().getCndCpCalculationSchemaPKey())) {
+      promise = me.cpCalculate();
+    }
+    return promise;
+  };
+
+  var modReasonHandler = function (x) {
+    var sdoItemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(mainItem.getSdoItemMetaPKey());
+    me.reasonCodeItemValidation(x.mainItem, sdoItemMeta, "1");
+  };
+
+  /****************** Quantity Changed Handling ********************/
+  quantityProcessTriggers.forEach(qtyChangedHandler);
+
+  promise = when.all(qtyChangedDeferreds).then(
+    function () {
+      /****************** Pricing Handling ********************/
+      if (calculationProcessTriggers.length !== 0) {
+        resetCalculationHandler();
+      }
+      calculationProcessTriggers.forEach(pricingUpdateHandler);
+
+      return when.all(pricingUpdateDeferreds).then(
+        function () {
+          if (calculationProcessTriggers.length !== 0) {
+            return pricingCalculateHandler();
+          }
+        }).then(
+        function () {
+          /****************** ModReason Handling ********************/
+          reasonCodeProcessTriggers.forEach(modReasonHandler);
+
+          me.getLoItems().resumeListRefresh(true);
+
+        }
+      );
+    }
+  );
+}
+else {
+  return when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

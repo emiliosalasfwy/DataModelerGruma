@@ -1,0 +1,84 @@
+<BusinessLogic methodName="cpCreateSdoConditionRecords" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PrintRelevantOnly" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//In CGCloud we create order Sdo Conditions in preparePrint method now. Thus this method is not ready to use when truckload is enabled in CGCloud.
+//For a consistent JSON structure as in Order this method needs an update.
+if (Utils.isDefined(me.getLoSdoConditions())) {
+  var items;
+
+  if(Utils.isSfBackend()) {
+    me.getLoSdoConditions().removeAllItems();
+  }
+  else {
+     items = me.getLoSdoConditions().getAllItems();
+    for (var index = 0; index < items.length; index++) {
+      items[index].setObjectStatus(STATE.DIRTY | STATE.DELETED);
+    }
+    // END WORKAROUND
+  }
+
+  if (me.getCalculationStatus() == "1" && me.getDocTaType() !== "NonValuatedDeliveryNote" && !Utils.isEmptyString(me.getSdoConditionsJson())) {
+    if (!Utils.isEmptyString(me.getSdoConditionsJson())) {
+      var tmpJSON = [];
+      if (Utils.isDefined(me.getSdoConditionsJson()) && !Utils.isEmptyString(me.getSdoConditionsJson())) {
+        tmpJSON = JSON.parse(me.getSdoConditionsJson());
+      }
+
+      var newItems = [];
+      if (Utils.isDefined(tmpJSON)) {
+        for (var i = 0; i < tmpJSON.length; i++) {
+          if (!PrintRelevantOnly || tmpJSON[i].PrintRelevant) {
+            var itemForAdd = {};
+            itemForAdd.pKey = PKey.next();
+            itemForAdd.sdoMainPKey = me.getPKey();
+            itemForAdd.sdoItemPKey = tmpJSON[i].SdoItemPKey;
+            itemForAdd.text1 = tmpJSON[i].Text1;
+            itemForAdd.prdMainPKey = tmpJSON[i].PrdMainPKey;
+            itemForAdd.currency = tmpJSON[i].Currency;
+            itemForAdd.currencyConversionRate = tmpJSON[i].CurrencyConversionRate;
+            itemForAdd.sdoItemErpId = " ";
+            itemForAdd.cndCpCalculationPosition = tmpJSON[i].CndCpCalculationPosition;
+            itemForAdd.cndCpSearchStrategyKTRelPos = tmpJSON[i].CndCpSearchStrategyKTRelPos;
+            itemForAdd.conditionBaseValue = tmpJSON[i].ConditionBaseValue;
+            if (Utils.isEmptyString(tmpJSON[i].ConditionValue)) {
+            tmpJSON[i].ConditionValue = tmpJSON[i].ConvertedConditionValue;
+            }
+            if (!isNaN(tmpJSON[i].ConditionValue)) {
+              itemForAdd.conditionValue = tmpJSON[i].ConditionValue;
+            }
+            itemForAdd.conditionUnit = tmpJSON[i].ConditionUnit;
+            itemForAdd.unitFactor = tmpJSON[i].UnitFactor;
+            itemForAdd.convertedConditionValue = tmpJSON[i].ConvertedConditionValue;
+            itemForAdd.conditionResult = tmpJSON[i].ConditionResult;
+            itemForAdd.cndCpMetaPKey = tmpJSON[i].CndCpMetaPkey;
+            if (tmpJSON[i].PrintRelevant) {
+              itemForAdd.cpIsPrintRelevant = "1";
+            }
+            else {
+              itemForAdd.cpIsPrintRelevant = "0";
+            }
+            newItems.push(itemForAdd);
+          }
+        }
+
+        if (newItems.length > 0) {
+          me.getLoSdoConditions().addItems(newItems);
+           items = me.getLoSdoConditions().getItemObjects();
+          for (var j = 0; j < items.length; j++) {
+            if (items[j].getObjectStatus() !== (STATE.DIRTY | STATE.DELETED)) {
+              items[j].setObjectStatus(STATE.NEW | STATE.DIRTY);
+            }
+          }
+          me.getLoSdoConditions().setObjectStatus(STATE.NEW | STATE.DIRTY);
+        }
+      }
+    }
+  }
+}
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

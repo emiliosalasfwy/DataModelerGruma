@@ -1,0 +1,30 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoBpaManagement" businessObjectType="" asynchronous="FALSE" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bpaMainPKey" type="DomPKey" />
+    <MethodInput name="main" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var user = ApplicationContext.get('user');
+
+var dValidFrom = Utils.createDateToday();
+dValidFrom.setHours(0,0,0,0);
+
+// Create empty ListItem
+var liBpaManagement =
+    {
+      "pKey" : PKey.next(),
+      "bpaMainPKey" : bpaMainPKey,
+      "usrMainPKey" : user.getPKey(),
+      "main" : main,
+      "managementType" : "Sales",
+      "salesOrg" : user.getBoUserSales().getSalesOrg(),
+      "validFrom" : Utils.convertFullDate2Ansi(dValidFrom),
+      "validThru" : Utils.getMaxDate(),
+      "objectStatus" : STATE.NEW | STATE.DIRTY
+    };
+
+// Add new Item to ListObjext
+me.addListItems([liBpaManagement]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

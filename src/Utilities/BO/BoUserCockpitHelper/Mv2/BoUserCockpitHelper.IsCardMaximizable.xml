@@ -1,0 +1,14 @@
+<BusinessLogic methodName="isCardMaximizable" businessObjectClass="BoUserCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var maximizable = false;
+
+switch (cardName){
+    
+  case "NextVisitsGuide": 
+    maximizable = true;
+    break;
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

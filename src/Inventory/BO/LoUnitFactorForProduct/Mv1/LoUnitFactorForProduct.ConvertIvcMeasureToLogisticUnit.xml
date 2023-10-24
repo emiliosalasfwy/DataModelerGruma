@@ -1,0 +1,27 @@
+<BusinessLogic methodName="convertIvcMeasureToLogisticUnit" businessObjectClass="LoUnitFactorForProduct" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="ivcMeasure" type="DomIvcMeasure" />
+    <MethodInput name="balance" type="DomDecimal" />
+    <MethodInput name="quantityLogisticUnit" type="DomPrdLogisticUnit" />
+    <MethodInput name="piecesPerSmallestUnit" type="DomDecimal" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var ivcUnitInformation = me.getItemByMeasure(ivcMeasure);
+var orderUnit = me.getAllItems().find(function(x){return x.getIsOrderUnit() == "1";});
+//Convert value
+var convertedValue = -1;
+
+if (Utils.isDefined(ivcUnitInformation)){
+  var balanceInSmallestUnit = balance * ivcUnitInformation.getPiecesPerSmallestUnit();
+
+  //Display stock only in order unit in item detailed list tab.
+  if(balanceInSmallestUnit < orderUnit.getPiecesPerSmallestUnit()){
+    convertedValue = 0;
+  }
+  else{
+    convertedValue = Math.floor(balanceInSmallestUnit / piecesPerSmallestUnit);
+  }
+}]]>
+</Code>
+  <Return name="convertedValue" value="convertedValue" />
+</BusinessLogic>

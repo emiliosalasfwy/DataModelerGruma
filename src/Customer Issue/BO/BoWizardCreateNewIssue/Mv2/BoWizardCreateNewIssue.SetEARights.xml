@@ -1,0 +1,28 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewIssue" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+var acl_customer = me.getLuCustomer().getACL();
+var acl_template = me.getLuSvcRequestMeta().getACL();
+
+// Hide customer selection if wizard is opened from call navigation
+if (!Utils.isEmptyString(me.getCallPKey())) {
+  acl_customer.removeRight(AclObjectType.OBJECT, "LuCustomer", AclPermission.VISIBLE);
+}
+
+// Disable customer selection if wizard is opened for particular customer
+if (!Utils.isEmptyString(me.getCallCustomerPKey()) && me.copyMode === '0') {
+  acl_customer.removeRight(AclObjectType.OBJECT, "LuCustomer", AclPermission.EDIT);
+}
+
+
+// Hide template selection if no customer is selected
+if (Utils.isEmptyString(me.getLuCustomer().getPKey())) {
+  acl_template.removeRight(AclObjectType.OBJECT, "LuSvcRequestMeta", AclPermission.VISIBLE);
+} else {
+  acl_template.addRight(AclObjectType.OBJECT, "LuSvcRequestMeta", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

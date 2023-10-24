@@ -1,0 +1,17 @@
+<BusinessLogic methodName="setAxisDefaultColor" businessObjectClass="BoChartHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Set color of axis line
+d3.select(".c3-axis-x").select("path").style("stroke","#3D424D");
+d3.select(".c3-axis-y").select("path").style("stroke","#3D424D");
+
+// Set color of tick lines
+d3.select(".c3-axis-x").selectAll("line").style("stroke","#3D424D");
+d3.select(".c3-axis-y").selectAll("line").style("stroke","#3D424D");
+
+// Set color of axis labels
+d3.select(".c3-axis-x").selectAll("text").style("fill","#3D424D");
+d3.select(".c3-axis-y").selectAll("text").style("fill","#3D424D");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

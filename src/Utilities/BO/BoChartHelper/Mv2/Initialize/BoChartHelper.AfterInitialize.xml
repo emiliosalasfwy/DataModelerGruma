@@ -1,0 +1,9 @@
+<BusinessLogic methodName="afterInitialize" businessObjectClass="BoChartHelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="{BOType}">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+		
+   ]]></Code>
+</BusinessLogic>

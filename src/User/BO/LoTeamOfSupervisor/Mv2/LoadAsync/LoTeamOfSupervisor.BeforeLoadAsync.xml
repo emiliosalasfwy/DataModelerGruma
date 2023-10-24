@@ -1,0 +1,12 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTeamOfSupervisor" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(console.time)) {
+  console.time("LoTeamOfSupervisor: loadAsync");
+}
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

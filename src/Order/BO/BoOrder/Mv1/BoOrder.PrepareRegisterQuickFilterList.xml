@@ -1,0 +1,104 @@
+<BusinessLogic methodName="prepareRegisterQuickFilterList" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterValue" type="Object" />
+    <MethodInput name="promotion" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var orderItems;
+var ifSelectedInList = false;
+var ifSelectedInCache = false;
+
+var currentPromotion = me.getLoSelectablePromotion().getCurrent();
+var currentItemFilter = me.getLoItemFilter().getCurrent().getFilterCode();
+var categoryId = me.getBoItemTabManager().getCurrentFilterId();
+
+if(Utils.isDefined(me.getLoProductQuickFilter())){
+  ifSelectedInList = me.getLoProductQuickFilter().getItemsByParam({"isSelected": true}).length > 0;
+}
+if(Utils.isDefined(me.getGroupQuickFilterCache()) && !Utils.isEmptyString(me.getGroupQuickFilterCache())){
+  ifSelectedInCache = Object.keys(me.getGroupQuickFilterCache()).length > 0;
+}
+
+
+//Creates list for all cases
+var addItemsToLoProductQuickFilter = function (items){
+  var loProductQuickFilter = me.getLoProductQuickFilter();
+  var groupNameExists;
+  var item;
+
+  for (var i=0; i<items.length; i++){
+    groupNameExists = loProductQuickFilter.getItemsByParam({"text": items[i].getGroupName()});
+    if (groupNameExists.length === 0){
+      item = {
+        "pKey": PKey.next(),
+        "text": items[i].getGroupName(),
+        "isSelected": false,
+        "specialOption": "",
+        "filter": "Group"
+      };
+      loProductQuickFilter.addListItems([item]);
+    }
+  }
+  loProductQuickFilter.orderBy({"text": "ASC"});
+};
+
+  var selectedFilter;
+//Reapply filter from either LoProductQuickFilter or QuickFilterCache
+var applySelectedFilterToList = function (){
+  var selectedFilterExistsInLo = me.getLoProductQuickFilter().getItemsByParam({"text": selectedFilter});
+
+  if(selectedFilterExistsInLo.length > 0){
+    selectedFilterExistsInLo[0].setIsSelected(true);
+  }
+};
+
+
+if((ifSelectedInList || ifSelectedInCache) && promotion === "0"){
+  //Create list when one of the quick filters is selected either in LoProductQuickFilter or QuickFilterCache
+  var loProductQuickFilter = me.getLoProductQuickFilter();
+
+  if(ifSelectedInList === true){
+    selectedFilter = loProductQuickFilter.getItemsByParam({"isSelected": true})[0].text;
+  } else{
+    selectedFilter = me.getGroupQuickFilterCache();
+  }
+
+  loProductQuickFilter.removeAllItems();
+  ApplicationContext.set('registerFilter', selectedFilter);
+  me.getLoItems().resetFilter("groupName");
+  promise = loProductQuickFilter.createAsync().then(
+    function (){
+      orderItems = me.getLoItems().getItems();
+      if(!Utils.isDefined(filterValue)){
+        me.getLoItems().resetAllFilters();
+      }
+      me.getLoItems().setItemFilter(currentItemFilter, categoryId, currentPromotion.getPKey());
+      if(orderItems.length > 0){
+        addItemsToLoProductQuickFilter(orderItems);
+      }
+      applySelectedFilterToList();
+    });
+} else{
+  //Create new list when no quick filter is applied
+  promise = BoFactory.createObjectAsync("LoProductQuickFilter", {}).then(
+    function (quickFilterList){
+      me.setLoProductQuickFilter(quickFilterList);
+
+      if(promotion == "1"){
+        //Reset filter and QuickFilterCache on promotion switch
+        me.getLoItems().resetFilter("groupName");
+        me.setGroupQuickFilterCache(null);
+        ApplicationContext.set('registerFilter', null);
+      } else{
+        var loProductQuickFilter = me.getLoProductQuickFilter();
+        orderItems = me.getLoItems().getItems();
+        if(orderItems.length > 0){
+          addItemsToLoProductQuickFilter(orderItems);
+        }
+      }
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,74 @@
+<BusinessLogic methodName="getCockpitMenuVisibility" businessObjectClass="BoSalesCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="token" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = "1";
+var isTourUser = ApplicationContext.get('user').hasRole('TourUser');
+
+switch (token) {
+  case "SalesfolderMenu":
+    if(isTourUser) {
+      visible = "0";
+    }
+    break;
+
+  case "ContractMenu":
+    if(isTourUser) {
+      visible = "0";
+    }
+    break;
+
+  case "PaymentMenu":
+    if(isTourUser) {
+      visible = "0";
+    }
+    break;
+
+  case "TasksMenu":
+    if(isTourUser) {
+      visible = "0";
+    }
+    break;
+
+  case "IssueMenu":
+    if(isTourUser) {
+      visible = "0";
+    }
+    break;
+
+  case "StartOfDayMenu":
+  case "EndOfDayMenu":
+  case "InventoryMenu":
+  case "CashMenu":
+  case "ReplenishmentMenu":
+    if(!isTourUser || Utils.isSfBackend()) {
+      visible = "0";
+    }
+    break;
+
+  case "SyncMenu":
+    visible = "0";
+    break;
+
+  case "MessageMenu":
+    if(Utils.isSfBackend()) {
+      visible = "0";
+    }
+    break;
+
+  case "DailyReportMenu":
+    if(isTourUser && Utils.isSfBackend()) {
+      visible = "0";
+    }
+    break;
+
+  case "TourMenu":
+    if(!isTourUser) {
+      visible = "0";
+    }
+    break;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

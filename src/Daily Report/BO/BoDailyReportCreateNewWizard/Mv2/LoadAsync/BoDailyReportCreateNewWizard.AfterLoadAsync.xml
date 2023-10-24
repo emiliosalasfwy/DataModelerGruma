@@ -1,0 +1,12 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoDailyReportCreateNewWizard" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    this.setObjectStatus(this.self.STATE_NEW_DIRTY);
+    var promise=when.resolve(result);
+		
+   ]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

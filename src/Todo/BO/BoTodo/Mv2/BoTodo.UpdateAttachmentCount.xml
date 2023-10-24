@@ -1,0 +1,16 @@
+<BusinessLogic methodName="updateAttachmentCount" businessObjectClass="BoTodo" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="update" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (update === "Add") 
+{
+  this.getLuTodoAttachmentCount().set('todoAttachmentCount', (this.getLuTodoAttachmentCount().getTodoAttachmentCount() + 1));
+} 
+else if (update === "Delete") 
+{
+  this.getLuTodoAttachmentCount().set('todoAttachmentCount', (this.getLuTodoAttachmentCount().getTodoAttachmentCount() - 1));
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

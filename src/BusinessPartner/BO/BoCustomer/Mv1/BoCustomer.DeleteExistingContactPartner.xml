@@ -1,0 +1,27 @@
+<BusinessLogic methodName="deleteExistingContactPartner" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="contactPartnerPKey" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadListAsync(LO_CUSTOMERCONTACTPARTNERRELATION, {toPKey: contactPartnerPKey}).then(
+  function (object) {
+    //Set object status of ContactPartner relation
+    var relations = object.getItemsByParam({fromPKey: me.getPKey()});    
+
+    if(Utils.isSfBackend()){
+      relations[0].setFromPKey('');
+      relations[0].setObjectStatus(STATE.PERSISTED | STATE.DIRTY);
+    }else{
+      relations[0].remove();
+    }
+
+    //save async of this object is not async!!!
+    Facade.startTransaction();
+    Facade.saveListAsync(object);
+    Facade.commitTransaction();
+
+  }
+);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

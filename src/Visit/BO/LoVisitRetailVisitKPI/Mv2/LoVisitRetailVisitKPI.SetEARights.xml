@@ -1,0 +1,25 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoVisitRetailVisitKPI" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="assessmentIndicatorDefinitionDataType" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// for primary KPIs data type dateTime is no supported
+// if primary KPI is dateTime hide the field in the promary KPI list
+
+if(Utils.isDefined(assessmentIndicatorDefinitionDataType) && assessmentIndicatorDefinitionDataType === "DateTime"){
+  me.getACL().removeRight(AclObjectType.PROPERTY, "actualValue", AclPermission.VISIBLE);
+  me.getACL().removeRight(AclObjectType.PROPERTY, "targetValue", AclPermission.VISIBLE);
+  me.getACL().removeRight(AclObjectType.PROPERTY, "question", AclPermission.VISIBLE);
+}else{
+  var itemsWithoutPrimaryKPI = me.getItemsByParamArray([{"isPrimaryKPI" : "1", "op" : "NE"}]);
+
+  itemsWithoutPrimaryKPI.forEach(function(itemWithoutPrimaryKPI){
+    aclItemWithoutPrimaryKPI = itemWithoutPrimaryKPI.getACL();
+    aclItemWithoutPrimaryKPI.removeRight(AclObjectType.PROPERTY, "actualValue", AclPermission.VISIBLE);
+    aclItemWithoutPrimaryKPI.removeRight(AclObjectType.PROPERTY, "targetValue", AclPermission.VISIBLE);
+    aclItemWithoutPrimaryKPI.removeRight(AclObjectType.PROPERTY, "question", AclPermission.VISIBLE);
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,78 @@
+<BusinessLogic methodName="ebFireItemListEvents" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//*************************************************************************************************************
+// New Event Handling with Buffering
+// 
+// Events are buffered in ebBufferItemListEvents(), a timer is started
+// When the timer is finished ebFireItemListEvents() is called, here the handling of the buffered events starts
+// The handling itself is done in ebHandleItemListEvents()
+// ebForceItemListEvents() can be called (should be called from a process) to force the clearance of the buffer
+//*************************************************************************************************************
+
+var promise;
+var deferreds = [];
+
+//check whether stepper timers are still running or if numpad is open
+if(Utils.listStepperTimeoutRunning())
+{
+  //timers are still running, so just restart our own
+  var eventTimer = me.getEventTimer();
+  if(Utils.isDefined(eventTimer))
+  {
+    clearTimeout(eventTimer);
+  }
+  eventTimer = setTimeout(
+    function()
+    {
+      me.ebFireItemListEvents();
+    },
+    750
+  );
+  me.setEventTimer(eventTimer);
+
+  promise = when.resolve();
+}
+else
+{
+  //no timers are running, so fire off the events
+  var buffer = me.getItemListEventBuffer();
+
+  me.setItemListEventBuffer([]);
+
+  if(Utils.isDefined(buffer) && buffer.length > 0)
+  {
+    promise = me.ebHandleItemListEvents(buffer)
+      .then(
+      function()
+      {
+        me.setItemListEventBufferingActive("0");
+        if(me.getItemListEventBuffer().length > 0)
+        {
+          var eventTimer = me.getEventTimer();
+          if(Utils.isDefined(eventTimer))
+          {
+            clearTimeout(eventTimer);
+          }
+          eventTimer = setTimeout(
+            function()
+            {
+              me.ebFireItemListEvents();
+            },
+            750
+          );
+          me.setEventTimer(eventTimer);
+        }
+
+        me.setItemListEventBufferingActive("1");
+      }
+    );
+  }
+  else
+  {
+    promise = when.resolve();
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

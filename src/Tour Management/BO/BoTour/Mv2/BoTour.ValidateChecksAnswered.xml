@@ -1,0 +1,32 @@
+<BusinessLogic methodName="validateChecksAnswered" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isAnswered = true;
+//Validation for tour check on state transition from 'open' to 'running'
+if (me.getTmgStatus().toLowerCase() === "open") {
+  if(Utils.isDefined(me.getLoTourChecks)){
+    var liTourCheckItems = me.getLoTourChecks().getAllItems(); 
+    if(liTourCheckItems.length > 0){
+      for (var i = 0; i < liTourCheckItems.length; i++) {
+        var liTourCheckItem=liTourCheckItems[i];
+        if(liTourCheckItem.getUsage() =="S" && liTourCheckItem.getValue() == "0"){
+          isAnswered = false;
+          break;
+        }
+      }
+    }
+  }
+}
+
+//Validation Message
+if(!isAnswered){
+  var newError = {"level": "error", 
+              "objectClass": "BoTour", 
+              "messageID": "CasTmgTruckCheck"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

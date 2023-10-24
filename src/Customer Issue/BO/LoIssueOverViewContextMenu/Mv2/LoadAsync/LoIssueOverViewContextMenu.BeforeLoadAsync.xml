@@ -1,0 +1,110 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoIssueOverViewContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// unwrap parameters
+var newParams = context.jsonQuery;
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "CancelDarkGrey24",
+  "actionId" : "Cancel",
+  "processEvent" : "Cancel",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+};
+
+var menuEntry1 = {
+  "id" : "0000002",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "Delete",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+};
+
+var menuEntry2 = {
+  "id" : "0000003",
+  "actionImg" : "CopyDarkGrey24",
+  "actionId" : "Copy",
+  "processEvent" : "Copy",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+};
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+
+var promise = BoFactory.loadObjectByParamsAsync("BoWorkflow", me.getQueryBy("pKey", context.jsonQuery.wfeWorkflowPKey)).then(
+  function (object) {
+    var nextStates = object.getNextStatesByStateType(context.jsonQuery.actualStatePKey, "Cancelled");
+    var user = ApplicationContext.get('user');
+    if (Utils.isCasBackend()) {
+      var activeBySubstitution = false;
+
+      if (context.jsonQuery.substitutionStatus === "Active_Substitute" || context.jsonQuery.substitutionStatus === "Active_Substituted") {
+        activeBySubstitution = true;
+      }
+    }
+
+    var jsonQuery = context.jsonQuery;
+    var phase = jsonQuery.issuePhase.getText().toLowerCase();
+    var userPKey = user.getPKey();
+    var inactiveSubstituted = jsonQuery.substitutionStatus !== "Inactive_Substituted"; 
+    var activeSubstitute = jsonQuery.substitutionStatus === "Active_Substitute";
+    var userIsResponsible = jsonQuery.responsiblePKey === userPKey;
+    var userIsInitiatior = jsonQuery.initiatorPKey === userPKey;
+
+    //Only For Responsible or Initiator (which is not currently substituted) or a substitute (that is currently active) and for Initial or Release state
+    if ((userIsResponsible && inactiveSubstituted || userIsInitiatior && inactiveSubstituted || activeSubstitute) && (phase === "initial" || phase === "released") && Utils.isDefined(nextStates) && nextStates.length > 0) {
+      menuEntry0.actionEnabled = "1";
+    }
+
+    //If Current user is responsible (and currently not substituted), Delete is available at any phase
+    if (userIsResponsible && inactiveSubstituted) {
+      menuEntry1.actionEnabled = "1";
+    }
+    //If not supervisor (and currently not substituted) then Initial and Release phase
+    else if (userIsInitiatior && user.getIsSupervisor() === "0" && inactiveSubstituted && (phase === "initial" || phase === "released")) {
+      menuEntry1.actionEnabled = "1";
+    }
+    //Supervisor (and currently not substituted) then any phase
+    else if (jsonQuery.initiatorPKey === userPKey && inactiveSubstituted && user.getIsSupervisor() == "1") {
+      menuEntry1.actionEnabled = "1";
+    }
+    //If current user is active substitute then Initial and Release phase
+    else if (activeSubstitute && (phase === "initial" || phase === "released")) {
+
+      menuEntry1.actionEnabled = "1";
+    }
+
+    var svcQuery = {};
+
+    svcQuery.params = [{ "field" : "svcRequestMetaPKey", "value" : jsonQuery.svcMetaPKey }];
+
+    return BoFactory.loadObjectByParamsAsync("LuSvcRequestMetaValidForUser", svcQuery);
+  }).then(
+  function (luSvcRequestMetaValidForUser) {
+
+    // Copy Context Menu for Issue - EA Rights
+
+    // Template must be active and valid for the current user (checked via the lookup)
+    if (luSvcRequestMetaValidForUser.getValidForUser() == "1") {
+
+      // Do not allow copy if the original issue is private and the customer is only substituted (via isManagedCustomer = 0)
+      if ((context.jsonQuery.isPrivate.getId() == "1") && (Utils.isDefined(context.jsonQuery.isManagedCustomer)) && (context.jsonQuery.isManagedCustomer.getId() === "0")) {
+        menuEntry2.actionEnabled = "0";
+      } else {
+        menuEntry2.actionEnabled = "1";            
+      }
+    }
+
+    me.addItems([menuEntry0, menuEntry1, menuEntry2]);
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

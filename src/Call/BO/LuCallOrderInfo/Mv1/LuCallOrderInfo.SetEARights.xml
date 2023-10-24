@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LuCallOrderInfo" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="companyRequired" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(companyRequired == "Not required"){
+  var aclOrderInfo = me.getACL();
+  aclOrderInfo.removeRight(AclObjectType.PROPERTY, "orders", AclPermission.VISIBLE);
+  aclOrderInfo.removeRight(AclObjectType.PROPERTY, "items", AclPermission.VISIBLE);
+  aclOrderInfo.removeRight(AclObjectType.PROPERTY, "totalValue", AclPermission.VISIBLE);
+  aclOrderInfo.removeRight(AclObjectType.PROPERTY, "currency", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

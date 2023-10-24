@@ -1,0 +1,18 @@
+<BusinessLogic methodName="loadLoOpenHoursAsync" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise =  when.resolve();
+
+if(bReload == "1" ||!Utils.isDefined(me.getLoOpenHours())) {
+  promise = BoFactory.loadListAsync(LO_TIMESLOT, me.getQueryBy("operatingHoursId", me.getOperatingHoursId())).then(
+    function (loOpenHours) {
+      var objectState = me.getObjectStatus();
+      me.setLoOpenHours(loOpenHours);
+      me.setObjectStatus(objectState);
+    });	
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,19 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoRewardProductValidation" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+var currentRewardId = me.getHurdleEvaluationHelper().getLoRewards().current.getPKey();
+var currentRewardProducts = me.getLoRewardProducts().getItems();
+
+currentRewardProducts.forEach(function(freeProduct) {
+  var rewardProduct = me.getHurdleEvaluationHelper().getLoRewardProducts().getAllItems().find(function(product){
+    return product.promotionReward == currentRewardId && product.prdId == freeProduct.prdId;
+  });
+  deferreds.push(rewardProduct.setQuantity(freeProduct.getQuantity()));
+});
+var promise = when.all(deferreds);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

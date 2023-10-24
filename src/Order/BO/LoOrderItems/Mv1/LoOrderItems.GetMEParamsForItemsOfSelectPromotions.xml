@@ -1,0 +1,57 @@
+<BusinessLogic methodName="getMEParamsForItemsOfSelectPromotions" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var mergePropertyFilter = "FILTER";
+var mergePropertyNone = "NONE";
+
+var mergeEngineParams = [];
+var phase = jsonParams.phase;
+var syncStatus = jsonParams.syncStatus;
+
+
+if ((!((phase == BLConstants.Order.PHASE_RELEASED) || (phase == BLConstants.Order.PHASE_CANCELED) || (phase == BLConstants.Order.PHASE_READY ))) && (jsonParams.disposalListProposal == "Proposal") && (jsonParams.mobilityRelevant == "1") && (syncstaus !== BLConstants.Order.NOT_SYNCABLE)) {
+
+  //Closed listing and Authorization List
+  if (jsonParams.considerListing == 1) {
+    var dsForAuthorizationList = this.getDSForAuthorizationList(mergePropertyNone, jsonParams.customerPKey, jsonParams.listing, jsonParams.listingWithModules);
+    //add to ME-Params
+    mergeEngineParams.push(dsForAuthorizationList);
+  }
+
+  //Sales Document Assortment
+  if (jsonParams.useSalesDocAssortment == 1 || jsonParams.filterBySdoAssortment == 1) {
+    var dsForSdoAssortment = this.getDSForSdoAssortment(mergePropertyNone, jsonParams.sdoMetaPKey, jsonParams.commitDate);
+    //add to ME-Params
+    mergeEngineParams.push(dsForSdoAssortment);
+  }
+  
+  //Out of stock products
+  if (jsonParams.considerOutOfStock != "No") {
+    if (Utils.isDefined(jsonParams.clbMainPKey) && !(Utils.isEmptyString(jsonParams.clbMainPKey))) {
+      mergeEngineParams.push(this.getDSForOutOfStock(jsonParams.clbMainPKey));
+    }
+  }
+
+  //Historic products
+  if (jsonParams.addHistoryItem == 1) {
+    var dateFrom = Utils.addDays2AnsiDate(jsonParams.commitDate, jsonParams.considerMaxHistoryDays * (-1));
+    mergeEngineParams.push(this.getDSForHistoricProducts(jsonParams.customerPKey, jsonParams.sdoMetaPKey, dateFrom));
+  }
+
+  //Inventory items
+  if (Utils.isDefined(jsonParams.tmgTourPKeys)){
+    if (jsonParams.considerInventory == 1 || jsonParams.filterByCurrentInventory == 1 ) {
+      var dsForCurrentInventory = this.getDsForCurrentInventory(mergePropertyNone, jsonParams.ivcMetaPKeys, jsonParams.bpaMainPKeys, jsonParams.tmgTourPKeys, jsonParams.etpVehiclePKeys, jsonParams.usrMainPKeys);
+      mergeEngineParams.push(dsForCurrentInventory);
+    } 
+  }
+}
+
+mergeEngineParams.push(this.getDSForSelectablePromotions(jsonParams, Utils.createDateToday()));
+
+mergeEngineParams.push(this.getDSForProductInformation(mergePropertyFilter, jsonParams.allowForeignProducts, jsonParams.considerFieldState,
+                                                       jsonParams.mainItemTemplate.getQuantityLogisticUnit(), jsonParams.considerNewProducts, jsonParams.commitDate, jsonParams.flatItemListGroupingAttribute, jsonParams.criterionFilterAttribute,
+                                                       jsonParams.criterionFilterValue, jsonParams.itemListOption));]]></Code>
+  <Return name="mergeEngineParams" value="mergeEngineParams" />
+</BusinessLogic>

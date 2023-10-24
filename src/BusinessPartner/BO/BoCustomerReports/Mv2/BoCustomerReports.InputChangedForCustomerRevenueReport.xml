@@ -1,0 +1,61 @@
+<BusinessLogic methodName="inputChangedForCustomerRevenueReport" businessObjectClass="BoCustomerReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCustomerSalesRevenue" type="Object" />
+    <MethodInput name="containerName" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var me = this;
+
+if(!Utils.isDefined(me.getChartHelper()))
+{
+  return;
+}
+
+var chartString = "chart_" + containerName;
+var chartSelector = "#"+chartString;
+var chartHelper = me.getChartHelper();
+var chart = chartHelper.getChartFromStorage(containerName);   
+
+if (Utils.isDefined(chart)) 
+{
+  var jsonData = this.prepareDataForCustomerRevenueReport(loCustomerSalesRevenue);
+
+  chart.load(jsonData.data);
+  chart.axis.range(jsonData.axisRange);
+  chart.focus();
+
+
+  me.getChartHelper().setAxisDefaultColor();
+
+  var svg = d3.select(chartSelector);
+  var text = svg.selectAll("text");
+  text.style("font-size", "1.2em");
+  text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+  // Set background to white
+  me.getChartHelper().setChartBackgroundDefaultColor(chartSelector, "100%");
+
+ 
+
+  var d3Container = me.getChartHelper().getUIContainer(containerName);
+ // Check if the ChartHelper is defined or not
+  if(!Utils.isDefined(d3Container))
+  {
+    return;
+  }
+  var chartDiv = d3Container.select(chartSelector);
+  var eventRect = chartDiv.selectAll(".c3-event-rect");
+
+  eventRect.on('mouseout', function(elem)
+      { 
+      });
+
+
+  setTimeout(function () {
+    // center vertically
+    me.centerVerticallyCustomerRevenueReport(containerName);
+
+  }, 100);
+
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

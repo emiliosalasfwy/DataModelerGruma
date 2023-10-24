@@ -1,0 +1,20 @@
+<BusinessLogic methodName="deleteItem" businessObjectClass="LoCustomerPOSRelation" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var liCustomerPOSRelation = me.getItemByPKey(pKey);
+
+if(Utils.isDefined(liCustomerPOSRelation) && liCustomerPOSRelation.getMandatory()!= 1){
+  liCustomerPOSRelation.delete();
+
+  //save list explicitly after deleting pos
+  Facade.startTransaction();
+  promise = Facade.saveListAsync(me).then(function(){
+    return Facade.commitTransactionAsync();
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,48 @@
+<BusinessLogic methodName="filterProductsByQuickFilter" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="items" type="Object" />
+    <MethodInput name="isPromotionFilterSet" type="String" />
+    <MethodInput name="isDiscrepanciesFilterSet" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loProductQuickFilter = me.getLoProductQuickFilter();
+var loCurrentSurveyProducts = me.getBoJobManager().getLoCurrentSurveyProducts();
+
+var previousAppliedGroup = loProductQuickFilter.getItemsByParam({"isSelected": true});
+var currentAppliedGroup = loProductQuickFilter.getItemsByParam({"text": items[0].text});
+
+loCurrentSurveyProducts.resetFilter("category");
+
+//Update LoProductQuickFilter with current filter
+if(previousAppliedGroup.length > 0 && previousAppliedGroup[0].getText() !== items[0].text){
+  previousAppliedGroup[0].setIsSelected(false);
+  if(items[0].specialOption !== "CLEAR"){
+    currentAppliedGroup[0].setIsSelected(true);
+  }
+} else if(previousAppliedGroup.length === 0 && items[0].specialOption !== "CLEAR"){
+  currentAppliedGroup[0].setIsSelected(true);
+}
+
+//Apply filter on survey item list
+if(items[0].specialOption !== "CLEAR"){
+  var filterArray = [];
+  me.setGroupQuickFilterCache(items[0].text);
+
+  //Quick filter in combination of other applied filters
+  if(isPromotionFilterSet == "1"){
+    filterArray.push({"planned": "1", "op": "EQ"});
+  }
+  if(isDiscrepanciesFilterSet == "1"){
+    filterArray.push({"hasDiscrepance": "1", "op": "EQ"});
+  }
+  filterArray.push({"category": items[0].text, "op": "EQ"});
+
+  loCurrentSurveyProducts.resetFilter("planned");
+  loCurrentSurveyProducts.resetFilter("hasDiscrepance");
+  loCurrentSurveyProducts.setFilterArray(filterArray);
+} else{
+  me.setGroupQuickFilterCache(null);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

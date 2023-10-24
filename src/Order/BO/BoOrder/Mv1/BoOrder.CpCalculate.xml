@@ -1,0 +1,137 @@
+<BusinessLogic methodName="cpCalculate" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="triggeredByFreeItem" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(SalesforceTools.isPricingLicenseAvailable()){
+
+
+
+  var calculationComplete;
+
+  //refresh Order data - will be checked if different to current data in engine
+  if (me.getBoOrderMeta().getCpPricingDate() === "DeliveryDate") {
+    me.setPricingDate(me.getDeliveryDate());
+  }
+  if (me.getFirstCalculation() === "1") {
+    me.setFirstCalculation("0");
+  }
+
+  CP.PricingHandler.getInstance().updateOrder(me.getPricingDate(), me.getCurrency(), me.cpGetRelevantOrderAttributes());
+
+  var results = [];
+  var recalculationRequired = "0";
+  var calcSuccess = true;
+  var splittingRule = me.getSplittingRule();
+
+  if(me.isGroupingEnabled()) {
+    var groups = [];
+    var determineGroups = function (x) {
+      var group = x.getSplittingGroup();
+      var quantity = x.getQuantity();
+      if(groups.indexOf(group) === -1 && quantity > 0) {
+        groups.push(group);
+      }
+    };
+    me.getLoItems().getAllItems().forEach(determineGroups);
+
+    var groupIndex = 0;
+    var currentGroup = " ";
+
+    var calculationFunction = function() {
+      if(groupIndex < groups.length) {
+        currentGroup = groups[groupIndex];
+
+        var itemFilterCallback = function(x){return x.dicAttributes.getItem('splittingGroup') === currentGroup;};
+
+        return CP.PricingHandler.getInstance().calculateOrderValue(itemFilterCallback).then(function(groupResult) {
+          groupResult.splittingGroup = currentGroup;
+          results.push(groupResult);
+          groupIndex++;
+
+          return calculationFunction();
+        });
+      }
+      return when.resolve();
+    };
+
+    calculationComplete = calculationFunction();
+  }
+  else {
+    calculationComplete = CP.PricingHandler.getInstance().calculateOrderValue().then(function (result) {
+      if (Utils.isDefined(result)) {
+        result.splittingGroup = " ";
+        results.push(result);
+      }
+    });
+  }
+
+  var promise = calculationComplete.then(function() {
+    if (me.isGroupingEnabled()) {
+      return me.resetCalculationResult();
+    }
+  }).then(function() {
+    var deferreds = [];
+    calcSuccess = results.length > 0;
+
+    for(var j = 0;  j < results.length; j++) {
+      deferreds.push(me.cpHandleCalculateResult(triggeredByFreeItem, results[j]));
+      calcSuccess = calcSuccess && results[j].CSTAT;
+    }
+
+    return when.all(deferreds);
+  }).then(function(reCalcReq) {
+    recalculationRequired = reCalcReq.reduce(
+      function (recalcRequired, recalcReqResult) {
+        return recalcReqResult === "1" ? "1" : recalcRequired;
+      }, "0");
+
+    if (me.getIsOrderPaymentRelevant() === '1') {
+      return me.setPaidAmountReceipt(me.getGrossTotalValueReceipt());
+    }
+  }).then(function() {
+    if(calcSuccess) {
+      if (me.getPaidAmount() >= 0) {
+        me.setDebitCredit("Debit");
+      } else {
+        me.setDebitCredit("Credit");
+      }
+
+      //Update total value at item filter
+      me.updateItemFilterTotalValue();
+      me.setCalculationTime(Utils.createAnsiDateTimeNow());
+      me.setCalculationStatus("1");
+    }
+    else {
+      me.setCalculationTime(Utils.createAnsiDateTimeNow());
+      me.setCalculationStatus("4");
+      return me.resetCalculationResult();
+    }      
+
+  }).then(function() {
+    return me.createPricingInfoJson();
+  }).then(function() {
+    if(recalculationRequired === "1") {
+      AppLog.log("#CP  ----> Recalculation triggered! <---- ");
+      return me.cpCalculate("1");
+    }
+  });
+}else{
+  var messageCollector = new MessageCollector();
+  var newError = {
+    "level": "error",
+    "objectClass" : "BoOrder",
+    "messageID" : "CasSdoNoPPPLicense"
+  };
+  messageCollector.add(newError);
+
+  var buttonValues = {};
+  var messages = messageCollector.getMessages().join("<br>");
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), messages, buttonValues).then(function () {
+    return "0";
+  });
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

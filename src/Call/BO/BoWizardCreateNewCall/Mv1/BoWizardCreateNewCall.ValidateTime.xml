@@ -1,0 +1,26 @@
+<BusinessLogic methodName="validateTime" businessObjectClass="BoWizardCreateNewCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[if (!Utils.isEmptyString(me.getDateFrom()))
+{
+  var d1 = Utils.convertAnsiDate2Date(me.getDateFrom());               
+  var splitString = me.getTimeFrom().split(":");
+  d1.setHours(splitString[0],splitString[1],0,0);
+
+  var duration = me.getCallMetaLookup().getDefaultDuration();
+  d1.setMinutes(d1.getMinutes() + duration );
+  d1.setHours(0,0,0,0);
+
+  if (d1 > Utils.convertAnsiDate2Date(me.getDateFrom()))
+  {
+    var  newError = {
+      "level": "error",
+      "objectClass": "BoCall",
+      "messageID": "CasClbCallsMayNotSpanSeveralDays"
+    };
+    messageCollector.add(newError);
+  }
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,249 @@
+<BusinessLogic methodName="addItemFromObject" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productsForAdd" type="LoProductForAdd" />
+    <MethodInput name="productPKey" type="DomPKey" />
+    <MethodInput name="sdoMainPKey" type="DomPKey" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="promotionPkey" type="DomPkey" />
+    <MethodInput name="considerSelectablePromotion" type="DomBool" />
+    <MethodInput name="commitDate" type="DomDate" />
+    <MethodInput name="itemTemplate" type="LiOrderItemMeta" />
+    <MethodInput name="clbMainPKey" type="DomPKey" />
+    <MethodInput name="criterionAttribute" type="String" />
+    <MethodInput name="barcodeScanBehavior" type="DomSdoBarcodeScanBehavior" />
+    <MethodInput name="scanIncrementQuantity" type="DomInteger" />
+    <MethodInput name="mode" type="String" />
+    <MethodInput name="uoM" type="DomPrdLogisticUnit" />
+    <MethodInput name="piecesPerSmallestUnit" type="DomPrdPiecesPerUnit" />
+    <MethodInput name="orderMeta" type="Object" />
+    <MethodInput name="loSuggestedQuantity" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var productInformationCP;
+var productInfoJsonParams = [];
+var productInfoJsonQuery = {};
+var promise;
+var result;
+
+if(Utils.isSfBackend()) {
+  commitDate = Utils.convertForDBParam(commitDate, "DomDate");
+}
+productInfoJsonParams.push({
+  "field" : "prdMainPKey",
+  "value" : productPKey
+});
+productInfoJsonParams.push({
+  "field" : "commitDate",
+  "value" : commitDate
+});
+productInfoJsonParams.push({
+  "field" : "criterionAttribute",
+  "value" : criterionAttribute
+});
+
+productInfoJsonQuery.params = productInfoJsonParams;
+if(Utils.isSfBackend() && Utils.isDefined(orderMeta) && (orderMeta.getComputePrice() === "4" || orderMeta.getComputePrice() === "5")) {
+  productInformationCP = "LuCpProductInformation";
+}
+else {
+  productInformationCP ="LuProductInformation";
+}
+
+var productInformationLookup;
+promise = Facade.getObjectAsync(productInformationCP, productInfoJsonQuery)
+  .then(
+  function (lookupData) {
+    // Instantiate lookup from lookup data
+    productInformationLookup = BoFactory.instantiate(productInformationCP, lookupData);
+
+    if (!Utils.isDefined(uoM) || Utils.isEmptyString(uoM)) {
+      // Set unit information depending on default unit
+      if (itemTemplate.getQuantityLogisticUnit() == "OrderUnit") {
+        uoM = productInformationLookup.getOrderQuantityLogisticUnit();
+      }
+      else if (itemTemplate.getQuantityLogisticUnit() == "ConsumerUnit") {
+        uoM = productInformationLookup.getConsumerQuantityLogisticUnit();
+      }
+      else if (itemTemplate.getQuantityLogisticUnit() == "PriceUnit") {
+        uoM = productInformationLookup.getPriceQuantityLogisticUnit();
+      }
+      else {
+        uoM = productInformationLookup.getOrderQuantityLogisticUnit();
+      }
+    }
+
+    var existingItems;
+
+    if(considerSelectablePromotion == '1') {
+      existingItems = me.getItemsByParam(
+        {
+          "prdMainPKey" : productPKey,
+          "sdoItemMetaPKey" : itemTemplate.getPKey(),
+          "quantityLogisticUnit" : uoM,
+          "promotionPKey" : promotionPkey
+        });
+    }
+    else {
+      existingItems = me.getItemsByParam(
+        {
+          "prdMainPKey" : productPKey,
+          "sdoItemMetaPKey" : itemTemplate.getPKey(),
+          "quantityLogisticUnit" : uoM
+        }); 
+    }
+
+    var filterCountIncrements = [];
+
+    //Check if there exists an item with the same ProductPKey
+    if (existingItems.length === 0) {
+
+      var product = productsForAdd.getItemsByParam({"prdMainPKey" : productPKey})[0];
+
+      // Initializing result
+      result = {};
+      // If the product is empty, then throw a error message otherwise get the data
+      if (Utils.isDefined(product)) {
+        var item = product.getData();
+
+        // Prepare data to instantiate the LI from, give PKey and remove id property
+        item.pKey = PKey.next();
+        delete item.id;
+        item.sdoMainPKey = sdoMainPKey;
+        item.prdMainPKey = productPKey;
+        item.isOrderUnit = "1";
+        item.quantityLogisticUnit = productInformationLookup.getOrderQuantityLogisticUnit();
+        item.piecesPerSmallestUnit = productInformationLookup.getOrderPiecesPerSmallestUnit();
+        item.piecesPerSmallestUnitForBasePrice = Math.max(productInformationLookup.getPiecesPerSmallestUnitForBasePrice(), 1);
+        item.priceEffect = itemTemplate.getPriceEffect();
+        item.sdoItemMetaPKey = itemTemplate.getPKey();
+        item.shortType = itemTemplate.getShortText();
+        item.type = itemTemplate.getText();
+        item.saveZeroQuantity = itemTemplate.getSaveZeroQuantity();
+        item.calculationGroup = itemTemplate.getCalculationGroup();
+        item.movementDirection = itemTemplate.getMovementDirection();
+        item.refPKey = productPKey + itemTemplate.getPKey();
+        item.deletedFreeItem = "0";
+        item.sort = "0";
+        item.discount = 0;
+        item.specialPrice = 0;
+        // pricing info variable assignment
+        item.pricingInfo1 = 0;
+        item.pricingInfo2 = 0;
+        item.pricingInfo3 = 0;
+        item.pricingInfo4 = 0;
+        item.pricingInfo5 = 0;
+        item.pricingInfo6 = 0;
+        item.pricingInfo7 = 0;
+        item.pricingInfo8 = 0;
+        item.pricingInfo9 = 0;
+        item.pricingInfo10 = 0;
+
+        if(Utils.isSfBackend()) {
+          if(item.listed == '1' && item.promoted == '1') {
+            item.itemState = 'PL';
+          } 
+          else if(item.listed == '0' && item.promoted == '1') {
+            item.itemState = 'P';                
+          } 
+          else if(item.listed == '1' && item.promoted == '0') {
+            item.itemState = 'L';                
+          }
+        }
+
+        /*this is a workaround:
+        groupId is bound as sorting attribute to order item list UI,
+        if groupId is null then framework will remove this item from list.
+        groupId is null when criterion product code is not maintained in backend for product in context*/
+        if(!Utils.isDefined(item.groupId)) {
+          item.groupId = "";
+        }
+
+        // Set object status
+        item.objectStatus = STATE.NEW;
+
+        me.addListItems([item]);
+        return me.addMissingUoMsToItem(item, itemTemplate).then(
+          function()
+          {
+            if (Utils.isDefined(orderMeta)) {
+              me.createDisplayInformationForItem(item, orderMeta, loSuggestedQuantity);
+            }
+
+            result.selectPKey = item.getPKey();
+
+            var foundItem = me.getItemsByParam(
+              {
+                "refPKey": item.getRefPKey(),
+                "quantityLogisticUnit" : uoM
+              });
+
+            var unitOfMeasureItem;
+
+            if(foundItem.length > 0) {
+              unitOfMeasureItem = foundItem[0];
+            }
+            else {
+              unitOfMeasureItem = me.getFirstItem();
+            }
+
+            result.filterCountIncrements = filterCountIncrements;
+            result.unitOfMeasureItem = unitOfMeasureItem;
+
+            // Build return values
+            if (item.getPromoted() == "1") {
+              filterCountIncrements.push(
+                {
+                  "key" : "Promotion",
+                  "value" : 1
+                });
+            }
+
+            if (item.getNewState() == "Available") {
+              filterCountIncrements.push({
+                "key" : "New",
+                "value" : 1
+              });
+            }
+
+            if (item.getOutOfStock() == "1") {
+              filterCountIncrements.push({
+                "key" : "OutOfStock",
+                "value" : 1
+              });
+            }
+
+            filterCountIncrements.push(
+              {
+                "key" : "All",
+                "value" : 1
+              });
+            return result;
+          });     
+      }
+      else {
+        result.filterCountIncrements = filterCountIncrements;
+        var buttonValues = {};
+        buttonValues[Localization.resolve("OK")] = "ok";
+        return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("Product_ScanProductProcess.ProductScannedNotInPromotionMsg"), buttonValues)
+          .then(function (input) {
+          return result;
+        });
+      }
+    } 
+    else {
+      var existingItem = existingItems[0];  
+      result = {};
+      result.selectPKey = existingItem.getPKey();
+      result.filterCountIncrements = filterCountIncrements;	
+      result.unitOfMeasureItem = existingItem;
+      return result;
+    }
+  }).then(function(result) {
+  // Increase quantity by scan increment if product is selected via scanning
+  if (mode === "addScannedProduct" && barcodeScanBehavior === "SelectIncrease") {
+    return me.incrementQuantityByScan(result.unitOfMeasureItem, scanIncrementQuantity);
+  }
+}).then(function(){
+  return result;  
+});]]></Code>
+  <Return name="addItemResult" value="promise" />
+</BusinessLogic>

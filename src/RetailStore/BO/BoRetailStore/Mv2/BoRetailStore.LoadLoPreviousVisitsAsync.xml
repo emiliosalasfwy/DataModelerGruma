@@ -1,0 +1,18 @@
+<BusinessLogic methodName="loadLoPreviousVisitsAsync" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+if(!Utils.isDefined(me.getLoPreviousVisits())) {
+  promise = BoFactory.loadListAsync(LO_PREVIOUSVISIT, me.getQueryBy("retailStoreId", me.getPKey())).then(
+    function (loPreviousVisitsJson) {
+      var objectState = me.getObjectStatus();
+      me.setLoPreviousVisits(loPreviousVisitsJson);
+      me.setObjectStatus(objectState);
+    });
+}
+else{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoRetailStore_LoadPreviousVisitsAsync" value="promise" />
+</BusinessLogic>

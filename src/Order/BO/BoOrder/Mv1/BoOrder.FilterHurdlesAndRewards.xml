@@ -1,0 +1,11 @@
+<BusinessLogic methodName="filterHurdlesAndRewards" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="selectedPromotionPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.getHurdleEvaluationHelper().getLoHurdles().setFilter("promotionPKey", selectedPromotionPKey, "EQ");
+me.getHurdleEvaluationHelper().getLoRewards().setFilter("promotionPKey", selectedPromotionPKey, "EQ");
+me.getHurdleEvaluationHelper().getLoRewardGroups().setFilter("promotionPKey", selectedPromotionPKey, "EQ");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,18 @@
+<BusinessLogic methodName="loadLoContactAsync" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+if(!Utils.isDefined(me.getLoContact())) {
+  promise = BoFactory.loadListAsync(LO_CONTACT, me.getQueryBy("accountId", me.getAccountId())).then(
+    function (loContactsJson) {
+      var objectState = me.getObjectStatus();
+      me.setLoContact(loContactsJson);
+      me.setObjectStatus(objectState);
+    });
+}
+else{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoRetailStore_LoadLoInContactAsync" value="promise" />
+</BusinessLogic>

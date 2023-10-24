@@ -1,0 +1,9 @@
+<BusinessLogic methodName="getCustomerPKey" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="callPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var customerPKey = me.getItemByPKey(callPKey).bpaMainPKey;]]>
+</Code>
+  <Return name="customerPKey" value="customerPKey" />
+</BusinessLogic>

@@ -1,0 +1,34 @@
+<BusinessLogic methodName="validateBase" businessObjectClass="BoCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (me.getLuCallMeta().getCompanyRequired() === "Not required") {
+  if (!Utils.isEmptyString(me.getBpaMainPKey())) {
+    // error : customer is illegal for this call template
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "simpleProperty" : "bpaMainPKey",
+      "messageID" : "CasClbCallTemplateDoesNotAllowCustomer"
+    };
+    messageCollector.add(newError);
+  }
+}
+else if (me.getLuCallMeta().getCompanyRequired() === "Mandatory") {
+  if (Utils.isEmptyString(me.getBpaMainPKey())) {
+    // error : customer must be filled
+    newError = {
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "simpleProperty" : "bpaMainPKey",
+      "messageID" : "CasClbCallTemplateDoesNotAllowNoCustomer"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

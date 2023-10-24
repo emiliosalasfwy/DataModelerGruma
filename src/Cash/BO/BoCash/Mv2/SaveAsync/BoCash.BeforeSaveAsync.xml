@@ -1,0 +1,83 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoCash" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//update amount
+if(me.getDebitCredit() === "Credit")
+{
+  me.setPaidAmount(me.getAbsolutePaidAmount() * -1);
+}
+else
+{
+  me.setPaidAmount(me.getAbsolutePaidAmount());
+}
+
+//for unreleased check in documents, updated sdopayments
+//checks done within
+var promise = me.createCheckInPayments().then(
+  function(){
+    if (me.getSetPhaseInBeforeSave() == "1" && Utils.isDefined(me.getBoWorkflow())) {
+
+      var actualState_beforeTransiton = me.getActualStatePKey();
+      var actualStatePKey_afterTransition = " ";
+      var nextStatePKey_afterTransition = " ";
+      var phase_afterTransition = " ";
+
+      //Determine ActualStatePKey to PKey of next phase 
+      var nextStates = me.getBoWorkflow().getNextStates(me.getActualStatePKey());
+
+      if (nextStates.length > 0) {
+        actualStatePKey_afterTransition = nextStates[0].toStatePKey;
+        phase_afterTransition = nextStates[0].stateType;
+
+        //Set NextStatePKey to ActualStatePKey (setting to nextStatePKey would not be correct - save at Web after sync would do state transition)
+        nextStatePKey_afterTransition = nextStates[0].toStatePKey;
+      }
+
+      //Determine next responsible
+      return me.getBoWorkflow().getNextResponsible(nextStatePKey_afterTransition, me.getResponsiblePKey(), me.getOwnerPKey()).then(
+        function (nextResponsible) {
+
+          //Set next responsible, states and, phase
+          //Note: If no responsible has been found, a message is displayed in after save
+          if (Utils.isDefined(nextResponsible)) {
+            me.setResponsiblePKey(nextResponsible);
+            me.setActualStatePKey(actualStatePKey_afterTransition);
+            me.setNextStatePKey(nextStatePKey_afterTransition);
+            me.setPhase(phase_afterTransition);
+
+            //Reset internal property to avoid duplicate phase and responsible setting
+            me.setSetPhaseInBeforeSave("0");
+
+            if (me.getBoWorkflow().getRecentStatePolicy() == "1") {
+              return BoFactory.createListAsync(LO_ORDERRECENTSTATE, {});
+            }
+          }
+        }).then(
+        function (loRecentState) {
+          if (Utils.isDefined(loRecentState)) {
+            me.setLoWfeRecentState(loRecentState);
+
+            //Write recent state entry
+            var jsonData = {};
+
+            jsonData.pKey = PKey.next();
+            jsonData.done = Utils.createDateToday();
+            jsonData.sdoMainPKey = me.getPKey();
+            jsonData.usrMainPKey = ApplicationContext.get('user').getPKey();
+            jsonData.wfeStatePKey = actualState_beforeTransiton;
+
+            me.getLoWfeRecentState().addItems([jsonData]);
+            me.getLoWfeRecentState().getItemsByParam({ "pKey": jsonData.pKey })[0].setObjectStatus(me.self.STATE_NEW_DIRTY);
+          }
+        }).then(
+        function(){
+          me.processInventoryActions();
+        });
+    }
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

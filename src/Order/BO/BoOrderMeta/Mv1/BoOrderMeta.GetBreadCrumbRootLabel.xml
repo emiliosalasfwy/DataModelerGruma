@@ -1,0 +1,25 @@
+<BusinessLogic methodName="getBreadCrumbRootLabel" businessObjectClass="BoOrderMeta" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var rootLabel = "";
+        var productSelectorConfiguration;
+
+        if ((this.getItemListOption() == "Hierarchy") && (this.getMobilityRelevant() == "1")) {
+            var params = [];
+
+            params.push({ "Level1": "All", "op": "NE" });
+            params.push({ "Level1": "Basket", "op": "NE" });
+            params.push({ "Level1": "New", "op": "NE" });
+            params.push({ "Level1": "Promotion", "op": "NE" });
+            params.push({ "Level1": "OutOfStock", "op": "NE" });
+            params.push({ "Level1": "History", "op": "NE" });
+
+            productSelectorConfiguration = this.getLoProductSelector().getItemsByParamArray(params);
+
+            if (productSelectorConfiguration.length > 0) {
+                rootLabel = Utils.DomainRepository.getToggleText("SdoPrdSelectorLevel1", productSelectorConfiguration[0].getLevel1());
+            }
+        }]]>
+</Code>
+  <Return name="rootLabel" value="rootLabel" />
+</BusinessLogic>

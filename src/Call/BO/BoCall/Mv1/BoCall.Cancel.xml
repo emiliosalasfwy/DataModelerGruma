@@ -1,0 +1,83 @@
+<BusinessLogic methodName="cancel" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reasonCode" type="Object" />
+    <MethodInput name="disableTransactionHandling" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//the system deletes jobs and detaches job lists.
+var deliveryCancelPromises = [];
+//needed for cancelTour case because transaction handling is managed in BoTour.cancelTour
+var executeTransaction = true;
+
+if(Utils.isDefined(disableTransactionHandling) &&
+   (disableTransactionHandling == "1" || disableTransactionHandling === "true" || disableTransactionHandling === true)){
+  executeTransaction = false;
+}
+if(executeTransaction){
+  Facade.startTransaction();
+}
+if (Utils.isDefined(reasonCode)) {
+  me.setReasonCode(reasonCode);
+}
+
+//Delete JobLists and standard JobDefLists
+//capture after Status set to Abandoned
+me.setClbStatus("Abandoned");
+me.captureProceedingTime("true");
+
+var promise = me.getBoJobManager().loadAndSetPrerequisites("StatusChange_Delete").then(
+  function () {
+    me.getBoJobManager().getLoCurrentSurveys().delete();
+    me.getBoJobManager().getLoQuestions().delete();
+    me.getBoJobManager().getLoMagnetizedJobList().demagnetizeAll();
+    // assign surveys to some POS so that the deletion will be saved
+    me.getBoJobManager().getLoPOS().getFirstItem().setSurveys(me.getBoJobManager().getLoCurrentSurveys());
+
+    if (me.getLuCallMeta().getLocCaptureDuringCancel() == "1") {
+      return me.getPosition();
+    }
+  }).then(function(){
+  // Parameters to load the Deliveries
+  var jqueryParams = [];
+  var jqueryQuery = {};
+  jqueryParams.push({"field" : "callCustomerPKey", "value" : me.getBpaMainPKey()});
+  jqueryParams.push({"field" : "uIPosition", "value" : "Delivery"});
+  jqueryParams.push({"field" : "callPKey", "value" : me.getPKey()});
+  jqueryQuery.params = jqueryParams;
+
+  //TourCase: Check if Call/Visit is in current running tour context
+  if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) &&
+     ApplicationContext.get('currentTourPKey') == me.getTmgMainPKey() && Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus') === "Running"){
+
+    //load all kinds of open sales documents assigned to the visit
+    return BoFactory.loadObjectByParamsAsync("LoCallRelatedDocuments", jqueryQuery);
+  }
+  else{
+    //load call related delivery documents
+    return BoFactory.loadObjectByParamsAsync("LoDeliveryOverview", jqueryQuery);
+  }
+}).then(function (loDocuments) {
+  if (Utils.isDefined(loDocuments)) {
+    var documents = loDocuments.getAllItems();
+    if (Utils.isDefined(documents) && documents.length > 0) {
+      for (var index = 0; index < documents.length; index++) {
+        if (documents[index].getPhase() === "Initial") {
+          //Using cancelDeliveries method for cancelling all kind of documents
+          deliveryCancelPromises.push(me.cancelDeliveries(documents[index].getPKey(), "CanceledByCall"));
+        }
+      }
+    }
+    return when.all(deliveryCancelPromises).then(function () {
+      me.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+      return me.saveAsync().then(
+        function () {
+          if(executeTransaction){
+            return Facade.commitTransactionAsync();
+          }
+        });
+    });
+  }
+});]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,109 @@
+<BusinessLogic methodName="presetDeliveryDate" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var deliveryDate;
+
+var considerSaturday = me.getBoOrderMeta().getConsiderSaturday();
+var considerSunday = me.getBoOrderMeta().getConsiderSunday();
+var considerLeadTime = me.getBoOrderMeta().getConsiderLeadTime();
+var leadTime = me.getBoOrderMeta().getLeadTime();
+
+var validDeliveryDateFound = false;
+
+switch (me.getBoOrderMeta().getDeliveryDatePolicy()) {
+  case "Today":
+    // Return current date
+    deliveryDate = Utils.createAnsiDateTimeToday();
+
+    promise = when.resolve(deliveryDate);
+
+    break;
+  case "BuiltIn":
+    if (considerLeadTime == "0") {
+      // Return current date
+      deliveryDate = Utils.createAnsiDateTimeToday();
+
+      promise = when.resolve(deliveryDate);
+    } else {
+      // Return calculated date
+
+      // Precalculate max delivery date
+      var maxDeliveryDate = Utils.convertAnsiDate2Date(
+        Utils.createAnsiDateTimeToday(),
+        me.getBoOrderMeta().getMaxLeadTime()
+      );
+
+      // Load list of public holidays for chekc
+      var jsonParams = [];
+      jsonParams.push({ field: "checkDate", value: Utils.createAnsiToday() });
+      jsonParams.push({
+        field: "maxCheckDate",
+        value: Utils.convertFullDate2Ansi(maxDeliveryDate),
+      });
+
+      var jsonQuery = {};
+      jsonQuery.params = jsonParams;
+
+      promise = BoFactory.loadObjectByParamsAsync(
+        "LoPublicHolidays",
+        jsonQuery
+      ).then(function (loPublicHolidays) {
+        ///Double conversion is needed  here as no Utils Function is available to replace
+        //returns Day Date Time
+        var calculatedDeliveryDate = Utils.convertAnsiDate2Date(
+          Utils.createAnsiToday()
+        );
+        var validDayCounter = 0;
+
+        // Check delivery date according to configurations regarding saturday, sunday and public holidays
+        while (!validDeliveryDateFound) {
+          if (
+            me.checkDeliveryDate(
+              calculatedDeliveryDate,
+              considerSaturday,
+              considerSunday,
+              loPublicHolidays
+            )
+          ) {
+            validDayCounter = validDayCounter + 1;
+          }
+
+          if (validDayCounter <= leadTime + 1) {
+            calculatedDeliveryDate = Utils.convertAnsiDate2Date(
+              Utils.addDays2AnsiFullDate(
+                Utils.convertFullDate2Ansi(calculatedDeliveryDate),
+                1
+              )
+            );
+          } else {
+            validDeliveryDateFound = true;
+          }
+
+          // Stop if maximum lead time has been reached
+          if (calculatedDeliveryDate.getTime() == maxDeliveryDate.getTime()) {
+            validDeliveryDateFound = true;
+          }
+        }
+
+        deliveryDate = Utils.convertFullDate2Ansi(calculatedDeliveryDate);
+
+        return deliveryDate;
+      });
+    }
+    break;
+  case "No":
+    if (me.getDocumentType() == "Replenishment") {
+      deliveryDate = null;
+    } else {
+      // Return empty date
+      deliveryDate = Utils.getMinDate();
+    }
+
+    promise = when.resolve(deliveryDate);
+
+    break;
+}]]>
+</Code>
+  <Return name="deliveryDate" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,59 @@
+<BusinessLogic methodName="onPaymentReasonChanged" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newValue = handlerParams.newValue;
+var oldValue = handlerParams.oldValue.getId();
+var type = me.getDocTaType();
+var promise = when.resolve();
+var buttonValues = {};
+
+if(Utils.isEmptyString(oldValue) && type != "NonValuatedDeliveryNote"){
+  if (!Utils.isEmptyString(newValue)){
+    //Message confirmation
+    buttonValues[Localization.resolve("OK")] = "ok";
+    buttonValues[Localization.resolve("Cancel")] = "cancel";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("PaymentReasonChange"), buttonValues).then(
+      function(input){
+        if(input === "ok"){
+          me.setDocTaType("NonValuatedDeliveryNote");
+          return me.resetCalculationResult().then(function () { 
+            var itemsMain = me.getLoItems();
+            var items = itemsMain.getAllItems();
+            var deferreds = [];
+
+            for (var index = 0; index < items.length; index++){
+              var item = items[index];
+              deferreds.push(me.resetFreeItems(item));
+            }
+            me.setCalculationTime(Utils.getMinDate());
+            me.setCalculationStatus("4");
+            deferreds.push(me.setEARight());
+            return when.all(deferreds);
+          });
+        }
+        else{
+          me.setPaymentReason(" ");
+        }
+      });
+  }
+  else{
+    me.setPaymentReason(oldValue);
+  }
+}
+else{
+  if(type == "NonValuatedDeliveryNote" && Utils.isEmptyString(newValue)){
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("NoEmptyPaymentReason"), buttonValues).then(
+      function(input){
+        me.setPaymentReason(oldValue);
+      });
+  }
+  else{
+    me.setPaymentReason(newValue);
+  }
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

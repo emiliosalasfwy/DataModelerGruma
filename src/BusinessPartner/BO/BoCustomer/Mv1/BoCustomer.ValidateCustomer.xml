@@ -1,0 +1,35 @@
+<BusinessLogic methodName="validateCustomer" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*
+UC: NGM Customer - Main
+The system saves and validates the customer data.
+The customer Name must not be empty.
+The Id must be unique within the sales organization. 
+*/
+
+if (Utils.isEmptyString(me.getName().trim()))
+{
+  messageCollector.add({
+    "level": "error", 
+    "objectClass": "BoCustomer", 
+    "messageID": "CasBpaMainCustomerNameMustNotBeEmpty",
+    "messageParams": {}
+  });
+}
+
+var email1 = me.getEmail1();
+if (me.getEmailEditable() == '1' && !Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1))
+{
+  messageCollector.add({
+    "level": "error", 
+    "objectClass": "BoCustomer", 
+    "messageID": "CasBpaMainCustomerEmailInvalid",
+    "messageParams": {}
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

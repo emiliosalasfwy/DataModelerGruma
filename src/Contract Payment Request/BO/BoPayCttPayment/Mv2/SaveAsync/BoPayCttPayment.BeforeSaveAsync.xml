@@ -1,0 +1,64 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoPayCttPayment" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*************************************************************************************
+*  1 CGCloud table / 2 onPrem tables                                                    *
+*                                                                                    *
+*  CGCloud:    -Payment and Payment Memo are stored in same table Contract_Payment__c   *
+*  onPrem:  -Separate table for payment memo                                         *
+**************************************************************************************/
+
+var paymentSavedPromise;
+
+if (Utils.isSfBackend()) {
+  paymentSavedPromise = BoFactory.createObjectAsync("BoSfHelper", {})
+    .then(function (helper) {
+    return helper.saveTrackedObject(me, []);
+  });
+}
+else {
+  paymentSavedPromise = Facade.saveObjectAsync(me).then(function () { return when.resolve(true); });
+}
+
+var promise = paymentSavedPromise.then(function (boWasSaved) {
+  var promises = []; 
+  if (boWasSaved) {
+    if(Utils.isDefined(me.getLoPayTactics())) {
+      promises.push(me.getLoPayTactics().saveAsync());
+    }
+
+    if(Utils.isDefined(me.getBoPayCttMemoData())) {
+      var boPayCttMemo = me.getBoPayCttMemoData();      
+
+      //Set SaveType - Always - Used Below condition
+      if (boPayCttMemo.getPaytext() != " ") {
+        if (boPayCttMemo.getPKey() == " ") {
+          if (Utils.isCasBackend()) {
+            var pKey = PKey.next();
+            boPayCttMemo.setPKey(pKey);
+            boPayCttMemo.setPayCttPaymentPKey(me.getPKey());
+            boPayCttMemo.setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+          }
+          else {
+            boPayCttMemo.setPKey(me.getPKey());
+            boPayCttMemo.setPayCttPaymentPKey(me.getPKey());
+            boPayCttMemo.setObjectStatus(STATE.PERSISTED | STATE.DIRTY);
+          }
+        }
+        me.setBoPayCttMemoData(boPayCttMemo);                          
+        console.info(me.getBoPayCttMemoData());
+        promises.push(me.getBoPayCttMemoData().saveAsync());
+      }
+    }
+  }
+  return when.all(promises);
+})
+.then(
+  function () {
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

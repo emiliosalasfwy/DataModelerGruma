@@ -1,0 +1,15 @@
+<BusinessLogic methodName="handlePaymentMethodChanged" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="oldValue" type="String" />
+    <MethodInput name="newValue" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(oldValue != newValue){
+  //reset payment collected flag whenever payment method is changed
+  me.setIsPaymentCollected("0");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

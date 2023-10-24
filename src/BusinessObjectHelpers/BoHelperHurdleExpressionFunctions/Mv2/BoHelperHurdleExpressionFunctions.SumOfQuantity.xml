@@ -1,0 +1,81 @@
+<BusinessLogic methodName="sumOfQuantity" businessObjectClass="BoHelperHurdleExpressionFunctions" businessObjectType="businessobjecthelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="hurdle" type="Object" />
+    <MethodInput name="order" type="Object" />
+    <MethodInput name="call" type="Object" />
+    <MethodInput name="pricingCalculator" type="Object" />
+    <MethodInput name="targetValue" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var perFactor = 1;
+var evaluationResult = {
+  "evaluationResult": false,
+  "differenceInfo": {
+    "detailText": "",
+    "calculatedValue": "",
+    "perFactor": 0
+  }
+};
+
+if(Utils.isDefined(targetValue) && !Utils.isEmptyString(targetValue)) {
+  var operator = hurdle.getOperator();
+  var mainOrderItemMeta = order.getBoOrderMeta().getLoOrderItemMetas().getItemsByParamArray([{"main":1}])[0];
+  var itemsParams = [{"quantity":"0","op":"GT"},
+                     {"sdoItemMetaPKey":mainOrderItemMeta.getPKey(),"op":"EQ"},
+                     {"promotionPKey":hurdle.getPromotionPKey(),"op":"EQ"},
+                     {"isOrderUnit":"1","op":"EQ"}];
+  var filteredItems = order.getLoItems().getItemsByParamArray(itemsParams);
+  var itemsToConsider = me.filterItemsByClassification(filteredItems, hurdle);
+  var sum = itemsToConsider.reduce(function (currentSum, currentItem) {
+    return currentSum + currentItem.getQuantity();
+  }, 0);
+  evaluationResult.evaluationResult = me.evaluateOperation(sum, operator, targetValue);
+  evaluationResult.differenceInfo.calculatedValue = sum;
+
+  // to check the applicability of reward having linked hurdle and set the per factor according to evaluation result
+  if(!evaluationResult.evaluationResult) {
+    perFactor = 0;
+  }
+  if(operator === "PER") {
+    if(targetValue > 0 && sum > 0) {
+      perFactor = Math.floor(sum/targetValue);
+    }
+    else {
+      perFactor = 0; 
+    }       
+  }
+  evaluationResult.differenceInfo.perFactor = perFactor;
+
+  var difference = Math.abs(targetValue - sum);
+  if(!evaluationResult.evaluationResult) {
+    switch (operator) {
+      case "gt":
+        evaluationResult.differenceInfo.detailText = "[b]" + (difference + 1) + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "ge":
+        evaluationResult.differenceInfo.detailText = "[b]" + difference + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "PER":
+        evaluationResult.differenceInfo.detailText = "[b]" + difference + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "eq":
+        evaluationResult.differenceInfo.detailText = "[b]" + difference + "[/b] " + Localization.resolve(sum < targetValue ? "Hurdle_more" : "Hurdle_less");
+        break;
+      case "ne":
+        evaluationResult.differenceInfo.detailText = "[b]1" + "[/b] " + Localization.resolve("Hurdle_moreless");
+        break;
+      case "le":
+        evaluationResult.differenceInfo.detailText = "[b]" + difference + "[/b] " + Localization.resolve("Hurdle_less");
+        break;
+      case "lt":
+        evaluationResult.differenceInfo.detailText = "[b]" + (difference + 1) + "[/b] " + Localization.resolve("Hurdle_less");
+        break;
+    }
+  }
+}
+else {
+  AppLog.warn("Invalid numeric value for following hurdle: '" + hurdle.getHurdleTitle() + "' (" + hurdle.getPKey() + ")");
+}]]>
+</Code>
+  <Return name="evaluationResult" value="evaluationResult" />
+</BusinessLogic>

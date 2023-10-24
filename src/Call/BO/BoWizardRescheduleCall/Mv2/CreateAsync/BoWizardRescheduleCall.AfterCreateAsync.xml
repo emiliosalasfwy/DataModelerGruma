@@ -1,0 +1,12 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWizardRescheduleCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise=when.resolve(result);
+me.setCallBo(context.jsonQuery.callBo);
+if (context.jsonQuery.callBo.allDay == "0"){
+me.setDuration(context.jsonQuery.callBo.duration);
+}]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

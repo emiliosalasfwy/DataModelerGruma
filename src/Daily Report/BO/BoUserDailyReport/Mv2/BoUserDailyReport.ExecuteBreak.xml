@@ -1,0 +1,221 @@
+<BusinessLogic methodName="executeBreak" businessObjectClass="BoUserDailyReport" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="clbMainBo" type="BoCall" />
+    <MethodInput name="timeEntryPKey" type="DomPKey" />
+    <MethodInput name="effectiveUTCTimeFrom" type="DomDateTime" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var closeTimeEntryPKey = "";
+var clbMainPKey = " ";
+var breakTimeEntryPKey = "";
+var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+
+// define timer
+var timer = {
+  // get Date out of UTC time ANSI string
+  getTimeEntryStartDate : function (effectiveUTCTimeFromAnsi) {
+    var teStartDate = Utils.createDateNow();
+    var splittedDateTime = effectiveUTCTimeFromAnsi.split(" ");
+    var splittedDate = splittedDateTime[0].split("-");
+    var splittedTime = splittedDateTime[1].split(":");
+    teStartDate.setUTCFullYear(splittedDate[0]);
+    teStartDate.setUTCMonth(splittedDate[1] - 1);
+    teStartDate.setUTCDate(splittedDate[2]);
+    teStartDate.setUTCHours(splittedTime[0]);
+    teStartDate.setUTCMinutes(splittedTime[1]);
+    teStartDate.setUTCSeconds(splittedTime[2]);
+    return teStartDate;
+  },
+
+  init : function (id) {
+    me[id] = {
+      obj : document.getElementById(id)
+    };
+  },
+
+  start : function (id, timeEntryStartDate) {
+    var obj = me[id];
+    if (Utils.isDefined(timeEntryStartDate)) {
+      obj.srt = me.getTimeEntryStartDate(timeEntryStartDate);
+    }
+    else {
+      obj.srt = Utils.createDateNow();
+    }
+    clearTimeout(obj.to);
+    me.tick(id);
+  },
+
+  stop : function (id) {
+    var obj = me[id];
+    obj.obj.innerHTML = " ";
+    clearTimeout(me[id].to);
+  },
+
+  tick : function (id) {
+    me.stop(id);
+    var obj = me[id];
+    var sec = Math.round((Utils.createDateNow() - obj.srt) / 1000);
+    var min = Math.floor(sec / 60);
+    sec = sec % 60;
+    var hrs = 0;
+    if (min > 59) {
+      hrs = Math.floor(min / 60);
+      min = min % 60;
+    }
+
+    // format time strings
+    sec = sec > 9 ? sec : "0" + sec;
+    min = min > 9 ? min : "0" + min;
+    hrs = hrs > 9 ? hrs : "0" + hrs;
+
+    obj.obj.innerHTML = hrs + ":" + min + ":" + sec;
+    obj.to = setTimeout(function () {
+      timer.tick(id);
+    }, 1000);
+  }
+};
+
+var buttonValues = {};
+var breakMessage = Localization.resolve("BoUserDailyReport_BreakMessageText");
+buttonValues[Localization.resolve("BoUserDailyReport_BreakMessageEndButton")] = "ok";
+
+//recovery
+if(Utils.isDefined(timeEntryPKey) && !Utils.isEmptyString(timeEntryPKey) && Utils.isDefined(effectiveUTCTimeFrom) && !Utils.isEmptyString(effectiveUTCTimeFrom)){
+  // task for showing timer in message box
+
+  var breakerMessage = "Break is running since: " + timer.getTimeEntryStartDate(effectiveUTCTimeFrom)  +" .";
+
+  promise = MessageBox.displayMessage(me.getBoUserDocMeta().getBreakUsrTimeEntryText(), breakerMessage, buttonValues).then(
+    function () {
+      // close break time entry
+      return me.closeTimeEntry(timeEntryPKey, false);
+    }
+  ).then(
+    function (timeEntryPKey) {
+      me.setEARights();
+    });
+}
+else {
+  // standard
+  // get time entry of call which has to be closed
+  if (Utils.isDefined(clbMainBo)) {
+    clbMainPKey = clbMainBo.getPKey();
+    closeTimeEntryPKey = clbMainBo.getTimeEntryPKey();
+  }
+
+  promise = me.closeTimeEntry(closeTimeEntryPKey, true).then(
+    function (timeEntryPKey) {
+      if (Utils.isDefined(clbMainBo)) {
+        clbMainBo.setTimeEntryPKey("");
+      }
+
+      // calculate start date and time
+      var now = Utils.createDateNow();
+      var time = dateTimeHelper.getFormattedTimeString(now.getHours() * 60 + now.getMinutes());
+      var breakTemplateText = me.getBoUserDocMeta().getBreakUsrTimeEntryText();
+      return me.createTimeEntry(me.getBoUserDocMeta().getBreakUsrTimeEntryMetaPKey(), clbMainPKey, " ", breakTemplateText, Utils.convertFullDate2Ansi(now), Utils.getMinDateTime(), time, "00:00", " ", " ", "0");
+    }
+  ).then(
+    function (timeEntryPKey) {
+      // error handling ... start no timer if time entry for break could not be created
+      if ((!Utils.isDefined(timeEntryPKey) || Utils.isEmptyString(timeEntryPKey)) && !Utils.isEmptyString(closeTimeEntryPKey)) {
+        // create new time entry for call if time entry was closed before
+        var now = Utils.createDateNow();
+        var time = dateTimeHelper.getFormattedTimeString(now.getHours() * 60 + now.getMinutes());
+        return me.createTimeEntry(clbMainBo.getUsrTimeEntryMetaPKey(), clbMainPKey, " ", clbMainBo.getSubject(), Utils.convertFullDate2Ansi(now), Utils.getMinDateTime(), time, "00:00", " ", " ", "0").then(
+          function (timeEntryPKey) {
+            clbMainBo.setTimeEntryPKey(timeEntryPKey);
+            return timeEntryPKey;
+          });
+      }
+      else {
+        return timeEntryPKey;
+      }
+    }
+  ).then(
+    function () {
+      // task for showing timer in message box
+      var newBreakerMessage = "Break is running since: " + Utils.createDateNow()  +" .";
+      return MessageBox.displayMessage(me.getBoUserDocMeta().getBreakUsrTimeEntryText(), newBreakerMessage, buttonValues);
+    }
+  ).then(
+    function (result) {
+      if (result === "ok") {
+        return me.closeTimeEntry(timeEntryPKey, true).then(
+          function () {
+            breakTimeEntryPKey = timeEntryPKey;
+            // create new time entry for call if time entry was
+            // closed before
+            if (!Utils.isEmptyString(closeTimeEntryPKey)) {
+              var now = Utils.createDateNow();
+              var time = dateTimeHelper.getFormattedTimeString(now.getHours() * 60 + now.getMinutes());
+              return me.createTimeEntry(clbMainBo.getUsrTimeEntryMetaPKey(), clbMainPKey, " ", clbMainBo.getSubject(), Utils.convertFullDate2Ansi(now), Utils.getMinDateTime(), time, "00:00", " ", " ", "0").then(
+                function (timeEntryPKey) {
+                  clbMainBo.setTimeEntryPKey(timeEntryPKey);
+                });
+            }
+          }
+        ).then(
+          function(){
+            return BoFactory.loadObjectByParamsAsync(LU_TIMEENTRYTYPE, me.getQueryBy("pKey", me.getBoUserDocMeta().getBreakUsrTimeEntryMetaPKey())).then(
+              function (luTimeEntryType) {
+
+                // Refresh total durations
+                if (Utils.isDefined(luTimeEntryType) && luTimeEntryType.getShowAggregation() == "1") {
+                  var listTimeEntryByVisitType = me.getLoUsrTimeEntryByVisitType().getItemObjects();
+                  var timeEntryFound = false;
+
+                  // check if time entry type is already in list
+                  var liBreakTimeEntry;
+                  var listTimeEntries;
+                  for (var i = 0; i < listTimeEntryByVisitType.length; i++) {
+
+                    if (listTimeEntryByVisitType[i].getPKey() === me.getBoUserDocMeta().getBreakUsrTimeEntryMetaPKey()) {
+                      // refresh duration of matching time
+                      listTimeEntries = me.getLoUsrTimeEntry().getItemObjects();
+                      for (var j = 0; j < listTimeEntries.length; j++) {
+                        if (listTimeEntries[j].getPKey() === breakTimeEntryPKey) {
+                          var duration = listTimeEntryByVisitType[i].getDuration().split(":");
+                          var durationInMinutes = duration[0] * 60 + duration[1] * 1 + listTimeEntries[j].getDuration();
+                          listTimeEntryByVisitType[i].setDuration(dateTimeHelper.getFormattedTimeString(durationInMinutes));
+                          timeEntryFound = true;
+                          break;
+                        }
+                      }
+                      break;
+                    }
+                  }
+
+                  // add new time entry type if type was not found
+                  if (!timeEntryFound) {
+                    listTimeEntries = me.getLoUsrTimeEntry().getItemObjects();
+                    for (var k = 0; k < listTimeEntries.length; k++) {
+                      if (listTimeEntries[k].getPKey() === breakTimeEntryPKey) {
+
+                        var newLiDuration = listTimeEntries[k].getDuration();
+                        var newliUsrTimeEntryType = {
+                          "pKey": luTimeEntryType.getPKey(),
+                          "text": luTimeEntryType.getText(),
+                          "duration": dateTimeHelper.getFormattedTimeString(newLiDuration)
+                        };
+                        me.getLoUsrTimeEntryByVisitType().addListItems([newliUsrTimeEntryType]);
+                        break;
+                      }
+                    }
+                  }
+                }
+                // Refresh total working time
+                me.calculateTotalActivityDuration();
+                me.setEARights();
+              });
+          });
+      }
+      else {
+        me.setEARights();
+      }
+    });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

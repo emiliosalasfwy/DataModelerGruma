@@ -1,0 +1,52 @@
+<BusinessLogic methodName="prepareFastOrderProducts" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[/* This method is used to prepare the list of items needed for Fast Order DataSearchField.
+   It is triggered from Item list tab and takes no input parameters.
+   Returns 2 dictionaries:
+   1.orderItemDictionary have Pkey as key and complete order item as the value.
+   This dictionary would used later for applying fast order quantites to order items.
+   2.productNumberDictionary have Product number as key and fastOrderItem as the value
+   This dictionary would be used to add items from pasteFromClipboard to FastOrder screen
+*/
+
+var items = me.getLoItems().getAllItems();
+var orderItemDictionary = Utils.createDictionary();
+var productNumberDictionary = Utils.createDictionary();
+var dictionaries = {};
+var fastOrderItems = [];
+var fastOrderItem;
+
+for(var i=0; i < items.length; i++) {
+  var currentProduct = items[i];
+  var isValidProductForAdd = currentProduct.isEditable();
+
+  if(isValidProductForAdd){
+    var isValidFastOrderItem = false;
+    isValidFastOrderItem = (currentProduct.sdoItemMetaPKey !== me.boOrderMeta.luOrderMetaForFreeItems.sdoItemMetaPKey ||
+                            Utils.isEmptyString(currentProduct.getRewardPKey())) && 
+      currentProduct.getPromotionPKey() == me.getSelectedPromotionPKey() && currentProduct.getIsOrderUnit() == "1" &&
+      me.boOrderMeta.loOrderItemMetas.getItemByPKey(currentProduct.sdoItemMetaPKey).main == "1";
+
+    if(isValidFastOrderItem) {
+      orderItemDictionary.add(currentProduct.getPKey(), currentProduct);
+      fastOrderItem = {
+        "pKey" : currentProduct.getPKey(),
+        "productNumber": currentProduct.getPrdId(),
+        "productDescription": currentProduct.getText1()
+      };
+      productNumberDictionary.add(currentProduct.getPrdId(), fastOrderItem);
+      fastOrderItems.push(fastOrderItem);
+    }
+  }
+}
+
+var loFastOrderProducts = BoFactory.instantiate("LoFastOrderProducts");
+loFastOrderProducts.addListItems(fastOrderItems);
+me.setLoFastOrderProducts(loFastOrderProducts);
+
+dictionaries.orderItemDictionary = orderItemDictionary;
+dictionaries.productNumberDictionary = productNumberDictionary;]]>
+</Code>
+  <Return name="dictionaries" value="dictionaries" />
+</BusinessLogic>

@@ -1,0 +1,19 @@
+<BusinessLogic methodName="assimilateQuestion" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="question" type="LiQuestion" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//PKey replacement of historical questions is done during BoJobManager save
+me.getLoQuestions().suspendListRefresh();
+question.setClbMainPKey(me.getClbMainPKey());
+question.setVisitDate(me.getReferenceDate());
+question.setVisitTime(me.getTimeFrom());       
+question.setObjectStatus(this.self.STATE_NEW_DIRTY);
+me.getLoQuestions().resumeListRefresh(true);
+
+if(question.getDone() !== "1"){
+  question.setDone("1");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

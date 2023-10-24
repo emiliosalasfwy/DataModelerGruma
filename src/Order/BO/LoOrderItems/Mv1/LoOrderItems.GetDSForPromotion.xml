@@ -1,0 +1,58 @@
+<BusinessLogic methodName="getDSForPromotion" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="commitDate" type="DomDate" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Datasource name (required by merge engine)
+var LO_MEPROMOTION = "LoMePromotion";
+
+var datasourceDefiniton = {
+	"boName" : LO_MEPROMOTION,
+	"dsParams" : {
+		"params" : [{
+				"field" : "customerPKey",
+				"value" : customerPKey
+			}, {
+				"field" : "commitDate",
+				"value" : commitDate
+			}
+		]
+	},
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "promoted",
+			"alias" : "promoted",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : mergeProperty,
+	"lookupDataSource" : "false"
+};
+
+if (Utils.isSfBackend()) {
+  datasourceDefiniton.dataSourceColumns.push({
+			"name" : "promotionPKey",
+			"alias" : "promotionPKey",
+			"default" : " " });
+  datasourceDefiniton.dataSourceColumns.push({
+			"name" : "rewardPKey",
+			"alias" : "rewardPKey",
+			"default" : " " });
+  datasourceDefiniton.dataSourceColumns.push({
+			"name" : "groupName",
+			"alias" : "groupName",
+			"default" : " " });
+  datasourceDefiniton.dataSourceColumns.push({
+			"name" : "groupSort",
+			"alias" : "groupSort",
+			"default" : " " });
+  datasourceDefiniton.dataSourceColumns.push({
+			"name" : "groupIdSort",
+			"alias" : "groupIdSort",
+			"default" : " " });
+}]]>
+</Code>
+  <Return name="dsForPromotion" value="datasourceDefiniton" />
+</BusinessLogic>

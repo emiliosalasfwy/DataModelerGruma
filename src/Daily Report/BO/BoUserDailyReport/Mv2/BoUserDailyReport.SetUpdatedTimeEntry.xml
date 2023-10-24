@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setUpdatedTimeEntry" businessObjectClass="BoUserDailyReport" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Parameters>
+    <MethodInput name="updatedTimeEntries" type="LoUsrTimeEntry" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+    if (Utils.isDefined(updatedTimeEntries)) {
+
+       me.setLoUsrTimeEntry(null);
+       me.setLoUsrTimeEntry(updatedTimeEntries);
+
+      }
+
+   ]]></Code>
+</BusinessLogic>

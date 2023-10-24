@@ -1,0 +1,43 @@
+<BusinessLogic methodName="setGalleryIcon" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jDTPKey" type="String" />
+    <MethodInput name="showGalleryIcon" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var questions = me.getBoJobManager().getLoQuestions();
+
+if(Utils.isDefined(jDTPKey)){
+  var currentJDT = questions.getItemByPKey(jDTPKey);
+  if(showGalleryIcon === "true" && currentJDT.cameraIcon != "PictureDetailwithPictures"){
+    currentJDT.cameraIcon = "PictureDetailwithPictures";
+  }
+  else if(!showGalleryIcon){
+    currentJDT.cameraIcon = "TakePicture";
+  }
+} else{
+  var attachmentIds;
+  var hasAttachments;
+  var noAttachments;
+  var attachments = me.getLoCallAttachments().getItemsByParamArray([{"objectStatus" : me.self.STATE_DELETED + me.self.STATE_NEW, "op" : "NE"},
+                                                                    {"objectStatus" : me.self.STATE_DELETED + me.self.STATE_UNMODIFIED, "op" : "NE"}]);
+
+  var deletedAttachments = me.getLoCallAttachments().filter(function(attachment){
+    return attachment.objectStatus === me.self.STATE_DELETED + me.self.STATE_NEW || attachment.objectStatus === me.self.STATE_DELETED + me.self.STATE_UNMODIFIED;
+  });
+
+  attachmentIds = attachments.map(function(attachment){return attachment.getClbMainPKey();});
+  hasAttachments = questions.filter(function(question){return attachmentIds.find(function(id) {return id === question.getPKey();});});
+  attachmentIds = deletedAttachments.map(function(attachment){return attachment.getClbMainPKey();});
+  noAttachments = questions.filter(function(question){return attachmentIds.find(function(id) {return id === question.getPKey();});});
+
+  noAttachments.forEach(function(attachment){
+    attachment.cameraIcon = "TakePicture";
+  });
+
+  hasAttachments.forEach(function(attachment){
+    attachment.cameraIcon = "PictureDetailwithPictures";
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

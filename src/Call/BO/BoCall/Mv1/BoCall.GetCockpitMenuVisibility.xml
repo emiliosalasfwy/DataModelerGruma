@@ -1,0 +1,32 @@
+<BusinessLogic methodName="getCockpitMenuVisibility" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="token" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = "0";
+var userGuidance = me.getLuCallMeta().getMobilityUserGuidance();
+var salesCall = (userGuidance == "Sales");
+var merchandizingCall = (userGuidance == "Merchandizing");
+
+switch (token) {
+  case "PromotionCalendarMenuItem":
+  case "PromotionsMenuItem":
+  case "SalesFolderMenuItem":
+  case "OrdersMenuItem":
+    visible = salesCall ? "1" : "0";
+    break;
+
+  case "StoreCheckMenuItem":
+  case "SurveyMenuItem":
+  case "AttachmentMenuItem":
+  case "NotesMenuItem":
+  case "CustomerMenuItem":
+  case "AssetsMenuItem":
+  case "CustomerTasksMenuItem":
+  case "CompleteMenuItem":
+    visible = (salesCall || merchandizingCall) ? "1" : "0";
+    break;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

@@ -1,0 +1,20 @@
+<BusinessLogic methodName="checkQuickFilterVisibility" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterBy" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+var isInContextOfSelectablePromotion = me.getBoOrderMeta().getConsiderSelectablePromotion() == '1' &&
+    Utils.isDefined(me.getLoSelectablePromotion()) &&
+    Utils.isDefined(me.getLoSelectablePromotion().getCurrent()) &&
+    me.getLoSelectablePromotion().getCurrent().getSpecialOption() !== "CLEAR";
+
+if(filterBy === "Group" && Utils.isSfBackend() && isInContextOfSelectablePromotion){
+  visible = true;
+} 
+else if(filterBy === "Category" && me.getBoOrderMeta().getItemListOption() === "FlatList"){
+  visible = true;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

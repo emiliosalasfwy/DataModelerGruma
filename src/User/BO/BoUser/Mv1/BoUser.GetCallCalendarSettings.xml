@@ -1,0 +1,57 @@
+<BusinessLogic methodName="getCallCalendarSettings" businessObjectClass="BoUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var boUserSettings = me.getBoUserSettings();
+
+var loUserSettingsList = [
+  {
+    "name" : "ClbCalendarInitialViewMobility",
+    "value" : boUserSettings.getClbCalendarInitialViewMobility()
+  },{
+    "name" : "ClbVisitsInMapMobility",
+    "value" : boUserSettings.getClbVisitsInMapMobility()
+  },{
+    "name" : "ClbDisplayUserInMapMobility",
+    "value" : boUserSettings.getClbDisplayUserInMapMobility()
+  },{
+    "name" : "ClbDisplayVisitsInMapMobility",
+    "value" : boUserSettings.getClbDisplayVisitsInMapMobility()
+  },{
+    "name" : "ClbCalendarInitialTime",
+    "value" : boUserSettings.getClbCalendarInitialTime()
+  },{
+    "name" : "ClbCalendarDefaultCallStatus",
+    "value" : boUserSettings.getClbCalendarDefaultCallStatus()
+  },{
+    "name" : "SyncTimeIntervall",
+    "value" : boUserSettings.getSyncTimeIntervall()
+  }, {
+    "name" : "ClbAgendaDisplayTimeMobility",
+    "value" : boUserSettings.getClbAgendaDisplayTimeMobility()
+  },{
+    "name" : "ClbCalendarDisplaySunMobility",
+    "value" : boUserSettings.getDisplayWeekend()
+  }
+];
+
+var loUserSettings = BoFactory.instantiate("LoUserSetting");
+
+var promise = Facade.getObjectAsync("LuSysSettingById", Utils.convertDsParamsNewToOld({ "iD" : "FirstDayOfWeek" })).then(
+  function (settingLookup) {
+    var liUserSetting = {
+      "name" : "FirstDayOfWeek",
+      "value" : settingLookup.value
+    };
+    loUserSettingsList.push(liUserSetting);
+
+    loUserSettings.addListItems(loUserSettingsList);
+
+    //Reset object state after adding item to keep Lo "clean" and prevent saving
+    loUserSettings.setObjectStatus(STATE.PERSISTED);
+    
+    return loUserSettings;
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,34 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTodoAttachmentsContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Build context menu list
+var contextMenuItemList = [];
+var isResponsible = false;
+var newParams  = context.jsonQuery;
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}  
+var menuEntry0 = { 
+  "id" : "0000001",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "Delete",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+}; 
+var user = ApplicationContext.get('user');  
+if (context.jsonQuery.responsiblePKey === user.getPKey()) {
+  isResponsible = true;
+}
+if(isResponsible && context.jsonQuery.issuePhase.getId().toLowerCase() !== "closed" && context.jsonQuery.issuePhase.getId().toLowerCase() !== "cancelled") {
+  menuEntry0.actionEnabled = "1";
+}
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

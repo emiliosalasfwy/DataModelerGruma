@@ -1,0 +1,19 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="BoTripList" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+if (Utils.isDefined(me.getLoTripListBpaRel())) {
+  deferreds.push(me.getLoTripListBpaRel().saveAsync());
+}
+deferreds.push(Facade.saveObjectAsync(me));
+
+var promise = when.all(deferreds)
+.then(function () {
+  return me;
+});]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

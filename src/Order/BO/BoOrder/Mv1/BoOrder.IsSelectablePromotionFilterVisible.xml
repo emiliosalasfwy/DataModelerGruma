@@ -1,0 +1,9 @@
+<BusinessLogic methodName="isSelectablePromotionFilterVisible" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var checkIfPhaseConditionIsMet = ![BLConstants.Order.PHASE_RELEASED, BLConstants.Order.PHASE_CANCELED, BLConstants.Order.PHASE_READY, BLConstants.Order.PHASE_FEEDBACK, BLConstants.Order.PHASE_VOIDED].includes(me.getPhase());
+var currentUserPKey = ApplicationContext.get('user').getPKey();
+var isVisible = me.getPromotionCount() > 0 && checkIfPhaseConditionIsMet && me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE && (me.getResponsiblePKey() === currentUserPKey);]]>
+</Code>
+  <Return name="isVisible" value="isVisible" />
+</BusinessLogic>

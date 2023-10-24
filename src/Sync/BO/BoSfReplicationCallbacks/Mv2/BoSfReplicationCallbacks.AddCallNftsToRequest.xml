@@ -1,0 +1,54 @@
+<BusinessLogic methodName="addCallNftsToRequest" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="request" type="Object" />
+    <MethodInput name="customerIds" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*At the time of application start the input paramter 'customerIds' consists of multiple customer pkeys in the form of array. 
+When the same method is called on loading/creating a call, the input paramater 'customerIds' consist of a single customer pkey 
+for which the call is being executed which is in string format like "001f200001ckbtuAAA". Thus, the string format is then converted to array ["001f200001ckbtuAAA"] */
+if (typeof(customerIds) == 'string') {
+  customerIds = [customerIds];
+}
+
+customerIds = Utils.uniq(me.removeLocalIDs(customerIds));
+var customerIdListString = "'" + customerIds.join("','") + "'";
+
+request.addRequest('NFT_Job_Definition_List', customerIds);
+request.addRequest('NFT_Customer_Task', customerIds);
+request.addRequest('NFT_Asset', customerIds);
+request.addRequest('NFT_Customer_Contract', customerIds);
+request.addRequest('NFT_Customer_Contract_Payment', customerIds);
+request.addRequest('NFT_Account_Receivable', customerIds);
+
+var attachmentIDs;
+
+var promise = Facade.selectSQL("DsBoSfReplicationCallbacks", "CustomerSetsOfCustomers", { "accountId": customerIdListString })
+.then(function (accountSetIDs) {
+  if(accountSetIDs.length > 0){
+    accountSetIDs = me.getPropertyValuesFromArray(accountSetIDs, "AccountSetID");
+    request.addRequest('NFT_Job_Definition_List_Set', accountSetIDs);
+  }
+  return Facade.selectSQL("DsBoSfReplicationCallbacks", "ContactPartnerIds", { "accountId": customerIdListString })
+    .then(
+    function (contactPartnerIds) {
+      attachmentIDs = contactPartnerIds;
+      
+      //load attachments related to visits and visit jobs
+      return Facade.selectSQL("DsBoSfReplicationCallbacks", "VisitAttachments", { "accountId": customerIdListString })
+        .then(
+        function (visitAttachmentIDs) {
+
+          attachmentIDs = attachmentIDs.concat(visitAttachmentIDs);
+
+          if(attachmentIDs.length > 0){
+            var finalAttachmentIDs =  me.removeLocalIDs(me.getPropertyValuesFromArray(attachmentIDs, "Id"));        
+            request.addRequest('NFT_Attachment', finalAttachmentIDs);  
+          }
+          return me.addOrderNftsToRequest(request, customerIds);
+        });
+    });
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

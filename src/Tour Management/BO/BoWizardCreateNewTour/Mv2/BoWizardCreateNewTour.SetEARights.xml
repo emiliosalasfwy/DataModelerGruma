@@ -1,0 +1,6 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewTour" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+    
+		
+   ]]></Code>
+</BusinessLogic>

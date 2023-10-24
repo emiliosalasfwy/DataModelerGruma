@@ -1,0 +1,22 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoVisit" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setPlannedStartDateTime(me.getPlannedStartDate()+" "+me.getPlannedStartTime()+":00");
+me.setPlannedEndDateTime(me.getPlannedEndDate()+" "+me.getPlannedEndTime()+":00");
+me.setActualStartDateTime(me.getActualStartDate()+" "+me.getActualStartTime()+":00");
+me.setActualEndDateTime(me.getActualEndDate()+" "+me.getActualEndTime()+":00");
+
+// When ActualStartDateTime & ActaulEndDateTime is same, add 1 minute to ActaulEndDateTime to avoid sync issue
+if(Utils.isDefined(me.getActualStartDateTime()) && Utils.isDefined(me.getActualEndDateTime()) && me.getActualStartDateTime() === me.getActualEndDateTime()) {
+  var timeFrom = Utils.convertAnsiDate2Date(me.getActualStartDate());
+  timeFrom.setHours(me.getActualStartTime().substring(0,2));
+  timeFrom.setMinutes(parseInt(me.getActualStartTime().substring(3,5))+1);
+  me.setActualEndDate(timeFrom);
+  me.setActualEndTime(Utils.convertTime2Ansi(timeFrom));
+}
+var promise = Facade.saveObjectAsync(me);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

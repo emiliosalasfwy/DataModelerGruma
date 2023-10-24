@@ -1,0 +1,72 @@
+<BusinessLogic methodName="prepareMapDetails" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customers" type="Object" />
+    <MethodInput name="pKey" type="String" />
+    <MethodInput name="currentLatitude" type="DomDecimal" />
+    <MethodInput name="currentLongitude" type="DomDecimal" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var customerDetail = customers.getItemByPKey(pKey);
+var mapDetail = BoFactory.instantiate("LuMapDetail");
+var distanceUnit = ApplicationContext.get('user').getDistanceUnit();
+var distance = 0;
+var jsonParams = [];
+var jsonQuery = {};
+var visitDetail;
+var promise = when.resolve();
+
+// Reset isButtonVisible for previously selected map pin
+var previouslySelectedCustomer = customers.getItemsByParam({"isButtonVisible": "1"});
+if(previouslySelectedCustomer.length > 0) {
+  previouslySelectedCustomer[0].setIsButtonVisible("0");
+}
+
+if(Utils.isDefined(pKey)) {
+  if(!customerDetail) {
+    visitDetail = me.getItemByPKey(pKey);
+    mapDetail.setPKey(visitDetail.getBpaMainPKey());
+    mapDetail.setName(visitDetail.getName());
+    mapDetail.setMainAddress(visitDetail.getMainAddress());
+  }
+  else {
+    mapDetail.setPKey(customerDetail.getPKey());
+    mapDetail.setName(customerDetail.getName());
+    mapDetail.setMainAddress(customerDetail.getMainAddress());
+    customerDetail.setIsButtonVisible("1");
+  }
+
+  if (!(currentLatitude === 0 && currentLongitude === 0)) {
+    if(!customerDetail){
+      distance = Utils.distanceBetween(currentLatitude, currentLongitude, visitDetail.getLatitude(), visitDetail.getLongitude(), distanceUnit);
+    }
+    else{
+      distance = Utils.distanceBetween(currentLatitude, currentLongitude, customerDetail.getLatitude(), customerDetail.getLongitude(), distanceUnit);
+    }
+
+    distance = Utils.round(distance, 2, 1) + " " + distanceUnit;
+    mapDetail.setDistance(distance);
+  }
+  else {
+    mapDetail.setDistance(" ");
+  }
+
+  var addCond = "AND SF_File.Usage__c = 'Icon' ";
+  jsonParams.push({ "field": "referencePKey", "value": mapDetail.getPKey() });
+  jsonParams.push({ "field": "addCond", "value": addCond });
+  jsonQuery.params = jsonParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LoBpaAttachment", jsonQuery).then(
+    function (loBpaAttachment) {
+      if (Utils.isDefined(loBpaAttachment)) {
+        if (loBpaAttachment.getCount() > 0) {
+          var attachment = loBpaAttachment.getAllItems()[0];
+          mapDetail.setCustomerProfilePicture(attachment.getMediaPath());
+          mapDetail.setCustomerPictureFileType(attachment.getType());
+        }
+      }
+      return mapDetail;
+    });
+}]]>
+</Code>
+  <Return name="mapDetail" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,5 @@
+<BusinessLogic methodName="getEmptySerialnumber" businessObjectClass="BoFlyoutRegisterAsset" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var serialNumber = "";]]></Code>
+  <Return name="serialNumber" value="serialNumber" />
+</BusinessLogic>

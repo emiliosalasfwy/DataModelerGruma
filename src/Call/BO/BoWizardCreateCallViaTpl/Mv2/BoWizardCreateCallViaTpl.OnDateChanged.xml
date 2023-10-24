@@ -1,0 +1,25 @@
+<BusinessLogic methodName="onDateChanged" businessObjectClass="BoWizardCreateCallViaTpl" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise;
+if((handlerParams.oldValue != handlerParams.newValue) && (me.getMode() !== "DragAndDrop")) {
+  var jsonQuery = {};
+  jsonQuery.referenceDateFrom = Utils.convertFullDate2Ansi(handlerParams.newValue);
+  jsonQuery.referenceDateThru = Utils.convertFullDate2Ansi(handlerParams.newValue);
+if(Utils.isSfBackend()){
+  jsonQuery.referenceDateFrom = Utils.convertForDBParam(jsonQuery.referenceDateFrom, 'DomDate');
+  jsonQuery.referenceDateThru = Utils.convertForDBParam(jsonQuery.referenceDateThru, 'DomDate');
+}
+  jsonQuery.responsiblePKey = me.getResponsiblePKey();
+  promise = BoFactory.loadListAsync("LoTripList", jsonQuery)
+    .then(function (loTripList) {
+    me.setLoTripList(loTripList);
+    return me;
+  });
+}
+else {
+  promise = when.resolve(me);
+}]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,11 @@
+<BusinessLogic methodName="determinePageSizeUsage" businessObjectClass="LoUsrDailyReportOverview" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+    var ReloadRelevant = "0";
+
+    if(Utils.isDefined(Framework.getProcessContext().dailyReportList.getPageSize()) && Framework.getProcessContext().dailyReportList.getItemObjects().length == Framework.getProcessContext().dailyReportList.getPageSize()){
+      ReloadRelevant = "1";
+    }
+		
+   ]]></Code>
+  <Return name="ReloadRelevant" value="ReloadRelevant" />
+</BusinessLogic>

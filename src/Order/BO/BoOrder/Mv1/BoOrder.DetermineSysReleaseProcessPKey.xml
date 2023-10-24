@@ -1,0 +1,60 @@
+<BusinessLogic methodName="determineSysReleaseProcessPKey" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var storedPKey = me.getStoredSysReleasePKey();
+if(!Utils.isEmptyString(storedPKey))
+{
+  promise = when.resolve(storedPKey);
+}
+else
+{
+  var orderMeta = me.getBoOrderMeta();
+  var SysReleaseProcessPKey = orderMeta.getSysReleaseProcessPKey();
+
+  if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') === "Running")
+  {
+    var tourPKey = ApplicationContext.get('currentTourPKey');
+    var orderMetaPKey = orderMeta.getPKey();
+    var orderSdoSubType = orderMeta.getSdoSubType();
+    var usage = "";
+
+    if (orderSdoSubType === "OrderEntry" || orderSdoSubType === "Delivery"){
+      usage = "SdoMeta.Order";
+    }else if (orderSdoSubType === "Replenishment"){
+      usage = "SdoMeta.Replenishment";
+    }
+
+    var jsonParams = [];
+    var jsonQuery ={};
+
+    jsonParams.push( { "field" : "tmgTourPKey", "value" : tourPKey});
+    jsonParams.push( { "field" : "objectMetaPKey", "value" : orderMetaPKey});
+    jsonParams.push( { "field" : "usage", "value" : usage});
+
+    jsonQuery.params=jsonParams;
+
+    promise = BoFactory.loadObjectByParamsAsync("LuTourObjectRelInformation", jsonQuery)
+      .then(
+      function(luTourObjectRelInformation) 
+      {
+
+        if(Utils.isDefined(luTourObjectRelInformation) && (!Utils.isEmptyString(luTourObjectRelInformation.getSysReleaseProcessPKey()))) 
+        {
+          SysReleaseProcessPKey = luTourObjectRelInformation.getSysReleaseProcessPKey();
+        } 
+
+        me.setStoredSysReleasePKey(SysReleaseProcessPKey);
+        return SysReleaseProcessPKey;
+      });
+  } 
+  else 
+  {
+    me.setStoredSysReleasePKey(SysReleaseProcessPKey);
+    promise = when.resolve(SysReleaseProcessPKey);
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

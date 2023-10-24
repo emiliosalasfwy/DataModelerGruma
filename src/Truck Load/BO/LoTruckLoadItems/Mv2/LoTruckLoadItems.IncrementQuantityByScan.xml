@@ -1,0 +1,15 @@
+<BusinessLogic methodName="incrementQuantityByScan" businessObjectClass="LoTruckLoadItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="LiTruckLoadItems" />
+    <MethodInput name="itemTemplate" type="LiOrderItemMeta" />
+    <MethodInput name="barcodeScanBehavior" type="DomSdoBarcodeScanBehavior" />
+    <MethodInput name="scanIncrementQuantity" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (barcodeScanBehavior.getId() === "SelectIncrease")
+{
+  item.setQuantity(parseInt(item.getQuantity(), 10) + scanIncrementQuantity);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

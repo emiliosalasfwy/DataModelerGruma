@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setVisible" businessObjectClass="LoUsrTimeEntryByVisitType" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="visible" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[if(visible===true){
+  
+this.getACL().addRight(AclObjectType.OBJECT, "LoUsrTimeEntryByVisitType", AclPermission.VISIBLE);
+    } else {
+      this.getACL().removeRight(AclObjectType.OBJECT, "LoUsrTimeEntryByVisitType", AclPermission.VISIBLE);
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

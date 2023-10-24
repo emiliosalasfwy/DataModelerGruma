@@ -1,0 +1,45 @@
+<BusinessLogic methodName="tourStateTransition" businessObjectClass="BoTour" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var tmgStatusLowerCase = me.getTmgStatus().toLowerCase();
+
+if (tmgStatusLowerCase === "initial" || tmgStatusLowerCase === "open") {
+  me.setTmgStatus("Running");
+  me.setReleaseButton(false);
+  me.setCompleteButton(true);
+  me.setReleaseInfoButton(true);
+  me.setCompleteInfoButton(false);
+
+  ApplicationContext.set("currentTourStatus", "Running");
+  var oldDateFrom = me.getDateFrom();
+  me.setDateFrom(Utils.createAnsiDateTimeToday());
+  me.setTimeFrom(Utils.createAnsiTimeNow());
+
+  if (me.getDateFrom() != Utils.getMaxDate()) {
+    var dateDiff =
+      (Utils.convertAnsiDate2Date(me.getDateThru()) -
+        Utils.convertAnsiDate2Date(oldDateFrom)) /
+      (24 * 60 * 60 * 1000);
+    var dateThru = Utils.convertAnsiDate2Date(me.getDateFrom());
+    dateThru.setDate(dateThru.getDate() + dateDiff);
+
+    me.setDateThru(Utils.convertFullDate2Ansi(dateThru));
+    me.setTimeThru(Utils.createAnsiTimeNow());
+  }
+  me.setEARights();
+} else if (tmgStatusLowerCase === "running") {
+  me.setTmgStatus("Completed");
+  me.setReleaseButton(false);
+  me.setCompleteButton(false);
+  me.setReleaseInfoButton(false);
+  me.setCompleteInfoButton(true);
+
+  ApplicationContext.set("currentTourPKey", "");
+  ApplicationContext.set("currentTourStatus", "");
+  me.setDateThru(Utils.createAnsiDateTimeToday());
+  me.setTimeThru(Utils.createAnsiTimeNow());
+  me.setEARights();
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

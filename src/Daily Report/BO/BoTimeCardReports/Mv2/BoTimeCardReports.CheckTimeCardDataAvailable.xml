@@ -1,0 +1,25 @@
+<BusinessLogic methodName="checkTimeCardDataAvailable" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryData" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(timeEntryData.getAllItems().length === 0)
+{
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoTimeCardReports_NoDataAvailable"), buttonValues).then(
+    function (input) {
+      return "0";						
+    }
+  );
+}
+else
+{
+  promise = when.resolve("1");
+}]]>
+</Code>
+  <Return name="dataAvailable" value="promise" />
+</BusinessLogic>

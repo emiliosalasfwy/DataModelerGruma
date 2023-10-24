@@ -1,0 +1,18 @@
+<BusinessLogic methodName="getTotalQuantityInReward" businessObjectClass="LoRewardProducts" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reward" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var quantity = 0;
+
+me.getItems().forEach(
+  function(product) {
+    if(product.getPromotionReward() === reward.getPKey()){
+      var calculatedValue = (reward.getPerFactor() >= 1 && reward.getSelected()!= "1") ? (product.getDefaultValue()*reward.getPerFactor()) :  product.getQuantity();
+      quantity += calculatedValue;
+    }
+  }
+);]]>
+</Code>
+  <Return name="quantity" value="quantity" />
+</BusinessLogic>

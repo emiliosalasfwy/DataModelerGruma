@@ -1,0 +1,118 @@
+<BusinessLogic methodName="onQuestionChanged" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+    <MethodInput name="jDTPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var loQuestions = me.getLoQuestions();
+var listItem;
+
+if(Utils.isEmptyString(handlerParams)){
+  //workaround: since buttons are not triggering event handler
+  loQuestions.suspendListRefresh();
+  listItem = loQuestions.getItemByPKey(jDTPKey);
+
+  if(Utils.startsWith(listItem.getPKey(), 'Local___xxx')) {
+    me.assimilateQuestion(listItem);
+  } else {
+    listItem.setDone("1");
+  }
+
+  loQuestions.resumeListRefresh(true);
+  if(listItem.getDataType() === "Toggle" && listItem.getManual() == "0"){
+    me.evaluateQuestions(loQuestions.getItems(), listItem.getJobDefListPKey());
+    loQuestions.setEARights(false);
+  }
+}
+else{
+  var columnName;
+  var value;
+  var oldValue;
+
+  for (var i = 0; i < handlerParams.modified.length; i++){
+    columnName = handlerParams.modified[i];
+    value = handlerParams.newValues[columnName];
+    oldValue = handlerParams.oldValues[columnName];
+    listItem = handlerParams.listItem;
+
+    if (value !== oldValue){
+      if (columnName == "value"){
+        if(listItem.getDataType() === "Date") {
+          var chosenDate = listItem.getValue();
+          if(chosenDate === " " || chosenDate === null){
+            chosenDate = Utils.getMinDate();
+          }
+          if(!(listItem.getMinValue() <= (chosenDate).slice(0,10) && listItem.getMaxValue() >= (chosenDate).slice(0,10))){
+            listItem.setValue(oldValue);
+            var messageCollector = new MessageCollector();
+            var minDatePolicy = listItem.getMinDatePolicy();
+            var maxDatePolicy = listItem.getMaxDatePolicy();
+            var messageId = " ";
+            if(minDatePolicy === "Today" && maxDatePolicy === "Today"){
+              messageId = "CasClbDateMustBeTodayDatePolicy";
+            } else if (minDatePolicy === "Today" && maxDatePolicy !== "NextYear"){
+              messageId = "CasClbDateMustBeOnOrAfterTodayDatePolicy";
+            } else if (maxDatePolicy === "Today"){
+              messageId = "CasClbDateMustBeOnOrBeforeTodayDatePolicy";
+            } else {
+              messageId = "CasClbDateMustBeInBetweenMinAndMaxDatePolicy";
+            }
+            var newError = {
+              "level": "error",
+              "objectClass" : "BoCall",
+              "messageID" : messageId,
+              "messageParams" : {
+                "minValue" : listItem.getMinValue(),
+                "maxValue" : listItem.getMaxValue()
+              }
+            };
+            messageCollector.add(newError);
+            var buttonValues = {};
+            var messages = messageCollector.getMessages().join("<br>");
+            buttonValues[Localization.resolve("OK")] = "ok";
+            promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), messages, buttonValues);
+          }
+          if(listItem.getValue() === " " || listItem.getValue() === null){
+            listItem.setValue(Utils.getMinDate());
+          }
+        }
+        listItem.setDone("1");
+        if(listItem.getDataType() === "Toggle" && listItem.getManual() == "0"){
+          me.evaluateQuestions(loQuestions.getItems(), listItem.getJobDefListPKey());
+          loQuestions.setEARights(false);
+        }
+        break;
+      }
+
+      if(columnName == "done"){
+
+        if(listItem.getDone() === "2"){
+          loQuestions.suspendListRefresh();
+          listItem.setDone("0");
+          loQuestions.resumeListRefresh(true);
+          if(listItem.getDataType() === "Toggle" && listItem.getManual() == "0"){
+            me.evaluateQuestions(loQuestions.getItems(), listItem.getJobDefListPKey());
+            loQuestions.setEARights(false);
+          }
+          break;
+        }
+
+        if(listItem.getDone() == "1"){
+          if(Utils.startsWith(listItem.getPKey(), 'Local___xxx')){
+            me.assimilateQuestion(listItem);
+          }
+          if(listItem.getDataType() === "Toggle" && listItem.getManual() == "0"){
+            me.evaluateQuestions(loQuestions.getItems(), listItem.getJobDefListPKey());
+            loQuestions.setEARights(false);
+          }
+          break;
+        }
+      }
+
+    }
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

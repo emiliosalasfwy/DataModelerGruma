@@ -1,0 +1,9 @@
+<BusinessLogic methodName="deleteTripList" businessObjectClass="BoTripList" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Delete trip list and its customer assignment
+me.getLoTripListBpaRel().delete();
+me.delete();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

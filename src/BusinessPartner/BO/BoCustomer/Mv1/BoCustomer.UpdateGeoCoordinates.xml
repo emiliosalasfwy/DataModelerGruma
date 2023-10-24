@@ -1,0 +1,39 @@
+<BusinessLogic methodName="updateGeoCoordinates" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var longitude;
+var latitude;
+var liBpaAddress;
+var objGeoCoordinates;
+
+var promise = Utils.getCurrentPosition().then(
+  function (position) {
+    if (Utils.isDefined(position)) {
+      // Get Longitude and Latitude
+      longitude = position.longitude;
+      latitude = position.latitude;
+
+      if (Utils.isDefined(longitude) && Utils.isDefined(latitude)) {
+        // Update Longitude and Latitude
+        me.getLoCustomerAddress().getMainAddress().setLongitude(longitude);
+        me.getLoCustomerAddress().getMainAddress().setLatitude(latitude);
+      }
+
+      liBpaAddress = {
+        "longitude" : longitude,
+        "latitude" : latitude
+      };
+      return liBpaAddress;
+    } 
+    else {
+      var buttonValues = {};
+      buttonValues[Localization.resolve("OK")] = "ok";
+      return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("BoCustomer_CasBpaLocationCouldNotBeUpdated"), buttonValues)
+      .then(function () {
+        return liBpaAddress;
+      });
+    }
+  });]]>
+</Code>
+  <Return name="liBpaAddress" value="promise" />
+</BusinessLogic>

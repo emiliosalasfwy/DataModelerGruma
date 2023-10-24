@@ -1,0 +1,88 @@
+<BusinessLogic methodName="getAllCustomerTasksForCard" businessObjectClass="LoIssueOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="currentCustomerPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+var minDate = Utils.convertForDBParam(Utils.getMinDate(), 'DomDate');
+var dateTimeToday = Utils.convertForDBParam(Utils.createAnsiDateTimeToday(), 'DomDate');
+var currentUsrMainPKey = ApplicationContext.get('user').getPKey();
+var currentDate = Utils.convertDate2Ansi(Utils.createDateToday());
+var customerSqlQuery = "'"+ currentCustomerPKey +"'";
+
+jsonQuery.loadLoCustomerOverview = customerSqlQuery;
+jsonQuery.params = jsonParams;
+
+if (Utils.isSfBackend()){
+  jsonQuery.cond = " AND issuePhase IN ('initial', 'Released') AND Account_Task__c.Due_Date__c <> #minDate# AND Account_Task__c.Due_Date__c <= #dateTimeToday# ";
+  jsonQuery.cond += " AND ((Account_Task__c.Responsible__c =  #currentUsrMainPKey# AND (Sub.SubMainUsrMainPKey IS NULL OR Sub.SubIsLeadFollowUpTime = #subIsLeadFollowUpTime#)) OR Sub.SubBpaRelUsrMainPKey = #currentUsrMainPKey#) ";
+}
+else{
+  jsonQuery.cond = " AND SvcIssue.IssuePhase IN ('initial', 'Released') AND SvcIssue.DueDate <> #minDate# AND SvcIssue.DueDate <= #dateTimeToday# ";
+  jsonQuery.cond += " AND ((SvcIssue.ResponsiblePKey = #currentUsrMainPKey# AND (Sub.SubMainUsrMainPKey IS NULL OR Sub.SubIsLeadFollowUpTime = #subIsLeadFollowUpTime#)) OR Sub.SubBpaRelUsrMainPKey = #currentUsrMainPKey#) ";
+}
+
+jsonParams.push({"field" : "minDate", "value" : minDate});
+jsonParams.push({"field" : "dateTimeToday", "value" : dateTimeToday});
+jsonParams.push({"field" : "currentUsrMainPKey", "value" : currentUsrMainPKey});
+jsonParams.push({"field" : "subIsLeadFollowUpTime", "value" : '1'});
+jsonQuery.customerTask = "customerTask";
+
+me.removeAllItems();
+
+var promise = Facade.getListAsync("LoIssueOverview", jsonQuery).then(
+  function(issue) {
+    var numberOfTasks;
+    if(!Utils.isDefined(numberOfListItems)){
+      numberOfTasks = 5;
+      if(Utils.isPhone()){
+        numberOfTasks = 3;
+      }
+    } else{
+      numberOfTasks = numberOfListItems;
+    }
+
+    me.cardItemCount = issue.length;
+    issue = issue.splice(0,numberOfTasks);
+
+    for(var i = 0; i < issue.length; i++){
+      if(Utils.isPhone()){
+        if(issue[i].text.length > 35){
+          issue[i].text= issue[i].text.substr(0, 35);
+          issue[i].text+= "...";
+        }
+      }
+      else{
+        if(issue[i].text.length > 30){
+          issue[i].text= issue[i].text.substr(0, 30);
+          issue[i].text+= "...";
+        }
+      }
+      if(issue[i].dueDate == Utils.getMinDateTimeDB()){
+        issue[i].dueDateText = "";
+      }
+      else{
+        if(Utils.isSfBackend()) {
+          issue[i].dueDateText = Localization.localize(Utils.unixepochToAnsiDate(issue[i].dueDate), "date");
+        }
+        else {
+          issue[i].dueDateText = Localization.localize(issue[i].dueDate, "date");
+        }
+        if(issue[i].dueDateText === Localization.localize(currentDate, "date")){
+          issue[i].dueDateText = Localization.resolve("CardCustomerTasks_CreatedToday");
+        }else if(issue[i].dueDateText === Localization.localize(Utils.addDays2AnsiFullDate(currentDate, -1), "date")){
+          issue[i].dueDateText = Localization.resolve("CardCustomerTasks_CreatedYesterday");
+        }
+        else if(issue[i].dueDateText === Localization.localize(Utils.addDays2AnsiFullDate(currentDate, 1), "date")){
+          issue[i].dueDateText = Localization.resolve("CardCustomerTasks_DueTommorrow");
+        }
+      }
+    }
+
+    me.addItems(issue, jsonQuery.params);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,57 @@
+<BusinessLogic methodName="validatePos" businessObjectClass="BoPos" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*
+UC: NGM Customer - POS
+The POS Name must not be empty.
+The POS Name must be unique for POS with same template
+*/
+var newError;
+var promise;
+var objectStatusNewDirty = (STATE.NEW | STATE.DIRTY);
+
+if (Utils.isEmptyString(this.getName())) {
+  newError = {
+    'level': 'error',
+    'objectClass': 'BoAssignNewPOSWizard',
+    'messageID': 'CasBoAssignNewPOSWizardMessagesNameMustNotBeEmpty',
+    'messageParams': {},
+  };
+  messageCollector.add(newError);
+  promise = when.resolve(messageCollector);
+
+  //execute following only if object is edited not if it is created new
+  //in new case validation is done in wizard already
+}
+else if (me.getObjectStatus() !== objectStatusNewDirty) {
+  promise = BoFactory.loadListAsync(LO_CUSTOMERPOSRELATION, me.getQueryBy('customerPKey', me.getCustomerPKey())).then(
+    function (loCustomerPosRelations) {
+
+      var posWithSameNameAndTemplate = loCustomerPosRelations.getItemsByParam({ 'posName': me.getName(), 'posMetaPKey': me.getBpaPosMetaPKey()});
+      var errorOccurred = false;
+      for (var i = 0; i < posWithSameNameAndTemplate.length; i++) {
+        if (posWithSameNameAndTemplate[i].getPosPKey() !== me.getPKey()) {
+          errorOccurred = true;
+          break;
+        }
+      }
+      if (errorOccurred) {
+        newError = {
+          'level': 'error',
+          'objectClass': 'BoPos',
+          'messageID': 'CasBoPosNameMustBeUniquePerTemplate',
+          'messageParams': {},
+        };
+        messageCollector.add(newError);
+      }
+      return messageCollector;
+    });
+}
+else {
+  promise = when.resolve(messageCollector);
+}]]>
+</Code>
+  <Return name="BoPos_validatePos" value="promise" />
+</BusinessLogic>

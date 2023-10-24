@@ -1,0 +1,47 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoTruckLoad" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var debugJsonAttached = when.resolve();
+
+if (me.getBoOrderMeta().getGeneratePricingLog() == "Yes")
+{
+  debugJsonAttached = me.cpAttachDebugJSON(me.getPricingJSON());
+}
+
+var promise = debugJsonAttached.then(
+  function () {
+    var deferreds = [];
+    if (me.getMode() !== "ReviewStock") {
+      if (Utils.isDefined(me.getLoItems())) {
+        deferreds.push(me.getLoItems().saveAsync());
+      }
+
+      if (Utils.isDefined(me.getLoInventories())) {
+        deferreds.push(me.getLoInventories().saveAsync());
+      }
+
+      if (me.getPhase() === "Released" && Utils.isDefined(me.getLoInventoryTransactions())) {
+        deferreds.push(me.getLoInventoryTransactions().saveAsync());
+      }
+
+      //No need to save the list in CGCloud case because there exist no DB table for it
+      //The information is saved as JSON in order/orderItem field
+      if(!Utils.isSfBackend()){
+        if (Utils.isDefined(me.getLoSdoConditions())) {
+          deferreds.push(me.getLoSdoConditions().saveAsync());
+        }
+      }
+
+      if (Utils.isDefined(me.getLoOrderAttachment())) {
+        deferreds.push(me.getLoOrderAttachment().saveAsync());
+      }
+    }
+
+    return when.all(deferreds);
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

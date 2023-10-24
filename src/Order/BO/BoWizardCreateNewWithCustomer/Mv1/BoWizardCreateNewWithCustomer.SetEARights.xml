@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewWithCustomer" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+
+    // Hide template selection if no customer is selected
+    if (Utils.isEmptyString(this.getLuOrderer().getPKey())) {
+        this.getLuOrderMeta().getACL().removeRight(AclObjectType.PROPERTY, "text", AclPermission.VISIBLE);
+    } else {
+        this.getLuOrderMeta().getACL().addRight(AclObjectType.PROPERTY, "text", AclPermission.VISIBLE);
+    }
+
+   ]]></Code>
+</BusinessLogic>

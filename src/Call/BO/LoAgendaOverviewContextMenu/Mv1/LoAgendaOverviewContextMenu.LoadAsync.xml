@@ -1,0 +1,171 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoAgendaOverviewContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var dicJsonQuery = Utils.convertDsParamsOldToNew(jsonQuery);
+var clbStatus = dicJsonQuery.clbStatus.getId();
+var deleteAllowed = dicJsonQuery.deleteAllowed.getId();
+var currentUsrMainPKey = ApplicationContext.get('user').getPKey();
+var responsiblePKey = dicJsonQuery.responsiblePKey;
+var mode = dicJsonQuery.mode;
+
+var lookupParams = [undefined];
+var defereds = [];
+
+var bCallIsReadOnly = clbStatus === "Completed" || clbStatus === "Canceled";
+
+if (!Utils.isEmptyString(dicJsonQuery.bpaMainPKey)) {
+  //check management / substitution info for EA-Rights
+  var cmiParams = [];
+  var cmiQuery = {};
+
+  cmiParams.push({
+    "field" : "customerPKey",
+    "value" : dicJsonQuery.bpaMainPKey
+  });
+  cmiParams.push({
+    "field" : "referenceDate",
+    "value" : dicJsonQuery.referenceDate
+  });
+  cmiParams.push({
+    "field" : "referenceUserPKey",
+    "value" : dicJsonQuery.referenceUserPKey
+  });
+  cmiQuery.params = cmiParams;
+
+  defereds.push(BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", cmiQuery).then(
+    function (customerManagementInfoLookup) {
+
+    if (Utils.isDefined(customerManagementInfoLookup)) {
+      if (customerManagementInfoLookup.getIsSubstituted() == "1") {
+        if (customerManagementInfoLookup.getSubstitutedInLeadFollowUpTime() == "1") {
+          bCallIsReadOnly = true; 
+        }
+      }	else if (customerManagementInfoLookup.getHasSubstitute() == "1") {
+        if (responsiblePKey === customerManagementInfoLookup.getReferenceUsrMainPKey() && customerManagementInfoLookup.getHasSubstituteInLeadFollowUpTime() === "0") {
+          // read only if current user is responsible and being substituted on the call's date
+          bCallIsReadOnly = true;
+        }
+      } else if (customerManagementInfoLookup.getHasSubstitute() === "0") {
+        if (responsiblePKey !== customerManagementInfoLookup.getReferenceUsrMainPKey()) {
+          // read only if current user is not responsible and not substituting the responsible
+          bCallIsReadOnly = true;
+        }
+      }
+    }
+  }));
+}
+
+if(Utils.isSfBackend())
+{
+  defereds.push(BoFactory.createObjectAsync("BoSfReplicationCallbacks", {}).then(
+    function (sfReplicationCallbacks){
+      return sfReplicationCallbacks.isCallOnDemandDataAvailable(dicJsonQuery.pKey, dicJsonQuery.bpaMainPKey);
+  }));
+}
+
+//dataAvailable will be a boolean in CGCloud (there we use it) and undefined for onPremises (there we don't use it)
+var promise = when.all(defereds)
+  .then(function(dataAvailable) // <!-- SF/CASDIF End -->
+        {
+  if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && 
+    !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && 
+    ApplicationContext.get('currentTourStatus') !== "Running"){
+
+    bCallIsReadOnly = true;
+  }
+  
+  if(dataAvailable.length > 1){
+    dataAvailable = dataAvailable[1];
+  }
+
+  var isFollowUpCard = mode === "FollowUp";
+  var contextMenuItemList = [];
+  var menuEntry0 = {
+    "id" : "0000001",
+    "actionImg" : "ExecuteDarkGrey24",
+    "actionId" : "Execute",
+    "processEvent" : "Execute",
+    "actionVisible" : !isFollowUpCard,
+    "actionEnabled" : "1"
+  };
+  var menuEntry1 = {
+    "id" : "0000002",
+    "actionImg" : "CompleteDarkGrey24",
+    "actionId" : "Complete",
+    "processEvent" : "Complete",
+    "actionVisible" : !isFollowUpCard,
+    "actionEnabled" : !bCallIsReadOnly && Utils.isDefined(dicJsonQuery.bpaMainPKey) && !Utils.isEmptyString(dicJsonQuery.bpaMainPKey) ? "1" : "0"
+  };
+  var menuEntry2 = {
+    "id" : "0000003",
+    "actionImg" : "CancelDarkGrey24",
+    "actionId" : "Cancel",
+    "processEvent" : "Cancel",
+    "actionVisible" : !isFollowUpCard,
+    "actionEnabled" : "1"
+  };
+  var menuEntry3 = {
+    "id" : "0000004",
+    "actionImg" : "RescheduleDarkGrey24",
+    "actionId" : "Reschedule",
+    "processEvent" : "Re-Schedule",
+    "actionVisible" : "1",
+    "actionEnabled" : "1"
+  };
+  var menuEntry4 = {
+    "id" : "0000005",
+    "actionImg" : "TrashcanDarkGrey24",
+    "actionId" : "Delete",
+    "processEvent" : "Delete",
+    "actionVisible" : "1",
+    "actionEnabled" : "1"
+  };
+  var menuEntry5 = {
+    "id" : "0000006",
+    "actionImg" : "InfoDarkGrey24",
+    "actionId" : "Info",
+    "processEvent" : "Info",
+    "actionVisible" : "1",
+    "actionEnabled" : "1"
+  };
+  var menuEntry6 = {
+    "id" : "0000007",
+    "actionImg" : "TripDarkGrey24",
+    "actionId" : "NavigateToCustomer",
+    "processEvent" : "NavigateToCustomer",
+    "actionVisible" : !isFollowUpCard,
+    "actionEnabled" : Utils.isDefined(dicJsonQuery.bpaMainPKey) && !Utils.isEmptyString(dicJsonQuery.bpaMainPKey) ? "1" : "0"
+  };
+
+  if(Utils.isSfBackend())
+  {
+    menuEntry1.actionEnabled = menuEntry1.actionEnabled == "1" && dataAvailable == "1"  ? "1" : "0";
+    menuEntry2.actionEnabled = Utils.isDefined(dicJsonQuery.bpaMainPKey) && !Utils.isEmptyString(dicJsonQuery.bpaMainPKey) ? "1" : "0";
+    menuEntry6.actionEnabled = Utils.isDefined(dicJsonQuery.bpaMainPKey) && !Utils.isEmptyString(dicJsonQuery.bpaMainPKey) ? "1" : "0";
+  }
+
+  contextMenuItemList.push(menuEntry0);
+  contextMenuItemList.push(menuEntry1);
+  contextMenuItemList.push(menuEntry2);
+  contextMenuItemList.push(menuEntry3);
+  contextMenuItemList.push(menuEntry4);
+  contextMenuItemList.push(menuEntry5);
+  contextMenuItemList.push(menuEntry6);
+
+  if (deleteAllowed === "0") {
+    menuEntry4.actionEnabled = "0";
+  }
+
+  if (bCallIsReadOnly) {
+    menuEntry1.actionEnabled = "0";
+    menuEntry2.actionEnabled = "0";
+    menuEntry3.actionEnabled = "0";
+    menuEntry4.actionEnabled = "0";
+  }
+
+  me.addItems(contextMenuItemList);
+  return me;
+});]]></Code>
+  <Return name="loOrderOverviewContextMenu" value="promise" />
+</BusinessLogic>

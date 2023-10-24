@@ -1,0 +1,18 @@
+<BusinessLogic methodName="deleteItem" businessObjectClass="LoTimeSlot" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var itemToDelete = me.getItemByPKey(pKey);
+
+if(Utils.isDefined(itemToDelete)){
+  
+  itemToDelete.remove();
+  
+  //filter out deleted items
+  me.setFilter("objectStatus", STATE.DIRTY | STATE.DELETED, "NCB");
+  
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

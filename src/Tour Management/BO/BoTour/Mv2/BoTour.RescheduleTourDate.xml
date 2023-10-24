@@ -1,0 +1,79 @@
+<BusinessLogic methodName="rescheduleTourDate" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="newDate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (!Utils.isDefined(newDate)) {
+  promise = when.resolve();
+} else {
+
+  var nDate = Utils.convertAnsiDate2Date(newDate).setHours(0,0,0,0);
+  var oDate = Utils.convertAnsiDate2Date(me.getDateFrom()).setHours(0,0,0,0);
+
+  if (nDate === oDate) {
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"), "The choosen date is the already planned date for this tour. Nothing will be changed.", buttonValues);
+  } else {
+    //get movement range for call moving:
+    var dateDiff = (nDate - oDate) / (24*60*60*1000);
+
+    //set dateThru of tour
+    var thruDate = Utils.convertAnsiDate2Date(me.getDateThru()).setHours(0,0,0,0);
+    var dateDiffTour = (thruDate - oDate) / (24*60*60*1000) ;
+    me.setDateFrom(newDate);
+    if (dateDiffTour !== 0) {
+      var dateThruTour = Utils.convertAnsiDate2Date(me.getDateFrom());
+      dateThruTour.setDate(dateThruTour.getDate() + dateDiffTour);
+      if (Utils.convertDate2Ansi(dateThruTour) < Utils.getMaxDateAnsi()) {
+        me.setDateThru(Utils.convertDate2Ansi(dateThruTour));
+      }
+    } else {
+      me.setDateThru(me.getDateFrom());
+    }
+
+    var moveCallDate = function (call, dateDiff) {
+      var dateFromCall = Utils.convertAnsiDate2Date(call.getDateFrom());
+      dateFromCall.setDate(dateFromCall.getDate() + dateDiff);
+      call.setDateFrom(Utils.convertDateTime2Ansi(dateFromCall));
+
+      var dateThruCall = Utils.convertAnsiDate2Date(call.getDateThru());
+      dateThruCall.setDate(dateThruCall.getDate() + dateDiff);
+      call.setDateThru(Utils.convertDateTime2Ansi(dateThruCall));
+
+      call.setObjectStatus(Utils.data.Model.STATE_DIRTY);
+    };
+
+    if(Utils.isDefined(me.getLoTourRelatedCalls())) {
+      var calls = me.getLoTourRelatedCalls().getAllItems();
+
+      for(var i = 0; i<calls.length;i++) {   
+        moveCallDate(calls[i], dateDiff);
+      }
+
+      me.getLoTourRelatedCalls().setObjectStatus(Utils.data.Model.STATE_DIRTY);
+
+      promise = when.resolve();
+    } else {
+      promise = BoFactory.loadObjectByParamsAsync(LO_TOURRELATEDCALLS, {"tmgMainPKey" : me.getPKey()}).then(
+        function(result){
+          if(Utils.isDefined(result)) {
+            me.setLoTourRelatedCalls(result);
+            var calls = me.getLoTourRelatedCalls().getAllItems();
+
+            for(var i = 0; i < calls.length; i++) {
+              moveCallDate(calls[i], dateDiff);
+            }
+
+            me.getLoTourRelatedCalls().setObjectStatus(Utils.data.Model.STATE_DIRTY);       
+          }
+        }
+      );
+    }
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

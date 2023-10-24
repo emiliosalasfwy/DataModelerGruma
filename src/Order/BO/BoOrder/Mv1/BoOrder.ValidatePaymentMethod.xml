@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validatePaymentMethod" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getPaymentMethod()) && me.getIsOrderPaymentRelevant() === '1' && me.getPaidAmountReceipt() > 0) {
+  var newError = {
+    "level" : "error",
+    "objectClass" : "BoOrder",
+    "messageID" : "CasSdoCheckEmptyPaymentMethod"
+  };
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

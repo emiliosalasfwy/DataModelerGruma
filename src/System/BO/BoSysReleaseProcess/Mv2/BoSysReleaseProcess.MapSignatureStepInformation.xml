@@ -1,0 +1,15 @@
+<BusinessLogic methodName="mapSignatureStepInformation" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+var length = stepItems.length;
+
+for(var i = 1; i <= length; i++) {
+  me.set("signatureGroupName" + i, stepItems[i-1].getText());
+  //Remove space from text
+  me.set("signatureId" + i, "");
+  me.set("signatureCode" + i, "");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

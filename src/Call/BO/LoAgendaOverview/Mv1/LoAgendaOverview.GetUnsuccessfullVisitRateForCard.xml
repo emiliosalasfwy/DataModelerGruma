@@ -1,0 +1,43 @@
+<BusinessLogic methodName="getUnsuccessfullVisitRateForCard" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="setDateFunction" type="String" />
+    <MethodInput name="filterCalls" type="String" />
+    <MethodInput name="currentResponsiblePKey" type="String" />
+    <MethodInput name="cardMode" type="String" />
+    <MethodInput name="currentDate" type="Date" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(currentDate)){
+  currentDate = Utils.createAnsiDateTimeToday();
+} else{
+  currentDate = Utils.createDateByString(currentDate);
+}
+
+var day = currentDate.getDay();
+var sundayAdjustment = (day === 0 ? -7 : 0);
+var mondayOfTheWeek = Utils.createSpecificDate(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() +(1 - day + sundayAdjustment));
+var sundayOfTheWeek = Utils.createSpecificDate(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() +(7 - day + sundayAdjustment));
+
+var promise = me.getCallsByDate(setDateFunction, filterCalls, Utils.convertFullDate2Ansi(mondayOfTheWeek), Utils.convertFullDate2Ansi(sundayOfTheWeek), currentResponsiblePKey, undefined, cardMode)
+.then(function() {
+
+  var items = me.getAllItems(); 
+  var count = items.length;
+  var unsuccessfullVisits = 0;
+
+  items.forEach(function(item){
+    if(item.hasOrder === "0"){
+      unsuccessfullVisits++;
+    }
+  });
+
+  if(count === 0 || unsuccessfullVisits === 0) {
+    return 0;
+  }
+  else {
+    return Number.parseFloat((unsuccessfullVisits/count) * 100).toFixed(1);
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

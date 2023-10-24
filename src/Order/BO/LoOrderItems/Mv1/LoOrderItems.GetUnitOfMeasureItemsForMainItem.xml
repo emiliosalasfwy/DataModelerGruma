@@ -1,0 +1,16 @@
+<BusinessLogic methodName="getUnitOfMeasureItemsForMainItem" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var unitOfMeasureItems = [];
+
+if(Utils.isDefined(mainItem)){
+  unitOfMeasureItems = me.getItemsByParamArray([
+    {"refPKey": mainItem.getRefPKey()},
+    {"sdoParentItemPKey": mainItem.getSdoParentItemPKey()}
+  ]);
+}]]>
+</Code>
+  <Return name="unitOfMeasureItems" value="unitOfMeasureItems" />
+</BusinessLogic>

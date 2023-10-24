@@ -1,0 +1,110 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+var lockedPhases = ['released', 'canceled', 'ready', 'feedback', 'voided'];
+var lockedByPhase = false;
+var userPKey = ApplicationContext.get('user').getPKey();
+
+if (lockedPhases.indexOf(me.getPhase().toLowerCase()) > -1) {
+  lockedByPhase = true;
+}
+
+//If the context tour has TmgTour.TmgStatus <> 'Running', the product check in document is not writeable.
+//If the respective template has SdoMeta.MobilityRelevant = 'No', the user can not edit any product check in document data. Only display.
+//If the product check in document has SdoMain.Phase in ('Released', 'Canceled', 'Ready', 'Feedback', 'Voided'), the document is not editable anymore.
+//If the user is not responsible of the product check in document (SdoMain.ResponsiblePKey <> current user), the document is not editable.
+
+if ((Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus').toLowerCase() !== "running") ||
+    me.getBoOrderMeta().getMobilityRelevant() === "0" || lockedByPhase || me.getResponsiblePKey() != ApplicationContext.get('user').getPKey()) {
+  acl.removeRight(AclObjectType.OBJECT, "BoTruckLoad", AclPermission.EDIT);
+  me.getLoItems().getACL().removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.EDIT);
+}
+
+var loAcl = me.getLoItems().getACL();
+var loItemMetaItems = me.getBoOrderMeta().getLoOrderItemMetas().getAllItems();
+var qsAcl = me.getLoQuantitySums().getACL();
+var orderItems = me.getLoItems();
+var items = me.getLoItems().getAllItems();
+var nloAcl = me.getLoUnitOfMeasure().getACL();
+var loItemAcl;
+
+// Hide the Type selection box
+if (me.getDocumentType() === "ProductCheckOut") {
+  for(var i = 0; i < items.length; i++) {
+    loItemAcl = items[i].getACL();
+    loItemAcl.removeRight(AclObjectType.PROPERTY, "sdoItemMetaPKey", AclPermission.VISIBLE);
+  }
+}
+
+if (Utils.isDefined(me.getBoOrderMeta()) && me.getDocumentType() === "ProductCheckOut" && (me.getPhase() == "Canceled" || me.getPhase() == "Released")) {
+  nloAcl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.EDIT);
+} 
+
+if (me.getBoOrderMeta().getConsiderItemModReason() === "0") {
+  nloAcl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+}
+
+if ((me.getDocumentType() == "TruckIvcTransferInward" && me.getRecipientPKey() == userPKey) || (me.getDocumentType() == "TruckIvcTransferInward" && me.getSenderPKey() == userPKey)) {
+  nloAcl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+} 
+
+if (me.isEditable() && me.getActualPrdCheckOutType() !== "Express") {
+  if (Utils.isDefined(me.getBoOrderMeta()) && me.getDocumentType() === "ProductCheckOut" && me.getBoOrderMeta().getItemPresettingPolicy() !== "Prepopulated") {
+    loAcl.removeRight(AclObjectType.PROPERTY, "modReasonEntered", AclPermission.VISIBLE);
+    qsAcl.removeRight(AclObjectType.PROPERTY, "targetQuantity", AclPermission.VISIBLE);
+    qsAcl.removeRight(AclObjectType.PROPERTY, "qtyDifference", AclPermission.VISIBLE);
+  }
+  else {
+    loAcl.addRight(AclObjectType.PROPERTY, "modReasonEntered", AclPermission.VISIBLE);
+    qsAcl.addRight(AclObjectType.PROPERTY, "targetQuantity", AclPermission.VISIBLE);
+    qsAcl.addRight(AclObjectType.PROPERTY, "qtyDifference", AclPermission.VISIBLE);
+  }
+}
+
+acl.removeRight(AclObjectType.PROPERTY, "cancelReason", AclPermission.VISIBLE);
+me.getLuSender().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+me.getLuRecipientDriver().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+
+if (me.getDocumentType() === "TruckIvcTransferOutward" || me.getDocumentType() === "TruckIvcTransferInward") {
+  me.getLuSender().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  me.getLuRecipientDriver().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  loAcl.addRight(AclObjectType.PROPERTY, "ivcBalance", AclPermission.VISIBLE);
+  loAcl.addRight(AclObjectType.PROPERTY, "ivcBalanceUnitType", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "bookInventoryValue", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "amountDifference", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "currency", AclPermission.VISIBLE);
+}
+else {
+  loAcl.removeRight(AclObjectType.PROPERTY, "ivcBalance", AclPermission.VISIBLE);
+  loAcl.removeRight(AclObjectType.PROPERTY, "ivcBalanceUnitType", AclPermission.VISIBLE);
+}
+
+if ((me.getDocumentType() === "TruckIvcTransferOutward") && (me.getPhase() == "Released" || me.getPhase() == "Canceled")) {
+  me.getLuRecipientDriver().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+}
+
+if ((me.getDocumentType() === "TruckIvcTransferInward") && (me.getPhase() == "Canceled")) {
+  acl.addRight(AclObjectType.PROPERTY, "cancelReason", AclPermission.VISIBLE);
+}
+
+if (me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() == "Initial" && me.getSenderPKey() == userPKey && Utils.isEmptyString(me.getInwardTransferDocumentPKey())) {
+  acl.addRight(AclObjectType.PROPERTY, "cancelReason", AclPermission.VISIBLE);
+}
+
+if (me.getDocumentType() === "TruckIvcTransferInward") { 
+  acl.removeRight(AclObjectType.OBJECT, "BoTruckLoad", AclPermission.EDIT);
+  me.getLuRecipientDriver().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "cancelReason", AclPermission.EDIT);
+}
+
+if (!(me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5")) {
+  acl.removeRight(AclObjectType.PROPERTY, "bookInventoryValue", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "amountDifference", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "currency", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "grossTotalValueReceipt", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "actualValueCurrency", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

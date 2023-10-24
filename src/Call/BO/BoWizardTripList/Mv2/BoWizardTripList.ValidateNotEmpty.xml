@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoWizardTripList" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;  
+
+if (Utils.isEmptyString(this.getDescription()) || Utils.isEmptyString(this.getValidFrom()) || Utils.isEmptyString(this.getValidThru())) {
+  newError = {"level": "error", 
+              "objectClass": "BoWizardTripList", 
+              "messageID": "CasTripListFillInAllValues"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

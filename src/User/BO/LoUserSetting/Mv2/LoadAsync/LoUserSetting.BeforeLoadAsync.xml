@@ -1,0 +1,41 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoUserSetting" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var settingsList = [];
+
+Utils.convertDsParamsOldToNew(context.jsonQuery);
+
+var promise = Facade.getListAsync("LoUserSetting", context.jsonQuery).then(
+  function (userSettings) {
+
+    if (userSettings.length > 0) {
+      var settingJson = userSettings[0];
+      for (var i in settingJson) {
+        if (settingJson.hasOwnProperty(i)) {
+          settingsList.push({ "name" : i, "value" : settingJson[i] });
+        }
+      }
+    }
+
+    if (settingsList.length > 0) {
+      me.addItems(settingsList);
+    }
+
+    var jsonQuerySysSetting = {"iD": "FirstDayOfWeek"};
+
+    return Facade.getObjectAsync("LuSysSettingById", Utils.convertDsParamsNewToOld(jsonQuerySysSetting));
+  }).then(
+  function (settingLookup) {
+    var liUserSetting = {
+      "name": "FirstDayOfWeek",
+      "value": settingLookup.value
+    }; 
+
+    me.addListItems([liUserSetting]);
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

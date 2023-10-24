@@ -1,0 +1,23 @@
+<BusinessLogic methodName="removeUnreadIcon" businessObjectClass="LoUsrNotification" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="NotificationDetail" type="BoUsrNotification" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(me.getCurrent())) {
+  if(NotificationDetail.getIsRead()== "1"){
+    me.getCurrent().setIsReadImage("EmptyImage");
+  }else{
+    me.getCurrent().setIsReadImage("CheckMarkFalse");
+  }
+}
+
+var filters = me.getAllEnabledFilters();
+if (filters.length > 0 && filters[0] === "isRead") {
+  var items = me.getItemObjects();
+  if (items.length === 0) {
+    me.setCurrentByPKey(undefined);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

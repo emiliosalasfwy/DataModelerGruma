@@ -1,0 +1,77 @@
+<BusinessLogic methodName="fetchProductsRelevantForReward" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loRewards" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var criterionAttribute;
+var addCondForeignProducts = "";
+var rewardIdsWithoutClassification = loRewards.getRewardIds();
+var loRewardProducts;
+var promise = when.resolve();
+
+if(me.getBoOrderMeta().getAllowForeignProducts() == "0"){
+  addCondForeignProducts = " AND productInfo.Competitive_Product__c = 0 ";
+}
+if (me.getBoOrderMeta().getItemListOption() == "Hierarchy") {
+  criterionAttribute = me.getBoOrderMeta().getCriterionAttributeForLevel(me.getBoOrderMeta().getNumberOfHierarchyLevels());
+} else {
+  criterionAttribute = me.getBoOrderMeta().getCriterionAttributeForFlatList();
+}
+promise = BoFactory.loadObjectByParamsAsync("LoRewardProducts", { rewardIds : rewardIdsWithoutClassification, addCondForeignProducts : addCondForeignProducts, criterionAttribute : criterionAttribute } );
+
+// get the tactic products for rewards that do have a classification defined and convert them into LiRewardProducts
+promise.then(function(rewardProducts) {
+  var classificationProducts = [];
+  var duplicateProducts = [];
+  var rewardsWithClassification = loRewards.getItems().filter(function(item) {return !Utils.isEmptyString(item.classification) && item.mergeEngine_invalidated !== "1" && item.prdType !== "AssetType";});
+  var orderItems = [];
+  for (var i = 0; i < rewardsWithClassification.length; i++) {
+    var currentReward = rewardsWithClassification[i];
+
+    //filter those items which belongs to same promotion as that of reward promotion and includes reward classification and are order units
+    orderItems = me.getLoItems().filter(function(item) {
+      var itemClassifications = item.productClassifications.split(";");
+      return item.promotionPKey === currentReward.getPromotionPKey() &&
+        itemClassifications.indexOf(currentReward.getClassification()) >= 0 &&
+        item.isOrderUnit == "1";
+    });
+    for (var k = 0; k < orderItems.length; k++) {
+      var classificationProduct = {
+        // concatenate pKey from tactic product id + reward id to achieve an unique id
+        "pKey" : orderItems[k].getTacticProductPKey() + currentReward.getPKey(),
+        "prdId" : orderItems[k].getPrdMainPKey(),
+        "promotionReward" : currentReward.getPKey(),
+        "defaultValue" : orderItems[k].getDefaultValue(),
+        "maxQuantityValue" : orderItems[k].getMaxValue(),
+        "rewardType" : currentReward.getRewardType(),
+        "logisticUnit" : orderItems[k].getQuantityLogisticUnit(),
+        "productName" : orderItems[k].getText1(),
+        "quantity" : orderItems[k].getDefaultValue(),
+        "isValidFreeItem" : "1",
+        "shortId" : orderItems[k].getShortId(),
+        "eAN" : orderItems[k].getEAN(),
+        "piecesPerSmallestUnitForBasePrice" : orderItems[k].getPiecesPerSmallestUnitForBasePrice(),
+        "prdType" : orderItems[k].getPrdType(),
+        "taxClassification" : orderItems[k].getTaxClassification(),
+        "productCode" : orderItems[k].getPrdId(),
+        "deliveryState" : orderItems[k].getDeliveryState(),
+        "fieldState" : orderItems[k].getFieldState(),
+        "newState" : orderItems[k].getNewState(),
+        "groupText" : orderItems[k].getGroupText(),
+        "groupId" : orderItems[k].getGroupId(),
+        "isOrderUnit" : "1"
+      };
+      // prevent to have duplicate reward products (this can happen when there are two products with different order item template)
+      if (duplicateProducts.filter(function(item) {return classificationProduct.prdId === item.prdId && classificationProduct.promotionReward === item.promotionReward;}).length === 0) {
+        duplicateProducts.push(classificationProduct);
+        classificationProducts.push(classificationProduct);
+      }
+    }
+  }
+  if (classificationProducts.length > 0) {
+    rewardProducts.addItems(classificationProducts);
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

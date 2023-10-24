@@ -1,0 +1,7 @@
+<BusinessLogic methodName="isTourInContext" businessObjectClass="LoCashOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = (Utils.isDefined(ApplicationContext.get("currentTourPKey")) && ApplicationContext.get("currentTourStatus") === "Running"); ]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

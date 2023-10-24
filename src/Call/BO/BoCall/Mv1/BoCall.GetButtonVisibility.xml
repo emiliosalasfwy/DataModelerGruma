@@ -1,0 +1,59 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="BoCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="token" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = true;
+var bCallIsReadOnly = me.isReadOnly();
+
+// Execute Break Button for initial time cards
+// hide button if:
+// 1. if there is no open time card available for the logged in user
+// 2. if the default break time entry template is not specified for the current time card
+// 3. if the call itself represents the default break of the time card (UsrDocMeta.BreakUsrTimeEntryMetaPKey = ClbMeta.UsrTimeEntryMetaPKey)
+if (token === "btnBreak"){
+  if( !Utils.isDefined(ApplicationContext.get("openTimeCardPKey")) || 
+     Utils.isEmptyString(ApplicationContext.get("openTimeCardPKey"))  ||
+     !Utils.isDefined(ApplicationContext.get("openTimeCardBreakMetaPKey")) || 
+     Utils.isEmptyString(ApplicationContext.get("openTimeCardBreakMetaPKey")) ||
+     ApplicationContext.get("openTimeCardBreakMetaPKey") === me.getLuCallMeta().getUsrTimeEntryMetaPKey()
+    ) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && 
+   !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && 
+   ApplicationContext.get('currentTourStatus') !== "Running"){
+  bCallIsReadOnly=true;
+}
+
+switch (token) {
+  case "btnComplete":
+    visible = !bCallIsReadOnly && Utils.isDefined(me.getBpaMainPKey()) && !Utils.isEmptyString(me.getBpaMainPKey());
+    break;
+
+  case "btnBreak":
+  case "btnQuestionsAddQuestion":
+  case "btnSurveyAddProduct":
+  case "btnSurveyScanProduct":
+  case "btnRegisterUnknownAsset":
+  case "btnScanBarcode":
+  case "btnTakePicture":
+  case "btnSelectPicture":
+  case "btnCreateNewDelivery":
+  case "btnEditNote":
+  case "btnSketch":
+  case "btnDeletePicture":
+    visible = !bCallIsReadOnly;
+    break;
+
+  case "btnTakeNewOrder":
+    visible = !(me.getClbStatus() === "Completed" || me.getClbStatus() === "Abandoned");
+    break;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

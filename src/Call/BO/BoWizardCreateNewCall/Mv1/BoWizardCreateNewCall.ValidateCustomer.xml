@@ -1,0 +1,18 @@
+<BusinessLogic methodName="validateCustomer" businessObjectClass="BoWizardCreateNewCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (messageCollector.containsNoErrors()){
+  if (!Utils.isEmptyString(me.getCustomerPKey()) && (me.getDateFrom() < me.getManagementRelationValidFrom() || me.getDateFrom() > me.getManagementRelationValidThru())){
+    var newError = {
+      "level" : "error",
+      "objectClass" : "BoWizardCreateNewCall",
+      "messageID" : "CasClbInvalidManagementRelation"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

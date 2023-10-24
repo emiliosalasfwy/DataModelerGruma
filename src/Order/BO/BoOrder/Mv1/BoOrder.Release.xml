@@ -1,0 +1,54 @@
+<BusinessLogic methodName="release" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+//Get StateType of next phase
+var nextStates = me.getBoWorkflow().getNextStates(me.getActualStatePKey());
+
+if (nextStates.length > 0) {
+  if (nextStates[0].stateType == "Released") {
+    me.setValidateForRelease("1");
+    me.setReleaseValidationDone("0");
+  }
+}
+
+// Set the release time
+if(me.getBoOrderMeta().getCaptureReleaseTime() == "1"){
+  me.setReleaseTime(Utils.createDateNow());
+}
+else{
+  me.setReleaseTime(Utils.getMinDate());
+}
+
+if (me.getBoOrderMeta().getDocInvoiceNumberGenBehavior() === "Release" && Utils.isEmptyString(me.getInvoiceId())) {
+  var sysNumberParams = [];
+  var sysNumberQuery = {};
+
+  sysNumberParams.push({
+    "field" : "sdoMetaPKey",
+    "value" : me.getSdoMetaPKey()
+  });
+  sysNumberParams.push({
+    "field" : "docTaType",
+    "value" : me.getDocTaType()
+  });
+  sysNumberQuery.params = sysNumberParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LuSdoMetaDocTATypeSysNumber", sysNumberQuery)
+    .then(function (luSdoMetaDocTATypeSysNumber) {
+    if (Utils.isDefined(luSdoMetaDocTATypeSysNumber)) {
+      if (!Utils.isEmptyString(luSdoMetaDocTATypeSysNumber.getSysNumberPKey())) {
+        return SysNumber.getSysNumberAsync(luSdoMetaDocTATypeSysNumber.getSysNumberPKey());
+      } else {
+        return SysNumber.getSysNumberAsync(me.getBoOrderMeta().getSysNumberPKey());
+      }
+    }
+  }).then(function (invoicenumber) {
+    if (Utils.isDefined(invoicenumber)) {
+      me.setInvoiceId(invoicenumber);
+    }
+  });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

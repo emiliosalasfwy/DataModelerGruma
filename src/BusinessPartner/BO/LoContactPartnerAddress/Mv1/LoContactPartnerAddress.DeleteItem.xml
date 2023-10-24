@@ -1,0 +1,15 @@
+<BusinessLogic methodName="deleteItem" businessObjectClass="LoContactPartnerAddress" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liContactPartnerAddress = me.getItemByPKey(pKey);
+
+if (Utils.isDefined(liContactPartnerAddress)){
+  liContactPartnerAddress.delete();
+}
+
+me.setFilter("objectStatus", STATE.DIRTY | STATE.DELETED, "NCB");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

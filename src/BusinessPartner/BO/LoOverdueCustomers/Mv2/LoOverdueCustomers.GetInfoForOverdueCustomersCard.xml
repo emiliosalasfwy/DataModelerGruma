@@ -1,0 +1,22 @@
+<BusinessLogic methodName="getInfoForOverdueCustomersCard" businessObjectClass="LoOverdueCustomers" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="overdueCustomersCount" type="Integer" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var count = me.cardItemCount;
+var numberVisible = 5;
+
+if(Utils.isPhone()) {
+  numberVisible = 3;
+}
+if(count <= numberVisible){
+  numberVisible = count;
+}
+
+var info = " ";
+if(numberVisible != "0"){
+  info = numberVisible.toString() + " / " + overdueCustomersCount;
+}]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

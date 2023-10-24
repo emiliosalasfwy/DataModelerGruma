@@ -1,0 +1,34 @@
+<BusinessLogic methodName="deleteOrder" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.getLoItems().delete();
+
+if (Utils.isDefined(me.getLoNotes())){
+  this.getLoNotes().delete();
+}
+
+if (Utils.isDefined(me.getLoOrderAttachment())){
+  me.getLoOrderAttachment().delete();
+}
+
+if (Utils.isDefined(me.getLoPayments())){
+  me.getLoPayments().delete();
+}
+
+if (Utils.isDefined(me.getLoInventoryTransactions())){
+  me.getLoInventoryTransactions().delete();
+}
+
+if (Utils.isDefined(me.getLoSysSignatureBlob())){
+  me.getLoSysSignatureBlob().delete();
+}
+
+if (Utils.isDefined(me.getLoSysSignatureAttribute())){
+  me.getLoSysSignatureAttribute().delete();
+}
+
+me.setOrderStatus("delete");
+me.delete();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

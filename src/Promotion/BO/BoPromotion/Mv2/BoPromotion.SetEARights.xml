@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoPromotion" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aclBO = me.getACL();
+
+//User is not Responsible -> ReadOnly Promotion
+if (!me.isPromotionEditable()) {
+  aclBO.removeRight(AclObjectType.OBJECT, "BoPrmPromotion", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

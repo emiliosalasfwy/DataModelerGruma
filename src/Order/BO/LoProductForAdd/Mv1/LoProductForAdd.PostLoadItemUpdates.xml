@@ -1,0 +1,24 @@
+<BusinessLogic methodName="postLoadItemUpdates" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="items" type="Object" />
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// OBSOLETE!! - No longer called by core - Data is retrieved directly as derived attribute via datasource from temp table containing the merge result
+
+var item;    
+
+	for(var i=0; i < items.length; i++) {
+    	item = items[i];
+
+		if ((item.getListing() !== "Hit") && (item.getListing() !== "Collection") && (item.getListing() !== "None")) {
+			item.setListing("None");
+		}
+
+		if ((item.getListingWithModules() !== "Hit") && (item.getListingWithModules() !== "Collection") && (item.getListingWithModules() !== "None")) {
+			item.setListingWithModules("None");
+		}
+	}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

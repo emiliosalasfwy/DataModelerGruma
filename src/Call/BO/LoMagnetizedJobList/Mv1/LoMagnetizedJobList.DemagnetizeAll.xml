@@ -1,0 +1,16 @@
+<BusinessLogic methodName="demagnetizeAll" businessObjectClass="LoMagnetizedJobList" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aMagnetizedJoblists = this.getAllItems();
+
+var idx;
+
+for (idx = 0; idx < aMagnetizedJoblists.length; idx++) 
+{
+  aMagnetizedJoblists[idx].setDemagnetizeOnSave("1");
+  aMagnetizedJoblists[idx].setDone("0");
+  aMagnetizedJoblists[idx].setClbMainPKey(" ");      
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

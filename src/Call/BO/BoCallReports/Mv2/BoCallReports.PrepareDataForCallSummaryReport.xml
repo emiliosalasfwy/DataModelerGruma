@@ -1,0 +1,99 @@
+<BusinessLogic methodName="prepareDataForCallSummaryReport" businessObjectClass="BoCallReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="storedsurveyData" type="Object" />
+    <MethodInput name="updatedSurveyData" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var notDistributedLength = 0;
+var outOfStockLength = 0;
+var facingMismatchLength = 0;
+var priceMismatchLength = 0;
+// Merge survey lists
+var loPos = updatedSurveyData;
+var allSurveys = BoFactory.instantiate("LoSurveys");
+
+if (Utils.isDefined(loPos)) {
+  var aPOS = loPos.getAllItems();
+  var idxPOS;
+  var loSurveys;
+
+  for (idxPOS = 0; idxPOS < aPOS.length; idxPOS++) {
+    loSurveys = aPOS[idxPOS].getSurveys();
+    if (Utils.isDefined(loSurveys)) {
+      allSurveys.addItems(loSurveys.getAllItems());
+    }
+  }
+}
+
+// Incrementally add stored surveys
+var itemComparisonParams = [];
+itemComparisonParams.push({ "fieldName" : "pKey" });
+
+if(Utils.isDefined(storedsurveyData)){
+  allSurveys.addItemsIncremental(storedsurveyData.getAllItems(), null, itemComparisonParams);
+}
+
+allSurveys.forEach(function(survey){
+  if(survey.getHide() != "1"){
+
+    if(survey.getValue() == "NotDistributed"){
+      notDistributedLength++;
+    }
+
+    if(survey.getValue() == "OutOfStock"){
+      outOfStockLength++;
+    }
+
+    if(survey.getTargetValue() != " " && survey.getSurveyText() == Localization.resolve("Report_CallSummary_Facings") && ((!Utils.isEmptyString(survey.getTargetValue()) && survey.getValue() != survey.getTargetValue()) || (!Utils.isEmptyString(survey.getLastValue()) && survey.getValue() != survey.getLastValue()))){
+      facingMismatchLength++;
+    }
+
+    if(survey.getTargetValue() != " " && survey.getSurveyText() == Localization.resolve("Report_CallSummary_Price") && ((!Utils.isEmptyString(survey.getTargetValue()) && survey.getValue() != survey.getTargetValue()) || (!Utils.isEmptyString(survey.getLastValue()) && survey.getValue() != survey.getLastValue()))){
+      priceMismatchLength++;
+    }
+  }
+});
+
+// Small bars in case of no exceptions
+if (notDistributedLength === 0) {notDistributedLength = 0.03;}
+if (outOfStockLength === 0) {outOfStockLength = 0.03;}
+if (facingMismatchLength === 0) {facingMismatchLength = 0.03;}
+if (priceMismatchLength === 0) {priceMismatchLength = 0.03;}
+
+// Determine maximum for axis
+var valueArray = [];
+valueArray.push(notDistributedLength);
+valueArray.push(outOfStockLength);
+valueArray.push(facingMismatchLength);
+valueArray.push(priceMismatchLength);
+
+var maxValue = valueArray.reduce(function (p, v) {
+  return (p > v ? p : v);
+});
+
+var axisMax = Math.ceil(maxValue * 1.1);
+
+// Generate grid lines
+var gridLines = [];
+var tick = maxValue / 5;
+
+gridLines.push({"value": (tick)});
+gridLines.push({"value": (tick * 2)});
+gridLines.push({"value": (tick * 3)});
+gridLines.push({"value": (tick * 4)});
+gridLines.push({"value": (tick * 5)});
+
+var jsonData = {
+  "data" : {
+    columns : [['surveyExceptions', notDistributedLength, outOfStockLength, facingMismatchLength, priceMismatchLength]]
+  },
+  "axisRange" : {
+    "max" : {
+      "y" : axisMax
+    }
+  },
+  "gridLines" : gridLines
+};]]>
+</Code>
+  <Return name="jsonData" value="jsonData" />
+</BusinessLogic>

@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateTotalActivityDuration" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var totalDuration = 0;
+
+var loActivities = me.getLoUsrDRActivity().getItemObjects();
+
+for(var idxloActivities = 0; idxloActivities < loActivities.length; idxloActivities ++) {
+  totalDuration = totalDuration + parseInt(loActivities[idxloActivities].getDuration(), 10);
+}
+
+if(Math.floor(totalDuration / 60) > 23) {
+  messageCollector.add({"level": "error", 
+                        "objectClass": "BoUserDailyReport", 
+                        "simpleProperty": " ", 
+                        "messageID": "CasUsrDailyReportActivityDuration"});
+}
+
+var promise = when.resolve(messageCollector);]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

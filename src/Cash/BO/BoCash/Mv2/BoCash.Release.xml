@@ -1,0 +1,39 @@
+<BusinessLogic methodName="release" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Determine next state but do not set (this is done within the beforeSaveAsync())
+var promise;
+var isCashCheckIn = me.getDocumentType() === "CashCheckIn";
+
+//Get StateType of next phase
+var nextStates = me.getBoWorkflow().getNextStates(me.getActualStatePKey());
+
+if (nextStates.length > 0 && nextStates[0].stateType == "Released") {
+    me.setValidateForRelease("1");
+}
+
+if(!isCashCheckIn) {  
+  if(me.getDebitCredit() === "Credit") {
+    me.setPaidAmount(me.getAbsolutePaidAmount() * -1);
+  } else {
+    me.setPaidAmount(me.getAbsolutePaidAmount());
+  }
+}
+
+// Set the release time
+if(me.getBoCashMeta().getCaptureReleaseTime() == "1") {
+  me.setReleaseTime(Utils.createDateNow());
+} else {
+  me.setReleaseTime(Utils.getMinDate());
+}
+
+//create new payment only for check out when releasing
+if(isCashCheckIn) {
+  promise = when.resolve();
+} else {
+  // Create payments if necessary (check is done with createPayments() method)
+  promise = me.createPayments();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

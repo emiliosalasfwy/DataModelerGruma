@@ -1,0 +1,45 @@
+<BusinessLogic methodName="ebForceItemListEvents" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//*************************************************************************************************************
+// New Event Handling with Buffering
+// 
+// Events are buffered in ebBufferItemListEvents(), a timer is started
+// When the timer is finished ebFireItemListEvents() is called, here the handling of the buffered events starts
+// The handling itself is done in ebHandleItemListEvents()
+// ebForceItemListEvents() can be called (should be called from a process) to force the clearance of the buffer
+//*************************************************************************************************************
+
+
+var promise;
+
+//check whether stepper timers are still running
+if(Utils.listStepperTimeoutRunning())
+{
+  //call this method again to wait for the timer
+  promise = me.ebForceItemListEvents();
+}
+else
+{
+  //no fw timers are running, so fire off the events and stop the timer
+  var eventTimer = me.getEventTimer();
+  if(Utils.isDefined(eventTimer))
+  {
+    clearTimeout(eventTimer);
+  }
+
+  var buffer = me.getItemListEventBuffer();
+  me.setItemListEventBuffer([]);
+
+  if(Utils.isDefined(buffer) && buffer.length > 0)
+  {
+    promise = me.ebHandleItemListEvents(buffer);
+  }
+  else
+  {
+    promise = when.resolve();
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

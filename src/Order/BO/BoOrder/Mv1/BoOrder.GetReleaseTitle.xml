@@ -1,0 +1,9 @@
+<BusinessLogic methodName="getReleaseTitle" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+var title = me.getBoOrderMeta().getText() + ": " + me.getOrderId();]]>
+</Code>
+  <Return name="title" value="title" />
+</BusinessLogic>

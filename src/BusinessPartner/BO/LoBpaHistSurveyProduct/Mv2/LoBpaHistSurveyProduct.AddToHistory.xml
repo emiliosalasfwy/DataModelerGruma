@@ -1,0 +1,73 @@
+<BusinessLogic methodName="addToHistory" businessObjectClass="LoBpaHistSurveyProduct" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="prdMainPKey" type="String" />
+    <MethodInput name="posPKey" type="String" />
+    <MethodInput name="clbMetaPKey" type="String" />
+    <MethodInput name="bpaCustomerPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var liNewbpaHistSurveyProduct = null;
+var bpaHistSurveyProductItemData = null;
+
+var aHistPrdForProduct = this.getItemsByParamArray([{
+  "prdMainPKey" : prdMainPKey,
+  "op" : "EQ"
+}, {
+  "objectStatus" : this.self.STATE_DELETED,
+  "op" : "NE"
+}
+                                                   ]);
+
+// For Store Survey Add
+if (posPKey === " ") {
+  if (aHistPrdForProduct.length === 0) {
+
+    bpaHistSurveyProductItemData = {
+      "pKey" : PKey.next(),
+      "bpaCustomerPKey" : bpaCustomerPKey,
+      "bpaPOSPKey" : posPKey,
+      "prdMainPKey" : prdMainPKey,
+      "clbMetaPKey" : clbMetaPKey,
+      "objectStatus" : this.self.STATE_NEW_DIRTY
+    };
+
+    this.addListItem(bpaHistSurveyProductItemData);
+  }
+} else {
+  // For POS entry check if store exists
+  var idxHistProducts = 0;
+  var bStoreEntryExists = false;
+  var bCurrentPOSEntryExists = false;
+  var liStoreHistProduct = null;
+
+  for (idxHistProducts; idxHistProducts < aHistPrdForProduct.length; idxHistProducts++) {
+    if (aHistPrdForProduct[idxHistProducts].getBpaPOSPKey() === " ") {
+      liStoreHistProduct = aHistPrdForProduct[idxHistProducts];
+      bStoreEntryExists = true;
+    } else if (aHistPrdForProduct[idxHistProducts].getBpaPOSPKey() === posPKey) {
+      bCurrentPOSEntryExists = true;
+    }
+  }
+
+  if (!bCurrentPOSEntryExists) {
+    if (bStoreEntryExists) {
+      liStoreHistProduct.setBpaPOSPKey(posPKey);
+    } else {
+      // add new historical product item
+      bpaHistSurveyProductItemData = {
+        "pKey" : PKey.next(),
+        "bpaCustomerPKey" : bpaCustomerPKey,
+        "bpaPOSPKey" : posPKey,
+        "prdMainPKey" : prdMainPKey,
+        "clbMetaPKey" : clbMetaPKey,
+        "objectStatus" : this.self.STATE_NEW_DIRTY
+      };
+
+      this.addListItem(bpaHistSurveyProductItemData);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

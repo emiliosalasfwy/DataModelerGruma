@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (Utils.isEmptyString(me.getLuProduct().getPKey()) || !(Utils.isDefined(me.getUoM()))) {
+  newError = {"level": "error",
+              "objectClass": "BoTruckLoadWizardAddProduct",
+              "messageID": "CasSdoFillInAllValues"};
+  messageCollector.add(newError);
+}
+if (!Utils.isEmptyString(me.getSubType()) && me.getSubType()==="ProductCheckIn" && Utils.isEmptyString(me.getSdoItemMetaPKey())) {
+  newError = {"level": "error",
+              "objectClass": "BoTruckLoadWizardAddProduct",
+              "messageID": "CasSdoFillInAllValues"};
+  messageCollector.add(newError);
+}
+
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

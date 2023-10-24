@@ -1,0 +1,40 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoTimeSlot" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//format times
+
+var items = me.getAllItems();
+
+me.suspendListRefresh();
+
+var deviation;
+var deviationString = "";
+
+for (var i = 0; i < items.length; i++) {
+  items[i].startTime = Localization.localize(items[i].startTime.substring(0,8),"time");
+  items[i].endTime = Localization.localize(items[i].endTime.substring(0,8),"time");
+  
+  //Calculate the deviation between local time and time slot time (defined for a specific time zone)
+  if(!Utils.isDefined(deviation) && Utils.isDefined(items[i].timeZone)){
+    var localDate = Utils.createDateToday();
+    var timeZoneDate = Utils.createDateByString(localDate.toLocaleString("en-US", {timeZone: items[i].timeZone}));
+    deviation = (timeZoneDate.getTime() - localDate.getTime()) / 1000 / 60 / 60;
+    if(deviation !== 0)deviationString = Localization.resolve("LoTimeSlot_TitlePrefix") + deviation + Localization.resolve("LoTimeSlot_GroupTextPostfix");
+  }
+  items[i].groupText = deviationString;
+}
+
+me.resumeListRefresh(true);
+
+//sort list
+me.orderBy({
+  daySort: "ASC",
+});
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

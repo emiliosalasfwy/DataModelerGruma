@@ -1,0 +1,27 @@
+<BusinessLogic methodName="getJsonQueryForLoLogisticUnit" businessObjectClass="BoOrder" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItemPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var logisticUnitParams = [];
+      var logisticUnitQuery = {};
+      var orderItems = this.getLoItems().getItemsByParam({ "pKey": orderItemPKey });      
+      
+      if (orderItems.length > 0) {
+        logisticUnitParams.push({ "field": "ProductPKey", "value":orderItems[0].getPrdMainPKey() });
+
+        var itemMetas = this.getBoOrderMeta().getLoOrderItemMetas().getItemsByParam({ "pKey": orderItems[0].getSdoItemMetaPKey() });
+
+        if (Utils.isDefined(itemMetas[0])){
+          logisticUnitParams.push({ "field": "LogisticCategory", "value":  itemMetas[0].getLogisticCategory() });
+        }
+      } else {
+        // Fallback
+        logisticUnitParams.push({ "field": "ProductPKey", "value": " " });
+        logisticUnitParams.push({ "field": "LogisticCategory", "value": " " });
+      }
+
+     logisticUnitQuery.params = logisticUnitParams;]]>
+</Code>
+  <Return name="jsonQuery" value="logisticUnitQuery" />
+</BusinessLogic>

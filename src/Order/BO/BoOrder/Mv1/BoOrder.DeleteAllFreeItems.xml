@@ -1,0 +1,21 @@
+<BusinessLogic methodName="deleteAllFreeItems" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var itemsMain = me.getLoItems();
+var items = itemsMain.getAllItems();
+var index;
+
+for (index = 0; index < items.length; index++)
+{
+	var currentItem = items[index];
+		
+	if(!Utils.isEmptyString(currentItem.getSdoParentItemPKey()))
+	{
+      currentItem.setQuantity(0);
+      currentItem.setDeletedFreeItem("1");
+    }		
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

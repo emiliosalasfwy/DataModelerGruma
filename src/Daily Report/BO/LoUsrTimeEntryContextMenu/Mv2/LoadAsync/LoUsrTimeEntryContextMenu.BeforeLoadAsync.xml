@@ -1,0 +1,24 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoUsrTimeEntryContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentUser = ApplicationContext.get('user').getPKey();
+var newContext = context.jsonQuery;          
+var enabled = newContext.manual && newContext.manual == "1" && newContext.phase !== "Released" && currentUser === newContext.owner ? "1" : "0";
+
+me.addItems([ 
+  {
+    "id": "0000001",
+    "actionImg": "TrashcanDarkGrey24",
+    "actionId": "Delete",
+    "processEvent": "Delete",
+    "actionVisible" : "1",
+    "actionEnabled" : enabled
+  } 
+]);
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

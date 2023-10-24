@@ -1,0 +1,25 @@
+<BusinessLogic methodName="validateReportWorkTime" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[/*
+UC:  NGM Usr - Edit Daily Report UC
+The system validates Work Time From <= Work Time Thru
+*/
+
+    var me = this;
+if(me.getBoUserDocMeta().getUiGroup() !== "TimeCard"){
+    if(Utils.convertAnsiTime2Time(me.getWorkTimeFrom()) > Utils.convertAnsiTime2Time(me.getWorkTimeThru())){
+
+    
+    var newError;
+
+    newError = {"level": "error",
+                        "objectClass": "BoUserDailyReport",
+                        "messageID": "CasUsrDailyReportWorkTimeFromGreaterThru"};
+
+    messageCollector.add(newError);
+    }
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

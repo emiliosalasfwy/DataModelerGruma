@@ -1,0 +1,118 @@
+<BusinessLogic methodName="validateTimeSlot" businessObjectClass="BoTimeSlot" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/** This function validated newly created or changed time Slots 
+      - Day of week is mandatory and must be filled 
+      - End Time must be after start time
+      - No overlap of time slot records is allowed
+**/
+
+
+//validate only if list of time slots exists
+//even if there is no existing time slot the Lo itself exists
+if(Utils.isDefined(me.getListTimeSlots())){
+
+  var stateNewDirty = STATE.NEW | STATE.DIRTY;
+  var stateDirty = STATE.DIRTY | STATE.PERSISTED;
+  var objectStatus = me.getObjectStatus();
+
+  if(objectStatus === STATE.NEW || objectStatus === stateNewDirty || objectStatus === stateDirty){
+    /** ###############################################
+    # Day of week is mandatory and must be filled # 
+    ###############################################**/
+    if (!Utils.isDefined(me.getDayOfWeek()) || Utils.isEmptyString(me.getDayOfWeek())){
+      messageCollector.add({
+        "level": "error", 
+        "objectClass": "BoTimeSlot", 
+        "messageID": "CasBoTimeSlotDayOfWeekMandatory",
+        "messageParams": {}
+      });
+    }
+
+
+    /** #####################################
+    # End Time must be after start time # 
+    #####################################**/
+
+    var startTimeTicks =  me.getComparableTicksFromTime(me.getStartTime());
+    var endTimeTicks =  me.getComparableTicksFromTime(me.getEndTime());
+
+    if (startTimeTicks >= endTimeTicks){
+      messageCollector.add({
+        "level": "error", 
+        "objectClass": "BoTimeSlot", 
+        "messageID": "CasBoTimeSlotStartTimeBiggerEndTime",
+        "messageParams": {}
+      });
+    }
+
+
+    /** ##############################################
+    # No overlap of time slot records is allowed # 
+    ##############################################**/
+
+    if(Utils.isDefined(me.getListTimeSlots())){
+
+      // get time slots with the same day ... there might exist several with same day
+      //ignore deleted ones
+      //ignore ones with same pKey
+      var timeSlotsToCheck = me.getListTimeSlots().getItems().filter(function (item){
+        if(item.dayOfWeek === me.getDayOfWeek() && item.pKey !=  me.getPKey()){
+          return item;
+        }
+      });
+
+      var bTimeZoneValid = true;
+
+      var startTimeTicksToCheck;
+      var endTimeTicksToCheck;
+      var bCurrentTSInOtherTS;
+      var bOtherTSInCurrentTS;
+
+      bTimeZoneValid = timeSlotsToCheck.every(function(timeSlot){ 
+
+        startTimeTicksToCheck = me.getComparableTicksFromTime(timeSlot.getStartTime());
+        endTimeTicksToCheck = me.getComparableTicksFromTime(timeSlot.getEndTime());
+        bCurrentTSInOtherTS = false;
+        bOtherTSInCurrentTS = false;
+
+        if(
+          //check if start/end time of current time slot is in other timeslot
+          ((startTimeTicks >= startTimeTicksToCheck) && (startTimeTicks < endTimeTicksToCheck)) ||
+          ((endTimeTicks > startTimeTicksToCheck) && (endTimeTicks <= endTimeTicksToCheck))
+        ){
+          bCurrentTSInOtherTS = true;
+        }else if(
+          //check if start/end of other timeslot is in current timeslot
+          ((startTimeTicksToCheck >= startTimeTicks) && (startTimeTicksToCheck < endTimeTicks))||
+          ((endTimeTicksToCheck > startTimeTicks) && (endTimeTicksToCheck <= endTimeTicks))
+        ){
+          bOtherTSInCurrentTS = true;
+        }
+
+        if(bCurrentTSInOtherTS || bOtherTSInCurrentTS){
+          //every iterator stop when first time callback returns false
+          return false;
+        }else{
+          return true;
+        }
+      });
+    }
+
+
+
+    if (!bTimeZoneValid){
+      messageCollector.add({
+        "level": "error", 
+        "objectClass": "BoTimeSlot", 
+        "messageID": "CasBoTimeSlotOverlap",
+        "messageParams": {}
+      });
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

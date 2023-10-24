@@ -1,0 +1,54 @@
+<BusinessLogic methodName="createAttrMappingTruckAudit" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+
+var tourId;
+var warehouse;
+var date;
+var time;
+var oAmount;
+var aAmount;
+var difference;
+
+if (tour) {
+  tourId = tour.getId();
+}
+
+if (ref.getLuEtpWarehouse) {
+  warehouse = ref.getLuEtpWarehouse().getText();
+}
+
+if (ref.getCommitDate) {  
+  date = Localization.localize(ref.getCommitDate(), "date");
+}
+
+//if (ref.getReleaseTime) {
+// Set to Current Time
+time = Localization.localize(Utils.createDateNow(), "time");
+//}
+
+if (ref.getBookInventoryValue) {  
+  oAmount = Localization.localize(ref.getBookInventoryValue().toFixed(2), "number");
+}
+
+if (ref.getGrossTotalValueReceipt) {  
+  aAmount = Localization.localize(ref.getGrossTotalValueReceipt().toFixed(2), "number");
+}
+
+if (ref.getAmountDifference) {  
+  difference = Localization.localize(ref.getAmountDifference().toFixed(2), "number");
+} 
+
+attributes.add("TourId", tourId);
+attributes.add("Warehouse", warehouse);
+attributes.add("Date", date);
+attributes.add("Time", time);
+attributes.add("oAmount", oAmount);
+attributes.add("aAmount", aAmount);
+attributes.add("Difference", difference);]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

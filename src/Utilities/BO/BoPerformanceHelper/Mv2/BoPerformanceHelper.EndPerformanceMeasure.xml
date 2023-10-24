@@ -1,0 +1,62 @@
+<BusinessLogic methodName="endPerformanceMeasure" businessObjectClass="BoPerformanceHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="measurementPoint" type="String" />
+    <MethodInput name="measureIndex" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentArray = this.getPerfDict();
+var perfObj;
+var found = false;
+
+var foundEntries = currentArray.filter(function(x){return x.Name === measurementPoint;});
+
+if(foundEntries.length === 1)
+{
+  perfObj = foundEntries[0];
+
+}
+else if(foundEntries.length > 1)
+{
+  foundEntries = foundEntries.filter(function(x){return x.Index === measureIndex;});
+  perfObj = foundEntries[0];
+
+}
+
+if(Utils.isDefined(perfObj))
+{
+  found = true;
+
+  var index = currentArray.indexOf(perfObj);
+  currentArray.splice(index, 1);
+  this.setPerfDict(currentArray);
+}
+
+if(found)
+{
+  var endTime = Utils.createDateNow().getTime();
+  var diff = endTime - perfObj.Time;
+
+  var delim = "*** ";
+  var consoleString = "###";
+
+  consoleString += delim;
+
+  consoleString += "Exit: ";
+  consoleString += perfObj.Index;
+  consoleString += " ";
+  consoleString += perfObj.Name;
+
+  consoleString += " [ "; 
+  consoleString += diff;
+  consoleString += "ms";
+  consoleString += " ] ";
+
+  consoleString += delim;
+
+  consoleString += "###";
+
+  console.log(consoleString);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,26 @@
+<BusinessLogic methodName="discontinue" businessObjectClass="LoCustomerPOSRelation" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var liCustomerPOSRelation = me.getItemByPKey(pKey);
+
+if (Utils.isDefined(liCustomerPOSRelation)){
+  liCustomerPOSRelation.setValidThru(Utils.addDays2AnsiFullDate(Utils.createDateToday(), -1));
+
+  if (liCustomerPOSRelation.getValidThru() < liCustomerPOSRelation.getValidFrom()){
+    liCustomerPOSRelation.setValidFrom(liCustomerPOSRelation.getValidThru());
+  }
+
+  liCustomerPOSRelation.setContinued("0");
+
+  //save list explicitly after discontinuing pos
+  Facade.startTransaction();
+  promise = Facade.saveListAsync(me).then(function(){
+    return Facade.commitTransactionAsync();
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

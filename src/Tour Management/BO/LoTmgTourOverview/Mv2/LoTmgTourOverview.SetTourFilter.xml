@@ -1,0 +1,20 @@
+<BusinessLogic methodName="setTourFilter" businessObjectClass="LoTmgTourOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (mode === "open") {
+  me.setFilter("tmgStatus", "Open", "EQ");
+} else {
+  me.resetFilter("tmgStatus");
+}
+
+var items = me.getItemObjects();
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+} else {
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

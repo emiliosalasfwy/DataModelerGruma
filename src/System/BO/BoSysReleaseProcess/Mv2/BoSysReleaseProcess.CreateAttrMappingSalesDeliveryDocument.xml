@@ -1,0 +1,80 @@
+<BusinessLogic methodName="createAttrMappingSalesDeliveryDocument" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+
+var tourId;
+var date;
+var customerId;
+var invoiceId;
+var asn;
+var amount;
+var currency;
+var driver;
+var time;
+
+if(Utils.isDefined(tour)){
+  tourId = tour.getId();
+}
+
+if (Utils.isDefined(ref.getReleaseTime) && Utils.isDefined(ref.getReleaseTime()) && ref.getBoOrderMeta().getCaptureReleaseTime() == "1") {  
+  date = Localization.localize(ref.getReleaseTime(), "dateTime");
+}
+
+if(Utils.isDefined(tour)){
+  driver = tour.getDriverName();	
+}
+
+if (ref.getLuDeliveryRecipient) {  
+  customerId = ref.getLuDeliveryRecipient().getCustomerNumber();
+}
+
+if (ref.getInvoiceId) {  
+  invoiceId = ref.getInvoiceId();
+}
+
+if (ref.getAsn) {  
+  asn = ref.getAsn();
+}
+
+if (ref.getGrossTotalValue) {  
+  amount = Localization.localize(ref.getGrossTotalValue().toFixed(2), "number");
+}  
+
+if (ref.getCurrency) {  
+  currency = Utils.getToggleText("DomCurrency", ref.getCurrency());
+}
+
+if (Utils.isDefined(tourId) && !Utils.isEmptyString(tourId)) {  
+  attributes.add("TourId", tourId);
+}
+
+if (!Utils.isEmptyString(date)) {
+  attributes.add("Date", date);
+}
+
+if (!Utils.isEmptyString(driver)) {
+  attributes.add("Driver", driver);
+}
+
+// <!-- CW-REQUIRED: Framework is now Utils -->
+if((!Utils.isSfBackend()) || (Utils.isSfBackend() && customerId != '0')) {
+attributes.add("CustomerId", customerId);
+}
+
+if (!Utils.isEmptyString(invoiceId)) {
+  attributes.add("InvoiceId", invoiceId);
+}
+
+if (!Utils.isEmptyString(asn)) {
+  attributes.add("ASN", asn);
+}
+
+if (!Utils.isEmptyString(amount) && !Utils.isEmptyString(currency)) {
+  attributes.add("Amount", amount + " " + currency);
+}]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

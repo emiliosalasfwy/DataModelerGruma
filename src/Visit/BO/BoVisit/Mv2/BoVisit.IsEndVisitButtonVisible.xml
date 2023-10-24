@@ -1,0 +1,9 @@
+<BusinessLogic methodName="isEndVisitButtonVisible" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible=false;
+if (me.getStatus() === 'InProgress') visible=true;
+]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

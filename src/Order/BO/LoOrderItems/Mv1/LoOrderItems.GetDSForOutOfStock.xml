@@ -1,0 +1,31 @@
+<BusinessLogic methodName="getDSForOutOfStock" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="clbMainPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Datasourcename(requiredbymergeengine)
+var LO_MEOUTOFSTOCK = "LoMeOutOfStock";
+
+var datasourceDefiniton = {
+	"boName" : LO_MEOUTOFSTOCK,
+	"dsParams" : {
+		"params" : [{
+				"field" : "clbMainPKey",
+				"value" : clbMainPKey
+			}
+		]
+	},
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "outOfStock",
+			"alias" : "outOfStock",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : "NONE",
+	"lookupDataSource" : "false"
+};
+]]>
+</Code>
+  <Return name="dsForOutOfStock" value="datasourceDefiniton" />
+</BusinessLogic>

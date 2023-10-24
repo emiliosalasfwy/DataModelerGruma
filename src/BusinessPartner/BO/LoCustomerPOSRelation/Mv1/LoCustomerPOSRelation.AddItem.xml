@@ -1,0 +1,23 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoCustomerPOSRelation" businessObjectType="" asynchronous="FALSE" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posPKey" type="DomPKey" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="bpaRelMetaPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/* <!-- CW-REQUIRED: LI instantiation --> */
+me.addListItems([{
+  "pKey" : Utils.isSfBackend() ? posPKey : PKey.next(),
+  "posPKey" : posPKey,
+  "customerPKey" : customerPKey,
+  "bpaRelMetaPKey" : bpaRelMetaPKey,
+  "validFrom" : Utils.createAnsiDateToday(),
+  "validThru" : Utils.getMaxDate(),
+  "salesOrg" : ApplicationContext.get('user').getBoUserSales().getSalesOrg(),
+  "listingModule" : " ",
+  "continued" : "1",
+  "objectStatus" : STATE.NEW
+}]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

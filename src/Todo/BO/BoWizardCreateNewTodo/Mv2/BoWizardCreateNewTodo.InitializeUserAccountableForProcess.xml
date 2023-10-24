@@ -1,0 +1,13 @@
+<BusinessLogic methodName="initializeUserAccountableForProcess" businessObjectClass="BoWizardCreateNewTodo" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync("LoTeamUserOverview", Utils.convertDsParamsNewToOld({ "teamList" : [ApplicationContext.get('user').getPKey()]} )).then(
+  function (teamLookup) {
+    if(Utils.isDefined(teamLookup) && teamLookup.length > 0 && Utils.isDefined(teamLookup[0].userAccountableId)){
+      return teamLookup[0].userAccountableId;
+    }
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,35 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoCashOverviewContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var contextMenuItemList = [];
+
+var newParams  = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery))
+{
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+} 
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "CancelDarkGrey24",
+  "actionId" : "Cancel",
+  "processEvent" : "Cancel",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+};
+//Workaround for .getId()
+if(context.jsonQuery.phase === "Initial"){
+  menuEntry0.actionEnabled = "1";
+}
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

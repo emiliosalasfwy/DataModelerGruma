@@ -1,0 +1,112 @@
+<BusinessLogic methodName="getNextResp_EtpOrgUnit" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="liNextWfeState" type="Object" />
+    <MethodInput name="responsiblePKey" type="DomPkey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var responsiblesMain = {};
+var responsibles = {};
+
+// Get all org units the current responsible belongs to (in the current sales area)
+var promise = BoFactory.loadObjectByParamsAsync("LoOrgUnitsOfUser", me.getQueryBy("usrMainPKey", responsiblePKey)).then(
+  function (loOrgUnitsOfUser) {
+    var orgUnits = loOrgUnitsOfUser.getItemObjects();
+    var functions = [];
+    var seqenceArguments = [];
+    var seqArg;
+
+    // For each org unit found, search for next responsible
+    for (var i = 0; i < orgUnits.length; i++) {
+      seqArg = {};
+      seqArg.orgUnitPKey = orgUnits[i].getEtpOrgMainPKey();
+      seqArg.usrRolePKey = liNextWfeState.getUsrRolePKey();
+      seqArg.managementType = orgUnits[i].getManagementType();
+
+      functions.push(startRecursiveFunction);
+      seqenceArguments.push(seqArg);
+    }
+
+    // Call recursive functions for each org unit by when_sequence
+    return when_sequence(functions, seqenceArguments);
+  }).then(
+  function (results) {
+    // Check whether the collection contains any responsible - If not, return undefined
+    var collectionIsEmpty = true;
+    for (var key in responsibles) {
+      if (responsibles.hasOwnProperty(key)) {
+        collectionIsEmpty = false;
+        break;
+      }
+    }
+    var nextResponsibleCollection;
+    if (!collectionIsEmpty) {
+      // Pack and return results
+      nextResponsibleCollection = {};
+      nextResponsibleCollection.responsibles = responsibles;
+      nextResponsibleCollection.mainResponsibles = responsiblesMain;
+    }
+
+    return nextResponsibleCollection;
+  });
+
+// Declaration of recursive function for org unit hierarchy search
+function startRecursiveFunction(args) {
+  function recursiveFunction(orgUnitPKey, usrRolePKey, managementType) {
+
+    var params = [];
+    var query = {};
+    params.push({ "field": "etpOrgMainPKey", "value": orgUnitPKey });
+    params.push({ "field": "managementType", "value": managementType });
+    params.push({ "field": "usrRolePKey", "value": usrRolePKey });
+    query.params = params;
+
+    // Get all users of given org unit with given user role
+    return BoFactory.loadObjectByParamsAsync("LoUsersOfOrgUnitByRole", query).then(
+      function (loUsersOfOrgUnitByRole) {
+        var usersWithRole = loUsersOfOrgUnitByRole.getItemObjects();
+        var usrPKey;
+
+        if (usersWithRole.length > 0) {
+          // Push found users to result
+          for (var j = 0; j < usersWithRole.length; j++) {
+            usrPKey = usersWithRole[j].getUsrMainPKey();
+
+            if (usersWithRole[j].getMain() == "1") {
+              // Check whether this responsible has been already found
+              if (!Utils.isDefined(responsiblesMain[usrPKey])) {
+                responsiblesMain[usrPKey] = usrPKey;
+              }
+            } else {
+              // Check whether this responsible has been already found
+              if (!Utils.isDefined(responsibles[usrPKey])) {
+                responsibles[usrPKey] = usrPKey;
+              }
+            }
+          }
+        } else {
+          // Determine parent org unit for hierarchy search
+          var paramsHierarchy = [];
+          var queryHierarchy = {};
+          paramsHierarchy.push({ "field": "childPKey", "value": orgUnitPKey });
+          paramsHierarchy.push({ "field": "structureType", "value": "Sales" });
+          queryHierarchy.params = paramsHierarchy;
+
+          return BoFactory.loadObjectByParamsAsync("LuParentOrgUnit", queryHierarchy);
+        }
+      }).then(
+      function (luParentOrgUnit) {
+        // Search on next hierarchy level
+        if (Utils.isDefined(luParentOrgUnit) && !Utils.isEmptyString(luParentOrgUnit.getParentPKey())) {
+          return recursiveFunction(luParentOrgUnit.getParentPKey(), usrRolePKey, managementType);
+        }
+      });
+  }
+
+  // Call recursive function with argument for this sequence part
+  var arg = args[0];
+  args.shift();
+  return recursiveFunction(arg.orgUnitPKey, arg.usrRolePKey, arg.managementType);
+}]]>
+</Code>
+  <Return name="nextResponsiblePKey" value="promise" />
+</BusinessLogic>

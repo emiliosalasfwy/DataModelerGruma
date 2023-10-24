@@ -1,0 +1,14 @@
+<BusinessLogic methodName="getUIContainer" businessObjectClass="BoChartHelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Parameters>
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="initialize" type="Boolean" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+	var _initialize = initialize ? initialize : false;
+	
+	var d3Container = Utils.getUIContainer(containerName, "d3", _initialize);
+		
+   ]]></Code>
+  <Return name="d3Container" value="d3Container" />
+</BusinessLogic>

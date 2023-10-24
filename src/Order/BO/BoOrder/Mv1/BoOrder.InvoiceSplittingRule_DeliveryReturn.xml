@@ -1,0 +1,20 @@
+<BusinessLogic methodName="invoiceSplittingRule_DeliveryReturn" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="LiOrderItem" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[switch(mainItem.getMovementDirection())
+{
+  case "In":
+    mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_Return"));
+    break;
+  case "Out":
+    mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_Delivery"));
+    break;
+  default:
+    mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_Misc"));
+    break;
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

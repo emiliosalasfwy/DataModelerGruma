@@ -1,0 +1,97 @@
+<BusinessLogic methodName="cpGetRelevantOrderAttributes" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderAttributes = [];
+
+var attribute = {};
+attribute.key = "Id";
+attribute.value = this.getOrderId();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "CommitDate";
+attribute.value = this.getCommitDate();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "Currency";
+attribute.value = this.getCurrency();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "ResponsiblePKey";
+attribute.value = this.getResponsiblePKey();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "HeaderDiscount";
+attribute.value = this.getHeaderDiscount();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PayerCustomerPKey";
+attribute.value = this.getPayerCustomerPKey();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "BillToCustomerPKey";
+attribute.value = this.getBillToCustomerPKey();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "DeliveryRecipientPKey";
+attribute.value = this.getDeliveryRecipientPKey();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo1";
+attribute.value = this.getPricingInfo1();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo2";
+attribute.value = this.getPricingInfo2();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo3";
+attribute.value = this.getPricingInfo3();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo4";
+attribute.value = this.getPricingInfo4();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo5";
+attribute.value = this.getPricingInfo5();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo6";
+attribute.value = this.getPricingInfo6();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo7";
+attribute.value = this.getPricingInfo7();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo8";
+attribute.value = this.getPricingInfo8();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo9";
+attribute.value = this.getPricingInfo9();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PricingInfo10";
+attribute.value = this.getPricingInfo10();
+orderAttributes.push(attribute);]]>
+</Code>
+  <Return name="orderAttributes" value="orderAttributes" />
+</BusinessLogic>

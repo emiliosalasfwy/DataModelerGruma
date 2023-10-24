@@ -1,0 +1,179 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoCash" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = context.jsonQuery;
+
+if (!jsonQuery) {
+  jsonQuery = {
+    'params' : []
+  };
+}
+
+var context = {
+  'jsonQuery' : jsonQuery
+};
+
+var promise = Facade.getObjectAsync(BO_CASH, jsonQuery).then(
+  function (selfJson) {
+    context.selfJson = selfJson;
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+    if (Utils.isDefined(selfJson)) {
+      var jsonParams = me.prepareLookupsLoadParams(selfJson);
+      return Facade.loadLookupsAsync(jsonParams);
+    } else {
+      return when.resolve(null);
+    }
+  }).then(
+  function (lookups) {
+    if (Utils.isDefined(lookups)){
+      me.assignLookups(lookups);
+    }
+    return BoFactory.loadObjectByParamsAsync(BO_ORDERMETA, me.getQueryBy("pKey", me.getSdoMetaPKey()));
+  }).then(
+  function (boOrderMeta) {
+    if (Utils.isDefined(boOrderMeta)) {
+      me.setBoCashMeta(boOrderMeta);
+    } else {
+      me.setBoCashMeta(null);
+    }
+
+    var sdoMetaPKey = me.getSdoMetaPKey(),
+        debitCredit = me.getDebitCredit(),
+        jsonQuery = {},
+        jsonParams = [];
+
+    jsonParams.push({
+      "field" : "SdoMetaPKey",
+      "operator" : "EQ",
+      "value" : sdoMetaPKey
+    });
+    jsonParams.push({
+      "field" : "SdoMainDebitCredit",
+      "operator" : "EQ",
+      "value" : debitCredit
+    });
+    jsonQuery.params = jsonParams;
+
+    return BoFactory.loadObjectByParamsAsync(LO_PAYMENTMETA, jsonQuery);
+  }).then(
+  function (loPaymentMeta) {
+    if (Utils.isDefined(loPaymentMeta)) {
+      if (Utils.isDefined(me.getBoCashMeta())) {
+        me.getBoCashMeta().setLoPaymentMeta(loPaymentMeta);
+      }
+    }
+
+    return BoFactory.loadObjectByParamsAsync(BO_WORKFLOW, me.getQueryBy("pKey", me.getWfeWorkflowPKey()));
+  }).then(
+  function (boWorkflow) {
+    if (Utils.isDefined(boWorkflow)) {
+      me.setBoWorkflow(boWorkflow);
+    } else {
+      me.setBoWorkflow(null);
+    }
+    if (me.setObjectStatus) {
+      me.setObjectStatus(this.self.STATE_UNMODIFIED);
+    }
+
+    if(me.getPhase() === "Released"){
+      return me.determineSysReleaseProcessPKey();
+    }else{
+      return "";
+    }
+  }).then(
+  function (sysReleaseProcessPKey) {   
+    if(!Utils.isEmptyString(sysReleaseProcessPKey)){
+      return BoFactory.loadListAsync("LoSysReleaseProcessStep", me.getQueryBy("sysReleaseProcessPKey", sysReleaseProcessPKey));
+    }else{
+      return undefined;
+    }
+  }).then(
+  function (loSysReleaseProcessStep) {
+    if (Utils.isDefined(loSysReleaseProcessStep)) {
+
+      var stepItems = loSysReleaseProcessStep.getAllItems();
+      if(stepItems.length > 0){
+        me.setSysReleaseProcessStepsExists("1");
+      }else{
+        me.setSysReleaseProcessStepsExists("0");
+      }
+    } else {
+      me.setSysReleaseProcessStepsExists("0");
+    }
+
+    return me.loadPayments();
+  }).then(
+  function () {
+
+    if(me.getDocumentType() === "CashCheckIn"){
+      var jsonQuery = {};
+      var jsonParams = [];
+
+      jsonParams.push({
+        "field" : "tmgMainPKey",
+        "operator" : "EQ",
+        "value" : me.getTmgMainPKey()
+      });
+      jsonParams.push({
+        "field" : "loPaymentMeta",
+        "operator" : "EQ",
+        "value" : me.getBoCashMeta().getLoPaymentMeta()
+      });
+      jsonParams.push({
+        "field" : "sdoMainPKey",
+        "operator" : "EQ",
+        "value" : me.getPKey()
+      });
+      jsonParams.push({
+        "field" : "loPayments",
+        "operator" : "EQ",
+        "value" : me.getLoPayments()
+      });
+      jsonParams.push({
+        "field" : "phase",
+        "operator" : "EQ",
+        "value" : me.getPhase()
+      });
+
+      jsonQuery.params = jsonParams;
+
+      return BoFactory.loadObjectByParamsAsync(LO_CHECKINPAYMENTITEMS, jsonQuery);
+    }else{
+      return undefined; 
+    }
+
+  }).then(
+  function (loCheckInPayments) {
+    if(Utils.isDefined(loCheckInPayments)){
+      me.setLoCheckInPayment(loCheckInPayments);
+      me.calculateAmount(loCheckInPayments);
+      me.addItemChangedEventListener('loCheckInPayment', me.onCheckInItemChanged);
+
+      var checkInItems = me.getLoCheckInPayment().getAllItems();
+      var checkInItemsLength = checkInItems.length;
+      var index  = 0;
+      for(;index < checkInItemsLength; index++)
+      {
+        if(checkInItems[index].getLevel() == "main")
+        {
+          me.reasonCodeCheckInValidation(checkInItems[index]);
+        }
+      }
+    }
+
+    me.setEARights();
+    me.setObjectStatus(STATE.PERSISTED);
+
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

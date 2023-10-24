@@ -1,0 +1,24 @@
+<BusinessLogic methodName="getInfoForNotificationsCard" businessObjectClass="LoUsrNotification" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var count = me.cardItemCount;
+var numberVisibleNotifications = 5;
+
+if(Utils.isPhone()) {
+	numberVisibleNotifications = 3;
+}
+
+if(count <= numberVisibleNotifications){
+  numberVisibleNotifications = count;
+}
+
+var info = " ";
+if(numberVisibleNotifications != "0"){
+	info = numberVisibleNotifications.toString() + " / " + count;
+}
+
+
+]]></Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

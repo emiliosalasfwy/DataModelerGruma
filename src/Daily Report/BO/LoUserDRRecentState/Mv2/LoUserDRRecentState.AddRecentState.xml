@@ -1,0 +1,21 @@
+<BusinessLogic methodName="addRecentState" businessObjectClass="LoUserDRRecentState" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="DailyReportPKey" type="DomPKey" />
+    <MethodInput name="CurrentWfeState" type="DomPKey" />
+    <MethodInput name="CurrentUser" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var recentState = {
+  "pKey" : PKey.next(),
+  "usrDailyReportPKey" : DailyReportPKey,
+  "usrMainPKey" : CurrentUser,
+  "wfeStatePKey" : CurrentWfeState,
+  "done" : Utils.createDateNow(),
+  "salesOrg" : ApplicationContext.get('user').getBoUserSales().getSalesOrg(),
+  "objectStatus": STATE.NEW | STATE.DIRTY
+};
+
+me.addListItems([recentState]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

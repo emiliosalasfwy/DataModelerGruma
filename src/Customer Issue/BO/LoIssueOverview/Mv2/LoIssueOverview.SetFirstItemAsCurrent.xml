@@ -1,0 +1,7 @@
+<BusinessLogic methodName="setFirstItemAsCurrent" businessObjectClass="LoIssueOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[this.setCurrentByPKey(this.getFirstItemPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

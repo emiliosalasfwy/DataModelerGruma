@@ -1,0 +1,9 @@
+<BusinessLogic methodName="setCustomerByPKey" businessObjectClass="LoCustomerOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="string" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setCurrentByPKey(pKey);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

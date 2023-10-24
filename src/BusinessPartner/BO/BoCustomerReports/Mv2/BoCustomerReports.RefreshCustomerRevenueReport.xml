@@ -1,0 +1,39 @@
+<BusinessLogic methodName="refreshCustomerRevenueReport" businessObjectClass="BoCustomerReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="containerName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(me.getChartHelper()))
+{
+  return;
+}
+
+var chartHelper = this.getChartHelper();
+var chartString = "chart_" + containerName;
+var chartSelector = "#"+chartString;
+
+var d3Container = chartHelper.getUIContainer(containerName);
+var chart = me.getChartHelper().getChartFromStorage(containerName);
+
+// Redraw chart title after orientation change by just drawing the title again
+var currentYear = parseInt(Utils.createDateToday().getUTCFullYear(), 10);
+var prevYear = currentYear-1;
+var title = Localization.resolve("Report_CustomerRevenue_Title") + " - " + prevYear + " " + Localization.resolve("Report_CustomerRevenue_Title_VS") + " " + currentYear;
+chartHelper.setChartTitle(d3Container, title, containerName);
+
+var sizeJson = chartHelper.computeContainerSize(containerName, 0.70, 0.96);
+chart.resize(sizeJson);
+
+var svg = d3.select(chartSelector);
+var text = svg.selectAll("text");
+text.style("font-size", "1.4em");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+setTimeout(function () {
+  // center vertically
+  me.centerVerticallyCustomerRevenueReport(containerName);
+
+}, 100);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

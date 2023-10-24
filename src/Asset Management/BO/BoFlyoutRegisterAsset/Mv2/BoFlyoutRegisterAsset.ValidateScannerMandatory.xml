@@ -1,0 +1,53 @@
+<BusinessLogic methodName="validateScannerMandatory" businessObjectClass="BoFlyoutRegisterAsset" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCallAssetOverview" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var messageCollector = new MessageCollector();
+
+var serialNumber = me.getSerialNumber();
+var liCallAsset;
+
+var items = loCallAssetOverview.getAllItems();
+
+for (var i = 0; i < items.length; i++) {
+  if (items[i].getSerialNumber() === serialNumber) {
+    liCallAsset = items[i];
+    if (liCallAsset.getScanRequired() == "1" && me.getScanned() === "0") {
+      // Warning Messasge : Asset required scanning
+      var newError;
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoFlyoutRegisterAsset",
+        "messageID" : "CasClbAssetRequiredScanning"
+      };
+      messageCollector.add(newError);
+    }
+    break;
+  }
+}
+
+if(messageCollector.getCount() > 0)
+{
+  //show always first of collected messages
+
+  var buttonValues = {};
+  buttonValues[Localization.resolve("Discard")] = "discard";
+  buttonValues[Localization.resolve("Back")] = "back";
+  var messages = messageCollector.getMessages().join("<br>");
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), messages, buttonValues)
+    .then(function(result)
+          {
+    messageCollector.destroy();
+    return result;    
+  });
+}
+else
+{
+  messageCollector.destroy();
+  promise = when.resolve("valid");    
+}]]>
+</Code>
+  <Return name="validationResult" value="promise" />
+</BusinessLogic>

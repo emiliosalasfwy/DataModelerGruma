@@ -1,0 +1,36 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoToDoOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="newTodoDetail" type="BoTodo" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Create empty ListItem
+var liSvcRequestTodo = {
+  // Preset attributes
+  pKey: newTodoDetail.getPKey(),
+  issuePhase: newTodoDetail.getIssuePhase(),
+  initiationDate: newTodoDetail.getInitiationDate(),
+  businessModified: Utils.createAnsiDateTimeNow(),
+  dueDate: newTodoDetail.getDueDate(),
+  priority: newTodoDetail.getPriority(),
+  responsiblePKey: newTodoDetail.getResponsiblePKey(),
+  responsibleName: newTodoDetail.getLuResponsible().getName(),
+  text: newTodoDetail.getText(),
+  ownerPKey: newTodoDetail.getOwnerPKey(),
+  ownerName: newTodoDetail.getLuOwner().getName(),
+  initiatorPKey: newTodoDetail.getInitiatorPKey(),
+  svcMetaPKey: newTodoDetail.getSvcRequestMetaPKey(),
+  isPrivate: newTodoDetail.getBoSvcRequestMeta().getIsPrivate(),
+  isActive: newTodoDetail.getBoSvcRequestMeta().getActive(),
+  wfeWorkflowPKey: newTodoDetail.getWfeWorkflowPKey(),
+  actualStatePKey: newTodoDetail.getActualStatePKey(),
+};
+
+// Add new Item to ListObject
+me.addListItems([liSvcRequestTodo]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liSvcRequestTodo.getPKey());
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

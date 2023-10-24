@@ -1,0 +1,8 @@
+<ListObject name="LoBpaMetaRoleMetaRel" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoBpaMetaRoleMetaRel" />
+  <Item objectClass="LiBpaMetaRoleMetaRel" />
+  <Methods>
+    <Method name="saveAsync" />
+    <Method name="hasRoleMetaOfId" />
+  </Methods>
+</ListObject>

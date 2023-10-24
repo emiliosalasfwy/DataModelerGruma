@@ -1,0 +1,65 @@
+<BusinessLogic methodName="showAllItems" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var items;
+var itemObjects;
+
+// If not all items have been loaded (due to prior switch to "Show All"), the missing items need to be loaded
+if (me.getIsAllItemsLoaded() == "0") {
+
+  // Load order items from merged result
+  var jsonQuery = {
+    params : []
+  };
+
+  jsonQuery = me.getBoOrder().getJsonQueryForLoItems();
+  if (Utils.isCasBackend()){
+	jsonQuery.params = me.getBoOrder().getLoItems().buildQueryCondition(jsonQuery, "ALL");
+  }
+  
+  promise = me.getBoOrder().getLoItems().loadAsyncIncremental(jsonQuery)
+    .then(function() {
+    me.setIsAllItemsLoaded("1");
+    me.setIsShowCategories("0");
+
+    me.getBoOrder().resetCurrentItemFilter();
+
+    items = me.getBoOrder().getLoItems();
+    items.resetFilter("groupId");
+    items.resetFilter("pKey");
+
+    itemObjects = items.getItemObjects();
+
+    if (itemObjects.length > 0) {
+      items.setCurrent(itemObjects[0]);
+    }
+
+    me.setCurrentFilterId("");
+    me.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "2", "LT");
+    me.getBoOrder().setItemFilterCounts();
+  });
+} else {
+  me.setIsShowCategories("0");
+
+  me.getBoOrder().resetCurrentItemFilter();
+
+  items = me.getBoOrder().getLoItems();
+  items.resetFilter("groupId");
+  items.resetFilter("pKey");
+
+  itemObjects = items.getItemObjects();
+
+  if (itemObjects.length > 0) {
+    items.setCurrent(itemObjects[0]);
+  }
+
+  me.setCurrentFilterId("");
+  me.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "2", "LT");
+  me.getBoOrder().setItemFilterCounts();
+
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

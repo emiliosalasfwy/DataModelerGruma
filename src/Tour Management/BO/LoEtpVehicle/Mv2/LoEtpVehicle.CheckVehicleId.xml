@@ -1,0 +1,21 @@
+<BusinessLogic methodName="checkVehicleId" businessObjectClass="LoEtpVehicle" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="enteredID" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// OBSOLETE!! - No longer called by core
+var promise;
+var items = this.getItemsByParam({"id" : enteredID});
+
+if(items.length < 1) {
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), "The entered Vehicle ID is not valid!").then(
+    function() {
+      return "0";
+    }); 
+} 
+else {
+  promise =  when.resolve("1");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

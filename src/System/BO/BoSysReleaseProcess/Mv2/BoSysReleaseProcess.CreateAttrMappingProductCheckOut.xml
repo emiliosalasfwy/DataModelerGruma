@@ -1,0 +1,50 @@
+<BusinessLogic methodName="createAttrMappingProductCheckOut" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = me.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+var tourId;
+var warehouse;
+var date;
+var lineItems;
+var oAmount;
+var aAmount;
+var difference;
+
+if (tour) {
+  tourId = tour.getId();
+}
+if (ref.getLuEtpWarehouse) {
+  warehouse = ref.getLuEtpWarehouse().getText();
+}
+if (ref.getCommitDate) {
+  date = Localization.localize(ref.getCommitDate(), "date");
+}
+if (ref.getLoItems) {
+  var items = ref.getLoItems().getItemObjects();
+  var arr =[];
+  var hasQtyFunc = function(y){return Utils.isDefined(y.getQuantity()) && y.getQuantity() > 0;};
+  arr = items.filter(hasQtyFunc);
+  lineItems = arr.length;
+}
+if (ref.getBookInventoryValue) {
+  oAmount = Localization.localize(ref.getBookInventoryValue().toFixed(2), "number");
+}
+if (ref.getGrossTotalValueReceipt) {
+  aAmount = Localization.localize(ref.getGrossTotalValueReceipt().toFixed(2), "number");
+}
+if (ref.getAmountDifference) {
+  difference = Localization.localize(ref.getAmountDifference().toFixed(2), "number");
+}
+
+attributes.add("TourId", tourId);
+attributes.add("Warehouse", warehouse);
+attributes.add("Date", date);
+attributes.add("LineItems", lineItems);
+attributes.add("oAmount", oAmount);
+attributes.add("aAmount", aAmount);
+attributes.add("Difference", difference);]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

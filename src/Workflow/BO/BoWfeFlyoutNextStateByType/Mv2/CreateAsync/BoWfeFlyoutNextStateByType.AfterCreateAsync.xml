@@ -1,0 +1,41 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWfeFlyoutNextStateByType" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var actualStatePKey = params.actualStatePKey;
+var workflowBO = params.workflowBO;
+
+if (Utils.isDefined(actualStatePKey)) {
+  result.setActualStatePKey(actualStatePKey);
+}
+
+if (Utils.isDefined(workflowBO)) {
+  var nextStateList;
+  var nextStateCount = 0;
+  var stateTypeString = params.nextStateTypes;
+  result.setBoWorkflow(workflowBO);
+
+  if(Utils.isDefined(stateTypeString)) {
+    nextStateList = BoFactory.instantiate("LoWfeState", {});
+    var stateTypeArray = stateTypeString.split(",");
+    var stateLength = stateTypeArray.length;
+
+    for(var idxState = 0; idxState < stateLength; idxState++) {
+      var stateType = stateTypeArray[idxState].trim();
+      var nextStates = workflowBO.getNextStatesByStateType(actualStatePKey, stateType);
+      nextStateCount += nextStates.length;
+      nextStateList.addObjectItems(nextStates);
+    }
+  }
+
+  result.setNextStateCount(nextStateCount);
+  result.setNextStateList(nextStateList);
+}
+
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

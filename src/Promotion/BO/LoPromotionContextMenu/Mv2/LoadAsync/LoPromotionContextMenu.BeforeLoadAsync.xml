@@ -1,0 +1,70 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPromotionContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var params = context.jsonQuery
+	, bEditable = false
+	, bApprovable = "0"
+	, bRejectable = "0"
+	, userPKey = ApplicationContext.get('user').getPKey()
+	, boWorkflow = {}
+	, wfeQuery = {}
+;
+
+var workflowLoaded = when.resolve();
+
+if ((!Utils.isEmptyString(params.wfeWorkflowPKey))) {
+
+	if (params.responsiblePKey === userPKey) {
+		bEditable = true;
+	}
+
+	if (bEditable) {
+		wfeQuery.params = ([{
+					"field" : "pKey",
+					"value" : params.wfeWorkflowPKey
+				}
+			]);
+		workflowLoaded = BoFactory.loadObjectByParamsAsync("BoWorkflow", wfeQuery)
+		.then(function (bo) {
+			if (Utils.isDefined(bo)) {
+				boWorkflow = bo;
+
+				if ((boWorkflow.getNextStatesByStateType(params.actualStatePKey, 'Rejected').length > 0) || (boWorkflow.getNextStatesByStateType(params.actualStatePKey, 'initial').length > 0)) {
+					bRejectable = "1";
+				}
+				if (boWorkflow.getNextStatesByStateType(params.actualStatePKey, 'Committed').length > 0) {
+					bApprovable = "1";
+				}
+			}
+		});
+    }
+}
+
+var promise = workflowLoaded.then(
+  function () {
+	var contextMenuItemList = [];
+	
+	contextMenuItemList.push({
+		"id" : "0000001",
+		"actionImg" : "CheckGrey24",
+		"actionId" : "Approve",
+		"processEvent" : "Approve",
+		"actionEnabled" : bApprovable
+	});
+	
+	contextMenuItemList.push({
+		"id" : "0000002",
+		"actionImg" : "CancelGrey24",
+		"actionId" : "Reject",
+		"processEvent" : "Reject",
+		"actionEnabled" : bRejectable
+	});
+	
+	me.addItems(contextMenuItemList);
+    return me;
+});]]>
+</Code>
+  <Return name="context" value="deferred.promise" />
+</BusinessLogic>

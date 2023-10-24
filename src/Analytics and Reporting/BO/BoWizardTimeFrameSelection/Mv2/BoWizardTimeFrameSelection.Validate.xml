@@ -1,0 +1,10 @@
+<BusinessLogic methodName="validate" businessObjectClass="BoWizardTimeFrameSelection" businessObjectType="businessobject" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[this.validateDate(messageCollector);
+this.validateUser(messageCollector);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

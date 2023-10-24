@@ -1,0 +1,39 @@
+<BusinessLogic methodName="resetFreeItems" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItem" type="LiOrderItem" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var deferreds = [];
+var parentPKey = orderItem.getPKey();
+var orderPKey = me.getPKey();
+var items = me.getLoItems().getAllItems();
+var length = items.length;
+var origQty;
+
+for (var index = 0; index < length; index++) {
+  var item = items[index];
+  var isFreeItem = false;
+
+  if (Utils.isSfBackend()){
+    isFreeItem = item.getSdoParentItemPKey() === parentPKey || item.getParentType() === "Order";
+  }
+  else{
+    isFreeItem = item.getSdoParentItemPKey() === parentPKey || item.getSdoParentItemPKey() === orderPKey;
+  }
+
+  if (isFreeItem) {
+    origQty = item.getQuantity();
+    deferreds.push(item.setDeletedFreeItem("1"));
+    deferreds.push(item.setShowInBasket("0"));
+    deferreds.push(item.setQuantity(0));
+    deferreds.push(CP.PricingHandler.getInstance().updateProduct(item.getData(), "Quantity"));
+    me.updateItemFilterBasketCount(item, origQty, 0);
+    //Update Count for "All" Filter
+    me.updateItemFilterCountAfterAdd();
+  }
+}
+promise = when.all(deferreds);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

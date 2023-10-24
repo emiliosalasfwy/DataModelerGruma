@@ -1,0 +1,27 @@
+<BusinessLogic methodName="calculateOpenItemTotal" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Calculate total values
+var totalDebit = 0;
+var totalCredit = 0;
+var totalDebitCredit = 0;
+var loBpaOpenItems = me.getLoBpaOpenItem().getItemObjects();
+var currency = "";
+
+for (var i = 0; i < loBpaOpenItems.length; i++) {
+  if (loBpaOpenItems[i].getDebitCredit() === "Debit") {
+    totalDebit = totalDebit + loBpaOpenItems[i].getAmount();
+  }
+  else if (loBpaOpenItems[i].getDebitCredit() === "Credit") {
+    totalCredit = totalCredit + loBpaOpenItems[i].getAmount();
+  }
+  currency = loBpaOpenItems[i].getCurrency();
+}
+totalDebitCredit = Math.abs(totalCredit - totalDebit);
+
+me.setTotalDebit(totalDebit + " "  + currency);
+me.setTotalCredit(totalCredit + " "  + currency);
+me.setTotalDebitCredit(totalDebitCredit + " "  + currency);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

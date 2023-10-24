@@ -1,0 +1,50 @@
+<BusinessLogic methodName="loadItemTabManager" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+if (me.getBoOrderMeta().getItemListOption() == "Hierarchy") {
+  var numberOfLevels = me.getBoOrderMeta().getNumberOfHierarchyLevels();
+  jsonParams.push({ "field" : "criterionAttribute_Level1", "value" : me.getBoOrderMeta().getCriterionAttributeForLevel("1") });
+  jsonParams.push({ "field" : "criterionAttribute_Level2", "value" : me.getBoOrderMeta().getCriterionAttributeForLevel("2") });
+  jsonParams.push({ "field" : "rootLabel", "value" : me.getBoOrderMeta().getBreadCrumbRootLabel() });
+  jsonParams.push({ "field" : "addProduct_CriterionAttribute", "value" : me.getBoOrderMeta().getCriterionAttributeForLevel(numberOfLevels) });
+  jsonParams.push({ "field" : "numberOfLevels", "value" : numberOfLevels });
+
+  if ((me.getPhase() == BLConstants.Order.PHASE_RELEASED) || (me.getPhase() == BLConstants.Order.PHASE_CLOSED) || (me.getPhase() == BLConstants.Order.PHASE_CANCELED) ||
+      (me.getPhase() == BLConstants.Order.PHASE_READY) || (me.getPhase() == BLConstants.Order.PHASE_FEEDBACK) || (me.getBoOrderMeta().getMobilityRelevant() == "0") || (me.getSyncStatus() === BLConstants.Order.NOT_SYNCABLE)) {
+
+    jsonParams.push({ "field" : "isShowCategories", "value" : "0" });
+  } else {
+    jsonParams.push({ "field" : "isShowCategories", "value" : "1" });
+  }
+} else {
+  jsonParams.push({ "field" : "isShowCategories", "value" : "0" });
+  jsonParams.push({ "field" : "addProduct_CriterionAttribute", "value" : me.getBoOrderMeta().getCriterionAttributeForFlatList() });
+}
+jsonQuery.params = jsonParams;
+
+var promise = BoFactory.createObjectAsync("BoItemTabManager", jsonQuery).then(
+  function (boItemTabManager) {
+    boItemTabManager.setObjectStatus(STATE.PERSISTED);
+    boItemTabManager.setObjectStatusFrozen(true);
+    me.setBoItemTabManager(boItemTabManager);
+    boItemTabManager.setBoOrder(me);
+    
+    var checkIfPhaseConditionIsMet = ![BLConstants.Order.PHASE_READY, BLConstants.Order.PHASE_RELEASED, BLConstants.Order.PHASE_CANCELED].includes(me.getPhase());
+
+    if (checkIfPhaseConditionIsMet && me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE) {
+      boItemTabManager.setAddProduct_ItemMeta(me.getBoOrderMeta().getLoOrderItemMetas().getMainItemTemplate());
+      boItemTabManager.setAddProduct_ScanIncrementQuantity(boItemTabManager.getAddProduct_ItemMeta().getScanIncrementQuantity());
+    }
+
+    return BoFactory.createListAsync("LoOrderItems");
+  }).then(
+  function(unitOfMeasures){
+    var boItemTabManager = me.getBoItemTabManager();
+    boItemTabManager.setLoUnitOfMeasure(unitOfMeasures);
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

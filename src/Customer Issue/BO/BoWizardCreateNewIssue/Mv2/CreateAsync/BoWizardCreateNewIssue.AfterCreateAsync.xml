@@ -1,0 +1,56 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWizardCreateNewIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var tempCustomerPkey = context.jsonQuery.callCustomerPKey;
+var text = context.jsonQuery.text;
+var dueDate = context.jsonQuery.dueDate;
+
+//copy mode flag is needed for EA-Rights
+if(Utils.isDefined(context.jsonQuery.copyMode)) {
+  me.copyMode = context.jsonQuery.copyMode;
+}
+else {
+  me.copyMode = '0';
+}
+
+if (Utils.isDefined(tempCustomerPkey)) {
+  me.setCustomerPKey(tempCustomerPkey);
+}
+var jsonParams = me.prepareLookupsLoadParams(me);
+
+var promise = Facade.loadLookupsAsync(jsonParams).then(
+  function (lookups) {
+    me.assignLookups(lookups);
+    me.setEARights();
+
+    if (Utils.isDefined(context.jsonQuery.cardDate)) {
+      //Creating new customer task from user cockpit
+      var dCardDate = Utils.convertAnsiDate2Date(context.jsonQuery.cardDate);
+      dCardDate.setHours(0, 0, 0, 0);
+      me.setDueDate(dCardDate);
+    }
+    else {
+      //Creating new customer task through dashboard
+      var dToday = Utils.createDateToday();
+      dToday.setHours(0, 0, 0, 0);
+      me.setDueDate(dToday);
+
+      if (Utils.isDefined(dueDate)) {
+        me.setDueDate(dueDate);
+      }
+    }
+
+    me.setText("");
+    if (Utils.isDefined(text)) {
+      me.setText(text);
+    }
+
+    me.setObjectStatus(STATE.NEW);
+    return me;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

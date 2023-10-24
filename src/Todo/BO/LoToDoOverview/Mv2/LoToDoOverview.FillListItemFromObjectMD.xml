@@ -1,0 +1,25 @@
+<BusinessLogic methodName="fillListItemFromObjectMD" businessObjectClass="LoToDoOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="listItem" type="LiToDoOverview" />
+    <MethodInput name="detailBO" type="BoTodo" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[listItem.setIssuePhase(detailBO.getIssuePhase());
+listItem.setInitiationDate(detailBO.getInitiationDate());
+listItem.setBusinessModified(Utils.createAnsiDateTimeNow());
+listItem.setDueDate(detailBO.getDueDate());
+listItem.setPriority(detailBO.getPriority());
+listItem.setResponsiblePKey(detailBO.getResponsiblePKey());
+listItem.setResponsibleName(detailBO.getLuResponsible().getName());
+listItem.setText(detailBO.getText());
+listItem.setOwnerPKey(detailBO.getOwnerPKey());
+listItem.setOwnerName(detailBO.getLuOwner().getName());
+listItem.setInitiatorPKey(detailBO.getInitiatorPKey());
+listItem.setSvcMetaPKey(detailBO.getSvcRequestMetaPKey());
+listItem.setIsPrivate(detailBO.getBoSvcRequestMeta().getIsPrivate());
+listItem.setIsActive(detailBO.getBoSvcRequestMeta().getActive());
+listItem.setWfeWorkflowPKey(detailBO.getWfeWorkflowPKey());
+listItem.setActualStatePKey(detailBO.getActualStatePKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

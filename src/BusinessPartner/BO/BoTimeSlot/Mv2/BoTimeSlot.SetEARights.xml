@@ -1,0 +1,16 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoTimeSlot" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeSlotEditable" type="string" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+if(Utils.isDefined(timeSlotEditable) && 
+   (timeSlotEditable.toUpperCase() === "TRUE" || timeSlotEditable === "1")){
+  acl.addRight(AclObjectType.OBJECT, "BoTimeSlot", AclPermission.EDIT);
+}else{
+  acl.removeRight(AclObjectType.OBJECT, "BoTimeSlot", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

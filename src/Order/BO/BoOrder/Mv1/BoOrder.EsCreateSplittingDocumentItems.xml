@@ -1,0 +1,42 @@
+<BusinessLogic methodName="esCreateSplittingDocumentItems" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingDocument" type="Object" />
+    <MethodInput name="splittingDocItemData" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//create empty LoItemsList
+splittingDocument.setLoItems(BoFactory.instantiate("LoOrderItems"));
+
+if(Utils.isDefined(splittingDocItemData)){
+  var mainItems = [];
+  //-------------------------------------------------------------------------------------------
+  //defining processing functions
+  //-------------------------------------------------------------------------------------------
+
+  var itemCreationFunction = function(mainItem){
+    //taking the data object of the main item as template
+    //var mainItem = me.getLoItems().getItemByPKey(mainItemPKey);
+    var newMainItemData = mainItem.getData();
+
+    //setting the new values
+    newMainItemData.pKey = PKey.next();
+    newMainItemData.sdoMainPKey = splittingDocument.getPKey();
+    splittingDocItemData.push(newMainItemData);
+    mainItems.push(newMainItemData);
+  };
+
+  var setMainItemNewDirtyFunction = function(mainItem){
+    mainItem.setObjectStatus(STATE.NEW | STATE.DIRTY);
+  };
+
+  //--------------------------------------------------------------------------------
+  //processing the items with the functions defined above
+  //--------------------------------------------------------------------------------
+
+  splittingDocItemData.forEach(itemCreationFunction);
+  splittingDocument.getLoItems().addItems(mainItems);
+  splittingDocument.getLoItems().getAllItems().forEach(setMainItemNewDirtyFunction);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

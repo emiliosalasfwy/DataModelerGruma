@@ -1,0 +1,23 @@
+<BusinessLogic methodName="createMenuItem" businessObjectClass="LoBpaContextMenu" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="id" type="DomText" />
+    <MethodInput name="actionImg" type="DomText" />
+    <MethodInput name="actionId" type="DomText" />
+    <MethodInput name="processEvent" type="DomText" />
+    <MethodInput name="actionEnabled" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Variables
+var menuItem = {};
+
+if (Utils.isDefined(id) && Utils.isDefined(actionImg) && Utils.isDefined(actionId) && Utils.isDefined(processEvent) && Utils.isDefined(actionEnabled))
+{		
+  menuItem.id = id;
+  menuItem.actionImg = actionImg;
+  menuItem.actionId = actionId;
+  menuItem.processEvent = processEvent;	
+  menuItem.actionEnabled= actionEnabled;				
+}]]>
+</Code>
+  <Return name="createMenuItem" value="menuItem" />
+</BusinessLogic>

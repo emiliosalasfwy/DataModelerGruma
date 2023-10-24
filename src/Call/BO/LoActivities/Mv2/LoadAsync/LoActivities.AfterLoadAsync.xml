@@ -1,0 +1,24 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoActivities" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Concatenate promotion Date Range to display in the UI
+var activitiesLoaded = me.getAllItems();
+
+for(var idxActivities = 0; idxActivities < activitiesLoaded.length; idxActivities++){
+  var currentActivities = activitiesLoaded[idxActivities];
+  if(Utils.isDefined(currentActivities.getPromotionId()) && (!Utils.isEmptyString(currentActivities.getPromotionId()))) {
+    if( Utils.isDefined(currentActivities.getPromotionSlogan()) &&  currentActivities.getPromotionSlogan() !== null){
+      var promotionDateFrom = Localization.localize(currentActivities.promotionDateFrom, "date");
+      var promotionDateThru = Localization.localize(currentActivities.promotionDateThru, "date");
+      var displayText = promotionDateFrom + ' - ' + promotionDateThru ;
+      currentActivities.setDateRange(displayText);
+    }
+  }
+}
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

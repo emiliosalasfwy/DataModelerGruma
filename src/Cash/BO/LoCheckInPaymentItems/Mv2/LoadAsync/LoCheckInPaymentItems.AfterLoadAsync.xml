@@ -1,0 +1,268 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoCheckInPaymentItems" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(result);
+var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var loPaymentMeta = params.loPaymentMeta.getAllItems();
+
+if (loPaymentMeta.length !== 0) {
+  var sdoMainPKey = params.sdoMainPKey;
+  var phase = params.phase;
+  var loPayments = params.loPayments;
+  var insertionItem;
+  var items = me.getAllItems();
+  var masterItemPositions = Utils.createDictionary();
+  var insertionIndex = 0;
+  var insertionCorrection = 0;
+  var runningMethod = "";
+  var runningMethodText = "";
+  var runningAmount = 0;
+  var currentMethod = "";
+  var currentMethodText = "";
+  var currentAmount = 0;
+  var currentItem;
+
+  var i = 0;
+  var length = items.length;
+
+  //helper function for creating a new item
+  var createNewItem = function (runningMethod, runningMethodText, runningAmount, insertPosition, masterItemPositions, loPaymentMeta, sdoMainPKey, loPayments, phase) {
+    runningAmount = Math.round(runningAmount * 100) / 100;
+
+    var masterItem = BoFactory.instantiate("LiCheckInPaymentItems", {});
+    var foundItem;
+
+    if (Utils.isDefined(loPayments)) {
+      var payItems = loPayments.getAllItems();
+      var loPaymentLength = payItems.length;
+      var index = 0;
+      for (; index < loPaymentLength; index++) {
+        if (payItems[index].getPaymentMethod() == runningMethod) {
+          foundItem = payItems[index];
+          break;
+        }
+      }
+    }
+
+    if (Utils.isDefined(foundItem)) {
+      masterItem.setPKey(foundItem.getPKey());
+      masterItem.setSdoPaymentMetaPKey(foundItem.getSdoPaymentMetaPKey());
+      masterItem.setInitiationDate(foundItem.getInitiationDate());
+      masterItem.setEnteredAmount(foundItem.getAbsoluteAmount());
+      masterItem.setAbsoluteAmount(foundItem.getAbsoluteAmount());
+      masterItem.setModReason(foundItem.getModReason());
+
+      //Set the amount with negation
+      masterItem.setAmount(-1 * foundItem.getAmount());
+      masterItem.setAmountReceipt(-1 * foundItem.getAmountReceipt());
+
+      if (Utils.isDefined(phase) && phase == "Released") {
+        masterItem.setCalcAmount(foundItem.getCalcAmount());
+      } else {
+        masterItem.setCalcAmount(runningAmount);
+      }
+    } else {
+      var arrLength = loPaymentMeta.length;
+      var sdoPaymentMetaPKey;
+      for (var ind = 0; ind < arrLength; ind++) {
+        var elem = loPaymentMeta[ind];
+        if (elem.paymentMethod == runningMethod) {
+          sdoPaymentMetaPKey = elem.getPKey();
+          break;
+        }
+      }
+
+      masterItem.setObjectStatus(STATE.NEW);
+      masterItem.setPKey(PKey.next());
+      masterItem.setSdoPaymentMetaPKey(sdoPaymentMetaPKey);
+      masterItem.setInitiationDate(
+        Utils.convertFullDate2Ansi(Utils.createDateToday())
+      );
+      masterItem.setEnteredAmount(runningAmount);
+      masterItem.setAbsoluteAmount(Math.abs(runningAmount));
+
+      masterItem.setAmount(runningAmount);
+      masterItem.setAmountReceipt(runningAmount);
+
+      masterItem.setCalcAmount(runningAmount);
+    }
+
+    masterItem.setSdoMainPKey(sdoMainPKey);
+    masterItem.setPaymentMethod(runningMethod);
+    masterItem.setLevel("main");
+
+    masterItem.setDisplayExpectedAmount(
+      Localization.localize(runningAmount.toFixed(2), "number") +
+      " " +
+      masterItem.getCurrency()
+    );
+
+    masterItem.setHierarchyIcon("ArrowExpandGrey24");
+    masterItem.setDisplayId(runningMethodText);
+    if (masterItem.getDisplayId() != "Expenses") {
+      masterItem.setExpenseType(" ");
+    }
+    masterItem.setDataType("Decimal");
+    masterItem.setUseStepper("1");
+    masterItem.setStepSize("1");
+    masterItem.setMinValue("0");
+    masterItem.setMaxValue("99999");
+    masterItem.setFormatType("0.2");
+
+    masterItemPositions.add(insertPosition, masterItem);
+  };
+
+  //check phase
+  //just display released payments
+  if (Utils.isDefined(phase) && phase == "Released") {
+    var oldItems = loPayments.getAllItems();
+    var oldItemsLength = oldItems.length;
+
+    for (var j = 0; j < oldItemsLength; j++) {
+      var oldItem = oldItems[j];
+      createNewItem(
+        oldItem.paymentMethod,
+        Utils.getToggleText("DomPaymentMethod", oldItem.paymentMethod),
+        oldItem.getAbsoluteAmount(),
+        j,
+        masterItemPositions,
+        loPaymentMeta,
+        sdoMainPKey,
+        loPayments,
+        phase
+      );
+    }
+  }
+  //or compute them
+  else {
+    //running over all found payments
+    for (; i < length; i++) {
+      currentItem = items[i];
+
+      currentItem.setHierarchyIcon("DotsSubGrey24");
+      currentItem.setDisplayId(currentItem.getText());
+      if (currentItem.getDisplayId() != "Expenses") {
+        currentItem.setExpenseType(" ");
+      }
+
+      currentItem.setDataType("Decimal");
+      currentItem.setUseStepper("0");
+      currentItem.setStepSize("1");
+      currentItem.setMinValue("0");
+      currentItem.setMaxValue("99999");
+      currentItem.setFormatType("0.2");
+
+      currentMethod = currentItem.paymentMethod;
+      currentMethodText = Utils.getToggleText(
+        "DomPaymentMethod",
+        currentItem.paymentMethod
+      );
+      currentAmount = currentItem.getAmount();
+
+      currentAmount = Math.round(currentAmount * 100) / 100;
+
+      currentItem.setDisplayExpectedAmount(
+        Localization.localize(currentAmount.toFixed(2), "number") +
+        " " +
+        currentItem.getCurrency()
+      );
+
+      //reached a new payment method?
+      if (
+        Utils.isEmptyString(runningMethod) ||
+        runningMethod != currentMethod
+      ) {
+        //store the data of the old payment method
+        if (!Utils.isEmptyString(runningMethod)) {
+          createNewItem(
+            runningMethod,
+            runningMethodText,
+            runningAmount,
+            insertionIndex + insertionCorrection,
+            masterItemPositions,
+            loPaymentMeta,
+            sdoMainPKey,
+            loPayments
+          );
+          insertionIndex = i;
+          insertionCorrection++;
+        }
+
+        //reset running values
+        runningAmount = 0;
+        runningMethod = currentMethod;
+        runningMethodText = currentMethodText;
+      }
+
+      runningAmount += currentAmount;
+
+      //store last method
+      if (i === length - 1) {
+        createNewItem(
+          runningMethod,
+          runningMethodText,
+          runningAmount,
+          insertionIndex + insertionCorrection,
+          masterItemPositions,
+          loPaymentMeta,
+          sdoMainPKey,
+          loPayments
+        );
+      }
+    }
+  }
+
+  length = masterItemPositions.keys().length;
+  i = 0;
+
+  //when released or canceled, discard all subitems
+  if (Utils.isDefined(phase) && phase != "Initial") {
+    items = [];
+    for (; i < length; i++) {
+      insertionIndex = masterItemPositions.keys()[i];
+      insertionItem = masterItemPositions.get(insertionIndex);
+
+      insertionItem.setHierarchyIcon("EmptyImage");
+      insertionItem.setUseStepper("0");
+      insertionItem.setDisplayExpectedAmount(
+        Localization.localize(
+          insertionItem.getCalcAmount().toFixed(2),
+          "number"
+        ) +
+        " " +
+        insertionItem.getCurrency()
+      );
+      items.push(insertionItem);
+    }
+  } else {
+    for (; i < length; i++) {
+      insertionIndex = masterItemPositions.keys()[i];
+      insertionItem = masterItemPositions.get(insertionIndex);
+
+      items.splice(insertionIndex, 0, insertionItem);
+    }
+  }
+
+  me.removeAllItems();
+  me.addObjectItems(items);
+
+  //setting mainpkeys
+  length = me.getAllItems().length;
+  items = me.getAllItems();
+
+  var currentMainPKey;
+  for (i = 0; i < length; i++) {
+    var currItem = items[i];
+    if (currItem.getLevel() == "main") {
+      currentMainPKey = currItem.getPKey();
+    }
+
+    currItem.setMainPKey(currentMainPKey);
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

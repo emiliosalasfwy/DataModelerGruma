@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateCallViaTpl" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+
+	var me = this;
+var acl = me.getACL();
+acl.removeRight(AclObjectType.PROPERTY, "validFrom", AclPermission.EDIT);
+acl.removeRight(AclObjectType.PROPERTY, "validThru", AclPermission.EDIT);
+
+if(me.getMode() == "DragAndDrop") {	
+	me.getLoTripList().getACL().removeRight(AclObjectType.OBJECT, "LoTripList", AclPermission.EDIT);
+}
+	
+  
+ ]]></Code>
+</BusinessLogic>

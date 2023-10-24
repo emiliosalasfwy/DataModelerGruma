@@ -1,0 +1,44 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoLongPressContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var inputParameters = context.jsonQuery;
+var contextMenuItemList = [];
+
+var menuEntry0 = {
+  "id": "0000001",
+  "actionImg": "MenuCapturePicture",
+  "actionId": "TakePicture",
+  "processEvent": "TakePicture",
+  "actionEnabled": !inputParameters.isReadOnly ? "1" : "0",
+  "actionVisible": "1"
+};
+var menuEntry1 = {
+  "id": "0000002",
+  "actionImg": "MenuPictureDetailwithPictures",
+  "actionId": "SelectPicture",
+  "processEvent": "SelectPicture",
+  "actionEnabled": !inputParameters.isReadOnly ? "1" : "0",
+  "actionVisible": "1"
+};
+var menuEntry2 = {
+  "id": "0000003",
+  "actionImg": "MenuSelectPicture",
+  "actionId": "ReviewPicture",
+  "processEvent": "ReviewPicture",
+  "actionEnabled": inputParameters.pictureTaken ? "1" : "0",
+  "actionVisible": "1"
+};
+
+contextMenuItemList.push(menuEntry0);
+contextMenuItemList.push(menuEntry1);
+contextMenuItemList.push(menuEntry2);
+
+this.addItems(contextMenuItemList);
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

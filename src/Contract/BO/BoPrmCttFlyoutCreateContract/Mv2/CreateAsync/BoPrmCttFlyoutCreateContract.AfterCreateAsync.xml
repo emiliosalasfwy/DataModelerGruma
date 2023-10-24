@@ -1,0 +1,48 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var customerPKey = "";
+
+var promise = BoFactory.loadListAsync("LoPrmMeta", result.getQueryBy("metaType", newParams.metaType)).then(
+  function (loPrmMeta) {
+    var list = loPrmMeta.getAllItems();
+    var prmMetaPKey = result.getPrmMetaPKey();
+    if ((list.length > 0) && (Utils.isEmptyString(prmMetaPKey))) {
+      prmMetaPKey = list[0].getPKey();
+    }
+
+    return result.loadPrmMetaLookup(prmMetaPKey);
+  }).then(
+  function() {
+    var managementInfoParams = [];
+    var managementInfoQuery = {};
+
+    managementInfoParams.push({ "field" : "customerPKey", "value" : ApplicationContext.get('user').getBoUserSales().getBpaCustomerPKey()});
+    managementInfoParams.push({ "field" : "referenceDate", "value" : Utils.convertFullDate2Ansi(Utils.createDateToday())});
+    managementInfoParams.push({ "field" : "referenceUserPKey", "value" : ApplicationContext.get('user').getPKey()});
+    managementInfoQuery.params = managementInfoParams;
+    return BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", managementInfoQuery);
+  }).then(
+  function (customerManagementInfoLookup) {
+    if (Utils.isDefined(customerManagementInfoLookup) && customerManagementInfoLookup.getIsManaged() == "1") {
+     customerPKey = ApplicationContext.get('user').getBoUserSales().getBpaCustomerPKey();
+    }
+    return result.loadCustomerLookup(customerPKey);
+  }).then(
+  function () {
+    var dateToday = Utils.createDateToday();
+    dateToday.setHours(0,0,0,0);
+    result.setDateFrom(dateToday);
+    result.setDateThru(dateToday);
+    result.setObjectStatus(this.self.STATE_NEW);
+
+    return result;
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

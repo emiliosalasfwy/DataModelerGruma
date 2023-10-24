@@ -1,0 +1,28 @@
+<BusinessLogic methodName="isDateBetween" businessObjectClass="LoAgendaOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="date" type="String" />
+    <MethodInput name="start" type="String" />
+    <MethodInput name="end" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) &&
+   Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus') === "Running"){
+ return "0"; 
+}
+
+var result = Utils.isDefined(start) && Utils.isDefined(end) && Utils.isDefined(date) ? "1" : "0";
+
+if (result == "1") {
+	var referenceDate;
+
+	if (typeof date === "string" && date.toUpperCase() === "#TODAY#") {
+		referenceDate = Utils.createDateToday().getTime();
+	} else {
+		referenceDate = Utils.convertAnsiDate2Date(date).getTime();
+	}
+
+	result = Utils.convertAnsiDate2Date(start).getTime() <= referenceDate && referenceDate <= Utils.convertAnsiDate2Date(end).getTime() ? "1" : "0";
+}]]>
+</Code>
+  <Return name="dateBetween" value="result " />
+</BusinessLogic>

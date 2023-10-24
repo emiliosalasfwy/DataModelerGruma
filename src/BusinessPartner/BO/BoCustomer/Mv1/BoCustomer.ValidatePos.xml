@@ -1,0 +1,123 @@
+<BusinessLogic methodName="validatePos" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*
+UC: NGM Customer POS
+The system saves and validates the POS
+The POS Name must not be empty.
+Each mandatory relation must exist for the POS.
+POS Relation Valid Thru must be >= ValidFrom
+POS Relations with same POS Relation Template must not have overlapping validity period.
+*/
+var promise;
+
+if (Utils.isDefined(me.getLoCustomerPOSRelation())) {
+  var items = me.getLoCustomerPOSRelation().getItemObjects();
+  var newError;
+  var i;
+  for(i = 0; i < items.length; i++) {
+    if (!Utils.isDefined(items[i].getValidFrom()) || items[i].getValidFrom() == "null") {
+      newError = {"level": "error",
+                  "objectClass": "BoCustomer",
+                  "messageID": "CasBpaPosFillInAllValues"};
+      messageCollector.add(newError);
+    }
+    else {
+      if (!Utils.isDefined(items[i].getValidThru()) || items[i].getValidThru() == "null") {
+        newError = {"level": "error",
+                    "objectClass": "BoCustomer",
+                    "messageID": "CasBpaPosFillInAllValues"};
+        messageCollector.add(newError);
+      }
+      else {
+        if (items[i].getValidThru() < items[i].getValidFrom()) {
+          newError = {"level": "error",
+                      "objectClass": "BoCustomer",
+                      "messageID": "CasBpaPosValidFromGreaterValidThru",
+                      "messageParams": {"posId":  "'" + items[i].getName() + "'" }};
+          messageCollector.add(newError);
+        }
+      }
+    }
+  }
+
+  //get all PosIds of current Customer
+  var idList = "";
+  for(var j = 0; j < items.length; j++) {
+    if (idList.indexOf(items[j].getPosId()) == -1) {
+      idList += items[j].getPosId() + "','";
+    }
+  }
+  idList = idList.substr(0,idList.length-3);
+
+  //load all PosRelations of all customers for above collected Ids
+  var jsonParams = [];
+  var jsonQuery = {};
+  jsonParams.push( { "field" : "posIdList", "operator" : "EQ", "value" : idList});
+  jsonQuery.params=jsonParams;
+  promise = BoFactory.loadListAsync("LoCustomerPOSForValidate", jsonQuery).then(
+    function(list) {
+      var errorList = "";
+      var listItems = list.getItems();
+
+      for (i = 0; i < listItems.length; i++) {
+        var paramsArrayBefore = [];
+        var paramsArrayBetween = [];
+        var paramsArrayAfter = [];
+        var paramsArrayOver = [];
+        var listBefore = [];
+        var listBetween = [];
+        var listAfter = [];
+        var listOver = [];
+        //set filter - find all Pos systemwide of same meta and ID and check if they overlap with the validity of the current pos
+        //validity of other pos can overlap from before timefrom of actual pos
+        paramsArrayBefore = [{"text": listItems[i].getText()}, {"posId": listItems[i].getPosId()}, {"ValidFrom":listItems[i].getValidFrom(),"op":"LE"}, {"ValidThru":listItems[i].getValidFrom(),"op":"GE"}];
+        if (Utils.isDefined(paramsArrayBefore)) {
+          listBefore = list.getItemsByParamArray(paramsArrayBefore);
+        }
+
+        //validity of other pos can be in between timefrom - timethru of actual pos
+        paramsArrayBetween = [{"text": listItems[i].getText()}, {"posId": listItems[i].getPosId()}, {"ValidFrom":listItems[i].getValidFrom(),"op":"GE"}, {"ValidThru":listItems[i].getValidThru(),"op":"LE"}];
+        if (Utils.isDefined(paramsArrayBetween)) {
+          listBetween = list.getItemsByParamArray(paramsArrayBetween);
+        }
+
+        //validity of other pos can overlap from after timethru of actual pos
+        paramsArrayAfter = [{"text": listItems[i].getText()}, {"posId": listItems[i].getPosId()}, {"ValidFrom":listItems[i].getValidThru(),"op":"LE"}, {"ValidThru":listItems[i].getValidThru(),"op":"GE"}];
+        if (Utils.isDefined(paramsArrayAfter)) {
+          listAfter = list.getItemsByParamArray(paramsArrayAfter);
+        }
+
+        //validity of other pos can overlap from before timethru till after timethru of actual pos
+        paramsArrayOver = [{"text": listItems[i].getText()}, {"posId": listItems[i].getPosId()}, {"ValidFrom":listItems[i].getValidFrom(),"op":"LE"}, {"ValidThru":listItems[i].getValidThru(),"op":"GE"}];
+        if (Utils.isDefined(paramsArrayOver)) {
+          listOver = list.getItemsByParamArray(paramsArrayOver);
+        }
+
+        if (listBefore.length > 1 || listBetween.length > 1 || listAfter.length > 1 || listOver.length > 1) {
+          if (errorList.indexOf(listItems[i].getPosId() +listItems[i].getText()) == -1) {
+            //if not thrown for this id/pos combination before -> throw error
+            newError = {
+              "level": "error",
+              "objectClass": "BoPos",
+              "messageID": "CasBpaPOSValidityPeriodMustNotOverlap",
+              "messageParams": {"posId": listItems[i].getPosId(), "text": listItems[i].getText()}
+            };
+            messageCollector.add(newError);
+            //if error for this id/meta combination was thrown, store it in list to prevent to throw it multiple times
+            errorList += (listItems[i].getPosId() + listItems[i].getText() + ",");
+          }
+        }
+      }
+      return messageCollector;
+    }
+  );
+}
+else {
+  promise = when.resolve(messageCollector);
+}]]>
+</Code>
+  <Return name="CustomerPosValidaton" value="promise" />
+</BusinessLogic>

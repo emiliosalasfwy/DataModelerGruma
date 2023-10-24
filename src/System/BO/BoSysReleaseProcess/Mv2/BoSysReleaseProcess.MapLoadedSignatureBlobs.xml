@@ -1,0 +1,22 @@
+<BusinessLogic methodName="mapLoadedSignatureBlobs" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+var signatureBlobs = me.getLoSysSignatureBlob();
+
+// Loop over steps and find related blobs in order to match the right blob to the right step (via SysReleaseProcessStepPKey)
+var length = stepItems.length;
+var signatureBlobItem;
+
+for(var i = 1; i <= length; i++) {
+  signatureBlobItem = signatureBlobs.getItemsByParamArray([{"sysReleaseProcessStepPKey" : stepItems[i-1].getPKey(), "op" : "EQ"}]);
+
+  if (signatureBlobItem.length > 0) {
+    me.set("attachmentBlobPKey" + i, signatureBlobItem[0].getPKey());
+    me.set("signatureBlob" + i, signatureBlobItem[0].getMediaPath());
+    me.set("signatureName" + i, signatureBlobItem[0].getName());
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

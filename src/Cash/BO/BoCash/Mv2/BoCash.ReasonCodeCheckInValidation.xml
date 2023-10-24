@@ -1,0 +1,31 @@
+<BusinessLogic methodName="reasonCodeCheckInValidation" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var validate = false;
+
+//if Item was changed
+if(Utils.isDefined(item)) {
+  var enteredAmount = (Math.round(item.getAmount() * 100)) / 100;
+  var absolutAmount = (Math.round(item.getAbsoluteAmount() * 100)) / 100;
+  if(item.getDifference() === 0) {
+    item.setModReasonEntered('EmptyImage');
+  }
+  else {
+    validate = true;
+    item.setModReasonEntered('EmptyImage');
+
+    if(me.getBoCashMeta().getPaymentModReasonRequired() == "Mand") {
+      if(item.getModReason() == " ") {        
+        item.setModReasonEntered('Edited'); 
+      }
+    }
+  }
+} 
+else {
+  item.setModReasonEntered('EmptyImage');
+}]]>
+</Code>
+  <Return name="validate" value="validate" />
+</BusinessLogic>

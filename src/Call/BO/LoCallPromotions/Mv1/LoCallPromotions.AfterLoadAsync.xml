@@ -1,0 +1,17 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoCallPromotions" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var items = me.getAllItems();
+
+if(items.length > 0){
+  me.setCurrentByPKey(me.getFirstItemPKey());
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

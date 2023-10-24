@@ -1,0 +1,30 @@
+<BusinessLogic methodName="generateProductsCounterStringForReward" businessObjectClass="LoRewards" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loRewardProducts" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[me.suspendListRefresh();
+if(Utils.isDefined(loRewardProducts)) {
+  var quantity;
+  var defaultValue;
+
+  loRewardProducts.resetFilter("promotionReward");
+  me.forEach(function(reward){
+    if(reward.getRewardType() == "FreeItem") {
+      if(reward.getIsApplicable() == 1){
+        if(reward.getPerFactor() >= 1){
+          defaultValue = reward.getDefaultValue()*reward.getPerFactor();
+        }
+        else {
+          defaultValue = reward.getDefaultValue();
+        }
+        quantity = loRewardProducts.getTotalQuantityInReward(reward);
+        reward.setCounterString(quantity + " / " + defaultValue);
+      } else {
+        reward.setCounterString("");
+      }
+    }
+  });
+}
+me.resumeListRefresh(true);]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,54 @@
+<BusinessLogic methodName="evaluateHurdles" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" maxRuntime="80" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="boOrder" type="Object" />
+    <MethodInput name="boCall" type="Object" />
+    <MethodInput name="promotionPKey" type="Object" />
+    <MethodInput name="reward" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Shouldn't be enhanced beyond the scope of hurdle evaluation
+
+var hurdleEvaluationPromises = [];
+var hurdleResults = { };
+var hurdles;
+
+if(!Utils.isDefined(reward)){
+  if (Utils.isEmptyString(promotionPKey)) {
+    hurdles = me.getLoHurdles().getItemsByParamArray([{"hurdleType": "RewardSpecific", "op":"NE"}]);
+  }
+  else {
+    hurdles = me.getLoHurdles().getItemsByParamArray([{"promotionPKey": promotionPKey,"op":"EQ"},{"hurdleType": "RewardSpecific", "op":"NE"}]);
+  }
+}
+else {
+  hurdles = me.getLoHurdles().getItemsByParamArray([{"pKey": reward.getHurdlePKey(), "op":"EQ"}]);
+}
+
+for (var i = 0; i < hurdles.length; i++) {
+  var currentHurdle = hurdles[i];
+  var targetValue = me.getHurdleValue(currentHurdle,reward);
+  var params = [{"type": "static", "value": currentHurdle},
+                {"type": "static", "value": boOrder},
+                {"type": "static", "value": boCall},
+                {"type": "static", "value": me.getSimplePricingCalculator()},
+                {"type": "static", "value": targetValue}];
+  var expressionResult = Facade.callBusinessLogicAsync("ProcessContext::BoHelperHurdleExpressionFunctions", currentHurdle.getExpressionFunction(), params);
+  hurdleEvaluationPromises.push(when(expressionResult)
+                                .then(function (hurdle, hurdleExpressionResult) {
+    if(Utils.isDefined(reward)){
+      reward.setPerFactor(hurdleExpressionResult.results.differenceInfo.perFactor);
+      reward.setIsReadyToBeApplicable(hurdleExpressionResult.results.evaluationResult ? '1' : '0');
+      reward.setCalculatedValue(hurdleExpressionResult.results.differenceInfo.calculatedValue);
+    }
+    else {
+      hurdle.setIsFulfilled(hurdleExpressionResult.results.evaluationResult ? '1' : '0');
+      hurdle.setValueToFulfillHurdle(hurdleExpressionResult.results.differenceInfo.detailText);
+      hurdle.setCalculatedValue(hurdleExpressionResult.results.differenceInfo.calculatedValue);
+    }
+  }.bind(null, currentHurdle)));
+}                               
+
+var promise = when.all(hurdleEvaluationPromises);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

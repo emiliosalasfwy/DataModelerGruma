@@ -1,0 +1,14 @@
+<BusinessLogic methodName="resetCurrentItemFilter" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[// Reset filters of image selector   
+me.getLoItems().resetFilterArray(["promoted", "newState", "history", "outOfStock", "quantity", "promotionPKey"]);
+
+var newCurrent = me.getLoItemFilter().getItemsByParam({ "filterCode": "All" });
+var current = me.getLoItemFilter().getCurrent();
+if (newCurrent.length > 0 && (!Utils.isDefined(current) || current.getPKey() != newCurrent[0].getPKey()))
+{
+  me.getLoItemFilter().setCurrentByPKey(newCurrent[0].getPKey());
+  me.getBoItemTabManager().setCurrentItemFilterId(newCurrent[0].getFilterCode());
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

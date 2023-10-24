@@ -1,0 +1,62 @@
+<BusinessLogic methodName="validateOrder" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+/*
+  Validates simple misc things like
+    - SdoMeta.BrokerRequired && isEmpty(SdoMain.BrokerCustomerPKey) -> ValidationException
+    - Delivery recipient mandatory
+
+  More complex validations are contained in
+    - validateDeliveryDate
+    - validateOrderItem
+    - validateOrderValue
+*/
+
+var mandatoryFieldEmpty = "";
+
+/*  SdoMeta.BrokerRequired && isEmpty(SdoMain.BrokerCustomerPKey) */
+
+if (me.getPhase() != "Canceled" && me.getObjectStatus() != 9) {
+  if (me.getBoOrderMeta().getBrokerRequired() == 1) {
+
+    if (!Utils.isDefined(me.getLuBrokerCustomer().getPKey()) || Utils.isEmptyString(me.getLuBrokerCustomer().getPKey())) {
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoOrder",
+        "simpleProperty" : "BrokerCustomerPKey",
+        "messageID" : "CasSdoMainNoBrokerAssignment"
+      };
+      messageCollector.add(newError);
+    }
+  }
+
+  // Condition for creating tour replenishment
+  if (me.getDocumentType() != 'Replenishment'){
+    /* Delivery recipient mandatory */
+    if (!Utils.isDefined(me.getLuDeliveryRecipient().getPKey()) || Utils.isEmptyString(me.getLuDeliveryRecipient().getPKey())) {
+      if (!Utils.isEmptyString(mandatoryFieldEmpty)) {
+        mandatoryFieldEmpty += ", ";
+      }
+      mandatoryFieldEmpty += "Delivery Recipient";
+    }
+
+    if (!Utils.isEmptyString(mandatoryFieldEmpty)) {
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoOrder",
+        "messageParams" : {
+          "mandatoryField" : mandatoryFieldEmpty
+        },
+        "messageID" : "CasSdoMandatoryFields"
+      };
+      messageCollector.add(newError);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

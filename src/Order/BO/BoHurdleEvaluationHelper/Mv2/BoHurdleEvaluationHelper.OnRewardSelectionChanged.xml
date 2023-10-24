@@ -1,0 +1,20 @@
+<BusinessLogic methodName="onRewardSelectionChanged" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="rewardPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var listItem = me.getLoRewards().getItemByPKey(rewardPKey);
+var oldValue = listItem.getIsSelectedOnUI();
+
+//setter will trigger reward change event handler i.e. onRewardChanged
+//reward change event handler will update isSelectedOnUI flag
+//we have to switch the value in code since this will not happen automatically on user click
+if(oldValue === "0"){
+  promise = listItem.setSelected("1");
+} else{
+  promise = listItem.setSelected("0");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

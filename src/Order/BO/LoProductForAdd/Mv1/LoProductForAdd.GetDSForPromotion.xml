@@ -1,0 +1,35 @@
+<BusinessLogic methodName="getDSForPromotion" businessObjectClass="LoProductForAdd" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="Object" />
+    <MethodInput name="customerPKey" type="Object" />
+    <MethodInput name="commitDate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Datasource name (required by merge engine)
+var LO_MEPROMOTION = "LoMePromotion";
+
+var datasourceDefiniton = {
+	"boName" : LO_MEPROMOTION,
+	"dsParams" : {
+		"params" : [{
+				"field" : "customerPKey",
+				"value" : customerPKey
+			}, {
+				"field" : "commitDate",
+				"value" : commitDate
+			}
+		]
+	},
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "promoted",
+			"alias" : "promoted",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : mergeProperty,
+	"lookupDataSource" : "false"
+};]]>
+</Code>
+  <Return name="datasourceDefiniton" value="datasourceDefiniton" />
+</BusinessLogic>

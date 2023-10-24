@@ -1,0 +1,19 @@
+<BusinessLogic methodName="setDefaultTemplate" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItem" type="Object" />
+    <MethodInput name="mainItemTemplate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[
+// OBSOLETE!! - No longer called by core - Setting of values is done via the merge engine's defaults feature
+
+orderItem.setSdoItemMetaPKey(mainItemTemplate.getPKey());
+orderItem.setType(mainItemTemplate.getText());
+orderItem.setShortType(mainItemTemplate.getShortText());
+orderItem.setPriceEffect(mainItemTemplate.getPriceEffect());
+orderItem.setSaveZeroQuantity(mainItemTemplate.getSaveZeroQuantity());
+orderItem.setCalculationGroup(mainItemTemplate.getCalculationGroup());
+orderItem.setMovementDirection(mainItemTemplate.getMovementDirection());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

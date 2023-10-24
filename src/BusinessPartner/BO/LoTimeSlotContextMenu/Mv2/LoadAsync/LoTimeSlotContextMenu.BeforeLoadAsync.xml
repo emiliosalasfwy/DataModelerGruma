@@ -1,0 +1,31 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTimeSlotContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(context);
+
+var actionEnabled = "0";
+
+if(Utils.isDefined(context.jsonQuery.timeSlotEditable) && 
+   (context.jsonQuery.timeSlotEditable.toUpperCase() == "TRUE" || context.jsonQuery.timeSlotEditable.toUpperCase() === "1")){
+  actionEnabled = "1";
+}
+
+var contextMenuItemList = [];
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "DeleteTimeSlot",
+  "actionVisible" : "1",
+  "actionEnabled" : actionEnabled
+};
+
+
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

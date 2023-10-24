@@ -1,0 +1,16 @@
+<BusinessLogic methodName="releaseButtonVisible" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = (me.getPhase() !== "Released") && (me.getPhase() !== "Canceled");
+var runningTour = "";
+
+if (Utils.isDefined(ApplicationContext.get('currentTourPKey'))){
+  runningTour = ApplicationContext.get('currentTourPKey');
+}
+
+if(runningTour !== me.getTmgMainPKey()){
+  visible = false;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

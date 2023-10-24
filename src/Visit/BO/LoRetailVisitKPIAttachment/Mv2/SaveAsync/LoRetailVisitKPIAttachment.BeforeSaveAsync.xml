@@ -1,0 +1,12 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoRetailVisitKPIAttachment" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/**
+Here parent might refer -> Retail Visit KPI, Assessment Task, RetailStore KPI.
+**/
+var promise= Facade.saveListAttachmentAsync(me, "parentAttachment", "parentAttachmentBlob", "attachmentBlob", "attachmentBlobPKey", "fileType");]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

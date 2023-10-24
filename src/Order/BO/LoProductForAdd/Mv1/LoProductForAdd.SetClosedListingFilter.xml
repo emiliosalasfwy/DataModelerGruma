@@ -1,0 +1,32 @@
+<BusinessLogic methodName="setClosedListingFilter" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="listing" type="DomString" />
+    <MethodInput name="listingWithModules" type="DomString" />
+    <MethodInput name="hitClosedListing" type="DomBool" />
+    <MethodInput name="collectClosedListing" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// If listings for current customer are closed for hit algorithm
+if(Utils.isDefined(hitClosedListing)){
+  if (hitClosedListing.getId() == 1){
+    if (listing == "Hit"){
+      me.setFilter("listing", "Hit", "EQ");
+    } else if (listingWithModules == "Hit"){
+      me.setFilter("listingWithModules", "Hit", "EQ");
+    }
+  }
+}
+
+// If listings for current customer are closed for collection algorithm    
+if(Utils.isDefined(collectClosedListing)){
+  if (collectClosedListing.getId() == 1){
+    if (listing == "Collection"){
+      me.setFilterArray([{"listing" : "None", "op" : "NE"}]);
+    } else if (listingWithModules == "Collection"){
+      me.setFilterArray([{"listingWithModules" : "None", "op" : "NE"}]);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

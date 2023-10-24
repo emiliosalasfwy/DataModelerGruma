@@ -1,0 +1,7 @@
+<BusinessLogic methodName="prepareRelease" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.setReleaseInProgress("1");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,8 @@
+<BusinessLogic methodName="checkEmptyList" businessObjectClass="LoFastOrderProducts" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Code language="JavaScript"><![CDATA[
+    
+var emptyList = (me.getItems().length > 0);
+		
+   ]]></Code>
+  <Return name="emptyList" value="emptyList" />
+</BusinessLogic>

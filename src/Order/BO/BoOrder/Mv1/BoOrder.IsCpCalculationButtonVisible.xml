@@ -1,0 +1,15 @@
+<BusinessLogic methodName="isCpCalculationButtonVisible" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var visible = (me.getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE && me.getPhase() !== BLConstants.Order.PHASE_RELEASED && me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE);
+
+//If the tour is not running in DSD do nto show the button
+if(me.getDocumentType() == "Delivery" &&
+   Utils.isDefined(ApplicationContext.get('currentTourPKey')) &&
+   !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) &&
+   ApplicationContext.get('currentTourStatus') !== "Running") {
+  visible = false;
+}]]></Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

@@ -1,0 +1,19 @@
+<BusinessLogic methodName="setOnlyOpenFilter" businessObjectClass="LoToDoOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var userPKey = ApplicationContext.get('user').getPKey();
+
+var filterArray = [];
+filterArray.push({"filterOpen" : "1", "op" : "EQ"});
+filterArray.push({"responsiblePKey" : userPKey, "op" : "EQ"});
+me.setFilterArray(filterArray);
+
+var items = me.getItemObjects();
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+}else{
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

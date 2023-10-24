@@ -1,0 +1,26 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LuCurrentAddress" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Method to get the current GPS location
+var promise = Utils.getCurrentPosition().then(
+  function (position) {
+    me.mainAddress = "";
+    me.name = "Me";
+    if(Utils.isDefined(position) && Utils.isDefined(position.latitude) && Utils.isDefined(position.longitude)) {
+      me.isAddressFound = "Yes";
+      me.latitude = position.latitude;
+      me.longitude = position.longitude;
+    } 
+    else {
+      me.isAddressFound = "No";
+      me.latitude = 0;
+      me.longitude = 0;
+    }
+    return context;
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

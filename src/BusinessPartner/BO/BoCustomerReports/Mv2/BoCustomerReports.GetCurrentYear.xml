@@ -1,0 +1,7 @@
+<BusinessLogic methodName="getCurrentYear" businessObjectClass="BoCustomerReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var currentYear = Utils.createDateToday().getUTCFullYear();]]>
+</Code>
+  <Return name="currentYear" value="currentYear" />
+</BusinessLogic>

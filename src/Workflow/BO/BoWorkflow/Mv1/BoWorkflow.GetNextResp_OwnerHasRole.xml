@@ -1,0 +1,35 @@
+<BusinessLogic methodName="getNextResp_OwnerHasRole" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="liNextWfeState" type="Object" />
+    <MethodInput name="ownerPKey" type="DomPkey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Check if the owner has the appropriate role as configured at the state
+
+var queryOwner = {};
+queryOwner.params = [
+  {
+    "field": "usrMainPKey",
+    "value": ownerPKey 
+  },
+  {
+    "field": "usrRolePKey",
+    "value": liNextWfeState.getUsrRolePKey()
+  }
+];
+
+var promise = BoFactory.loadObjectByParamsAsync("LuUserHasRole", queryOwner).then(
+  function (luOwnerHasRole) {
+    if (Utils.isDefined(luOwnerHasRole) && !Utils.isEmptyString(luOwnerHasRole.getUsrMainPKey())) {
+      var nextResponsibleCollection = {};
+      nextResponsibleCollection.responsibles = {};
+      nextResponsibleCollection.mainResponsibles = {};
+      nextResponsibleCollection.responsibles[ownerPKey] = ownerPKey;
+
+      return nextResponsibleCollection;
+    }
+  }
+);]]>
+</Code>
+  <Return name="nextResponsibleCollection" value="promise" />
+</BusinessLogic>

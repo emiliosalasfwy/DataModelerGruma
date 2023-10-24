@@ -1,0 +1,7 @@
+<BusinessLogic methodName="isReleaseInformationVisible" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = (me.getPhase() === "Released" && me.getSysReleaseProcessStepsExists() == "1");]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

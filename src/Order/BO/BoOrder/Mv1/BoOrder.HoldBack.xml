@@ -1,0 +1,15 @@
+<BusinessLogic methodName="holdBack" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Set ActualStatePKey to PKey of next phase
+var nextState = me.getBoWorkflow().getNextStateHoldBack(me.getActualStatePKey());
+
+if (!Utils.isEmptyString(nextState.toStatePKey)) {
+  me.setActualStatePKey(nextState.toStatePKey);
+  me.setPhase(nextState.stateType);
+  //Set NextStatePKey to ActualStatePKey (setting to nextStatePKey would not be correct - save at Web after sync would do state transition)
+  me.setNextStatePKey(nextState.toStatePKey);  
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

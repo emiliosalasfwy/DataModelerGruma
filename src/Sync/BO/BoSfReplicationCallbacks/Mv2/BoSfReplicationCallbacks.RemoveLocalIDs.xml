@@ -1,0 +1,9 @@
+<BusinessLogic methodName="removeLocalIDs" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="IDs" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var filteredIds = Utils.filter(IDs, function (id) { return !id.startsWith("Local_"); });]]>
+</Code>
+  <Return name="filteredIds" value="filteredIds" />
+</BusinessLogic>

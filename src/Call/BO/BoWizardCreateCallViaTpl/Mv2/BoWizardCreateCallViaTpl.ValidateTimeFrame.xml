@@ -1,0 +1,19 @@
+<BusinessLogic methodName="validateTimeFrame" businessObjectClass="BoWizardCreateCallViaTpl" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var tripList = me.getLoTripList().getCurrent();
+var selectedDate = Utils.convertAnsiDateTime2AnsiDate(me.getSelectedDate());
+
+if ((selectedDate < tripList.getValidFrom()) || (selectedDate > tripList.getValidThru())) {
+  var newError = {
+    "level" : "error",
+    "objectClass" : "BoWizardCreateCallViaTpl",
+    "messageID" : "CasClbTripListDateNotValid"
+  };
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

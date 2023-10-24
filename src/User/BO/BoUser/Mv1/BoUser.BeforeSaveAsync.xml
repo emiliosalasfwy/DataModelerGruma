@@ -1,0 +1,15 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+deferreds.push(Facade.saveObjectAsync(me));
+//deferreds.push(me.getBoUserSales().saveAsync());
+deferreds.push(me.getBoUserSettings().saveAsync());
+
+var promise = when.all(deferreds);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

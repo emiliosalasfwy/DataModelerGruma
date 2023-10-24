@@ -1,0 +1,17 @@
+<BusinessLogic methodName="toggleRoundingOrder" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[switch (mode) {
+  case "ON":                     
+    me.setIsRoundingOn("1");
+    break;
+  case "OFF":
+    me.setIsRoundingOn("0");
+    break;
+}
+me.setIsRoundingToggleChanged("1");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

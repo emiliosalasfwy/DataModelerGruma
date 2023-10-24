@@ -1,0 +1,31 @@
+<BusinessLogic methodName="doDelete" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var buttonValues = {};
+var userPKey = ApplicationContext.get('user').getPKey();
+
+if(me.getResponsiblePKey() == userPKey){
+  if(me.getPhase() != 'Committed'){
+    me.getLoPrmCttProducts().delete();
+    me.getLoPrmCttTactics().delete();
+    me.getLoPrmCttComment().delete();
+    me.getBoSlogan().delete();
+    me.delete();
+  }
+  else{
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"),
+                                        Localization.resolve("ValidationMessages.BoPrmContract.CasPrmCttDeletePhaseNotAllowed"),
+                                        buttonValues);
+  }
+}
+else{
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"),
+                                      Localization.resolve("ValidationMessages.BoPrmContract.CasPrmCttDeleteNotResponsible"),
+                                      buttonValues);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

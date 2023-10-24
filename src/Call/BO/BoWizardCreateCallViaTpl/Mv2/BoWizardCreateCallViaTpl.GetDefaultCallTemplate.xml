@@ -1,0 +1,29 @@
+<BusinessLogic methodName="getDefaultCallTemplate" businessObjectClass="BoWizardCreateCallViaTpl" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var callMetaPKey = ApplicationContext.get('user').getBoUserSales().getClbMetaPKey();
+var promise;
+
+//If no Default Call Template for User is found, search for SysSettings
+if (Utils.isEmptyString(callMetaPKey)) {
+  var jsonQuerySysSetting = {};
+  jsonQuerySysSetting.iD = "ClbMetaDefaultCallTemplate";
+  promise = BoFactory.loadObjectByParamsAsync("LuSysSettingById", jsonQuerySysSetting)
+    .then(function (luSysSettingById) {
+    var jsonQueryCallMeta = {};
+    jsonQueryCallMeta.iD = luSysSettingById.getValue();
+
+    return BoFactory.loadObjectByParamsAsync("LuCallMetaById", jsonQueryCallMeta);
+  })
+    .then(function (luCallMetaById) {
+    callMetaPKey = luCallMetaById.getPKey();
+    me.setCallMetaPKey(callMetaPKey);
+    return me;
+  });
+} else {
+  me.setCallMetaPKey(callMetaPKey);
+  promise = when.resolve(me);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

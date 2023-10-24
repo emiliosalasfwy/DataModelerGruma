@@ -1,0 +1,33 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoTodo" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//#########################################################
+// If the respective user document template is not Mobility
+// Relevant, the user can not edit any To Do data.
+// #########################################################
+var acl = me.getACL();
+if (me.getIssuePhase().toLowerCase() === "closed" || me.getIssuePhase().toLowerCase() === "cancelled" || me.getResponsiblePKey()  != ApplicationContext.get('user').getPKey()) {
+  // To Do fields should not be editable.
+  acl.removeRight(AclObjectType.OBJECT, "BoTodo", AclPermission.EDIT);
+
+  //To DO Note should also be not editable
+  acl = me.getBoTodoNote().getACL();
+  acl.removeRight(AclObjectType.OBJECT, "BoTodoNote", AclPermission.EDIT);
+}
+else {
+  acl.setAce({
+    "objectType" : AclObjectType.OBJECT,
+    "objectName" : "BoTodo",
+    "rights" : AclPermission.ALL,
+    "grant" : true
+  });
+}
+
+//Hide Type text for CGCloud - Not possible at UI level
+if (Utils.isSfBackend()) {
+  var aclMeta = me.getBoSvcRequestMeta().getACL();
+  aclMeta.removeRight(AclObjectType.PROPERTY, "issueTypeText", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

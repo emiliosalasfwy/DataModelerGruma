@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getIvcMetasByItemMeta" businessObjectClass="BoOrderMeta" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="itemMetaPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+      
+      var params = { "sdoItemMetaPKey": itemMetaPKey };
+      var inventoryMetasByItemMeta = this.getLoInventoryMetaByItemMeta().getItemsByParam(params);
+      
+    ]]></Code>
+  <Return name="ivcMetasByItemMeta" value="inventoryMetasByItemMeta" />
+</BusinessLogic>

@@ -1,0 +1,40 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoVisit" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+me.suspendListRefresh();
+for(var i=0; i < items.length; i++ ) {
+  items[i].setPlannedStartDate(Utils.convertAnsiDateTime2AnsiDate(items[i].getPlannedStartDateTime()));
+  items[i].setPlannedStartTime(items[i].getPlannedStartDateTime().substring(11,16));
+  items[i].setPlannedEndDate(Utils.convertAnsiDateTime2AnsiDate(items[i].getPlannedEndDateTime()));
+  items[i].setPlannedEndTime(items[i].getPlannedEndDateTime().substring(11,16));
+}
+for(var i=0; i < items.length; i++ ) {
+  items[i].beginEdit();
+  var combinedVisitAddress = "";
+  if(!Utils.isEmptyString(items[i].getStreet()) || !Utils.isEmptyString(items[i].getCity()) ) {
+    
+    if(!Utils.isEmptyString(items[i].getStreet())) {
+      combinedVisitAddress = combinedVisitAddress + items[i].getStreet();
+    }
+    
+    if(!Utils.isEmptyString(items[i].getCity())) {
+      if(!Utils.isEmptyString(combinedVisitAddress) ) {
+        combinedVisitAddress += ", ";
+      }
+      combinedVisitAddress = combinedVisitAddress + items[i].getCity();
+    }
+  } 
+  items[i].setCombinedAddress(combinedVisitAddress);
+  items[i].setObjectStatus(STATE.PERSISTED);
+  items[i].endEdit();
+}
+
+me.resumeListRefresh(true);
+var promise=when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

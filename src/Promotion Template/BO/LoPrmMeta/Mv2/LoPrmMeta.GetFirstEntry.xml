@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getFirstEntry" businessObjectClass="LoPrmMeta" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var prmMetas = this.getItemObjects();
+var pKey = " ";
+
+if (prmMetas.length > 0) {
+  pKey = prmMetas[0].getPKey();
+}]]>
+</Code>
+  <Return name="pkey" value="pKey" />
+</BusinessLogic>

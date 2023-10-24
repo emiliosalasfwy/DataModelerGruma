@@ -1,0 +1,45 @@
+<BusinessLogic methodName="getDsForCurrentInventory" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="ivcMetaPKeys" type="DomString" />
+    <MethodInput name="bpaMainPKeys" type="DomString" />
+    <MethodInput name="tmgTourPKeys" type="DomString" />
+    <MethodInput name="etpVehiclePKeys" type="DomString" />
+    <MethodInput name="usrMainPKeys" type="DomString" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[// Datasource name (required by merge engine)
+var LO_METRUCKLOADITEMS = "LoMeTruckLoadItems";
+var datasourceDefiniton = {
+  "boName" : LO_METRUCKLOADITEMS,
+  "dsParams" : {
+    "params" :[ {
+      "field" : "ivcMetaPKeys",
+      "value" : ivcMetaPKeys
+    },{
+      "field" : "bpaMainPKeys",
+      "value" : bpaMainPKeys
+    },    {
+      "field" : "tmgTourPKeys",
+      "value" : tmgTourPKeys
+    },    {
+      "field" : "etpVehiclePKeys",
+      "value" : etpVehiclePKeys
+    },    {
+      "field" : "usrMainPKeys",
+      "value" : usrMainPKeys
+    }
+              ]
+
+  },
+  "matchingColumn" : "prdMainPKey",
+  "dataSourceColumns" : [{
+    "name" : "currentInventory",
+    "alias" : "currentInventory",
+    "default" : "0"
+  }
+                        ],
+  "mergeProperty" : mergeProperty,
+  "lookupDataSource" : "false"
+};]]></Code>
+  <Return name="dsForCurrentInventory" value="datasourceDefiniton" />
+</BusinessLogic>

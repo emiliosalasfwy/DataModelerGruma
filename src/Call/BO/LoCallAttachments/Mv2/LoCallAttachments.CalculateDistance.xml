@@ -1,0 +1,27 @@
+<BusinessLogic methodName="calculateDistance" businessObjectClass="LoCallAttachments" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="latitude1" type="Decimal" />
+    <MethodInput name="longitude1" type="Decimal" />
+    <MethodInput name="latitude2" type="Decimal" />
+    <MethodInput name="longitude2" type="Decimal" />
+    <MethodInput name="distanceUnit" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//This function has been deprecated, we are using Utils.distanceBetween() to calculate distance now
+
+var distance1 = Math.abs(latitude1 - latitude2) * 111.3;
+var distance2 = Math.abs(longitude1 - longitude2) * 111.3 * Math.cos(((latitude1 + latitude2) * Math.PI) / 180.0 / 2);
+var calculateDistance = Math.round(Math.sqrt(distance1 * distance1 + distance2 * distance2) * 1000, 0);
+
+switch (distanceUnit) {
+  case "miles":
+    calculateDistance = (calculateDistance * 0.00062137);
+    break;
+
+  case "km":
+    calculateDistance = (calculateDistance / 1000);
+    break;
+}]]>
+</Code>
+  <Return name="calculateDistance" value="calculateDistance" />
+</BusinessLogic>

@@ -1,0 +1,9 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoTodoAttachments" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.saveListAttachmentAsync(me, "SvcTodoAttachment", "SvcTodoAttachmentBlob", "mediaPath", "attachmentBlobPKey", "type");]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,11 @@
+<BusinessLogic methodName="startBackgroundSync" businessObjectClass="LoOrderOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if( ApplicationContext.get("TriggerSyncProcess")){
+  Facade.startBackgroundReplication();
+}  
+  
+ApplicationContext.set("TriggerSyncProcess", false);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

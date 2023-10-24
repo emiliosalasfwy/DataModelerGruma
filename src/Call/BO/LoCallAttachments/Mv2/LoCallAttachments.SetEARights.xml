@@ -1,0 +1,45 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoCallAttachments" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="String" />
+    <MethodInput name="boCall" type="BoCall" />
+    <MethodInput name="isReadOnly" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var liCallAttachment = me.getItemByPKey(pKey);
+var acl = liCallAttachment.getACL();
+
+//Get the Meta Lookup Object
+var objMetaLookup = boCall.getLuCallMeta();
+
+//Get the User details
+var user = ApplicationContext.get('user');
+
+if(objMetaLookup.getTagMediaDateTime() == "1"){
+  acl.addRight(AclObjectType.PROPERTY, "creationDate", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY, "creationTime", AclPermission.VISIBLE); 
+}else{
+  acl.removeRight(AclObjectType.PROPERTY, "creationDate", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "creationTime", AclPermission.VISIBLE); 
+}		
+
+if (user.getIsSupervisor() == "1"  && user.getPKey() !== boCall.getResponsiblePKey() && objMetaLookup.getTagMediaGeoLocation() == "1"){
+  acl.addRight(AclObjectType.PROPERTY, "latitude", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY, "longitude", AclPermission.VISIBLE); 
+  acl.addRight(AclObjectType.PROPERTY, "locationDeviation", AclPermission.VISIBLE); 
+}else{
+  acl.removeRight(AclObjectType.PROPERTY, "latitude", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "longitude", AclPermission.VISIBLE); 
+  acl.removeRight(AclObjectType.PROPERTY, "locationDeviation", AclPermission.VISIBLE); 
+}
+
+if(isReadOnly){
+  me.getACL().removeRight(AclObjectType.OBJECT, "LoCallAttachments", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "subjectTag", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "typeTag", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "areaTag", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "competitorTag", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

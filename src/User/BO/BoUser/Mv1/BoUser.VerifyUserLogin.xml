@@ -1,0 +1,10 @@
+<BusinessLogic methodName="verifyUserLogin" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Note: Deleted content of this funtion. Loginname is checked via BoUserCheck.verifyLoginName now
+//      Function is called from Loagin Process because of migration purposes
+
+var loginNameValid = 1;]]>
+</Code>
+  <Return name="loginNameValid" value="loginNameValid" />
+</BusinessLogic>

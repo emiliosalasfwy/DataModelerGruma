@@ -1,0 +1,17 @@
+<BusinessLogic methodName="setIsTagged" businessObjectClass="LoCallAttachments" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="attachmentTagSet" type="LiCallAttachments" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!Utils.isEmptyString(attachmentTagSet.getSubjectTag()) || 
+    !Utils.isEmptyString(attachmentTagSet.getTypeTag()) || 
+    !Utils.isEmptyString(attachmentTagSet.getAreaTag()) || 
+    attachmentTagSet.getCompetitorTag() !== "0"){
+  attachmentTagSet.setIsTagged("1");
+}
+else{
+  attachmentTagSet.setIsTagged("0");
+}]]>
+</Code>
+  <Return name="value" value="attachmentTagSet" />
+</BusinessLogic>

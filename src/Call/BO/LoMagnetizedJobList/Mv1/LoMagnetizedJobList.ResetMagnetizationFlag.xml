@@ -1,0 +1,11 @@
+<BusinessLogic methodName="resetMagnetizationFlag" businessObjectClass="LoMagnetizedJobList" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+
+var magnetizedJobLists = this.getAllItems();
+var idxJob = magnetizedJobLists.length;
+while (idxJob--) {
+	magnetizedJobLists[idxJob].setDemagnetizeOnSave("0");
+}
+		
+   ]]></Code>
+</BusinessLogic>

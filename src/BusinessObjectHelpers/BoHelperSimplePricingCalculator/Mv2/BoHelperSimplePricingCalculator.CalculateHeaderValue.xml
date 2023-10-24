@@ -1,0 +1,41 @@
+<BusinessLogic methodName="calculateHeaderValue" businessObjectClass="BoHelperSimplePricingCalculator" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="boOrder" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var values = {
+  grossTotalValue: 0,
+  grossTotalValueReceipt: 0,
+  totalValue: 0,
+  totalValueReceipt: 0
+};
+var itemsMain = boOrder.getLoItems();
+var items = itemsMain.getAllItems();
+var index;
+var orderValue = 0;
+
+for (index = 0; index < items.length; index++)
+{
+  var item = items[index];
+  var totalValue = 0;
+  var quantity = item.getQuantity();
+  if(quantity > 0)
+  {
+    var price = item.getPrice();
+    var priceEffect = item.getPriceEffect();
+
+    totalValue = priceEffect * quantity * price;
+    totalValue = isNaN(totalValue) ? 0 : totalValue;
+    orderValue += totalValue;      
+  }
+}
+
+//No tax calculation implemented in first version - set both properties to the same order value
+values.grossTotalValue = orderValue;
+values.grossTotalValueReceipt = orderValue;
+
+values.totalValue = orderValue;
+values.totalValueReceipt = orderValue;]]>
+</Code>
+  <Return name="values" value="values" />
+</BusinessLogic>

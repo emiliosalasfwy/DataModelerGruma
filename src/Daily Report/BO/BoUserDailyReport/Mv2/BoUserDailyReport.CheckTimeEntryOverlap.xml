@@ -1,0 +1,46 @@
+<BusinessLogic methodName="checkTimeEntryOverlap" businessObjectClass="BoUserDailyReport" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="dateTimeFrom" type="String" />
+    <MethodInput name="dateTimeThru" type="String" />
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// check time entries with overlapping..
+if(Utils.isDefined(me.getLoUsrTimeEntry())){
+  var loTimeEntries = ApplicationContext.get("dateTimeHelper").sortTimeEntries(me.getLoUsrTimeEntry().getItemObjects());
+  var isOverlap= false;
+  var compTimeFrom = ApplicationContext.get("dateTimeHelper").getUTCDate(dateTimeFrom); 
+  var compTimeThru = ApplicationContext.get("dateTimeHelper").getUTCDate(dateTimeThru);
+  
+  if(Utils.isDefined(compTimeFrom) && Utils.isDefined(compTimeThru)) {  
+    for(var idxloTimeEntries = 0; idxloTimeEntries<  loTimeEntries.length; idxloTimeEntries ++){ 
+      // compare TimeEntries Time values
+      if(loTimeEntries[idxloTimeEntries].getUsrTimeEntryMetaPKey() !== me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey()){            
+
+        var listItemTimeFrom = ApplicationContext.get("dateTimeHelper").getUTCDate(loTimeEntries[idxloTimeEntries].getEffectiveUTCTimeFrom());            
+        var listItemTimeThru = ApplicationContext.get("dateTimeHelper").getUTCDate(loTimeEntries[idxloTimeEntries].getEffectiveUTCTimeThru());
+
+        //check for identical entry
+        if(listItemTimeThru.getTime() == compTimeThru.getTime() || compTimeFrom.getTime() == listItemTimeFrom.getTime()){
+          isOverlap=true;
+          break;
+        }
+        if(listItemTimeFrom.getTime() < compTimeThru.getTime() && compTimeFrom.getTime() < listItemTimeThru.getTime()){
+          isOverlap=true;
+          break;
+        }
+      }
+    }
+  }
+  if(isOverlap) {
+    var newError = {"level": "error", 
+                    "objectClass": "BoUserDailyReport", 
+                    "simpleProperty": " ", 
+                    "messageID": "CasUsrTimeCardNoTimeOverlap"};
+    messageCollector.add(newError);
+
+  }
+}]]>
+</Code>
+  <Return name="validationMessage" value="messageCollector" />
+</BusinessLogic>

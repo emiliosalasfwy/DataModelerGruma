@@ -1,0 +1,26 @@
+<BusinessLogic methodName="getNextStatesByStateType" businessObjectClass="BoWorkflow" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="actualStatePKey" type="DomPKey" />
+    <MethodInput name="stateType" type="DomWfeStateType" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+      var result = [];
+
+      // Get WfeStates by state type
+      var wfeNextState = this.getLoWfeState().getItemsByParam({ "stateType" : stateType});    
+
+      // Check existence of states with given state type from actual state
+      for (var i = 0; i < wfeNextState.length; i++) {
+
+          // Check if state is reachable from current state
+          var wfeStateTransition = this.getLoWfeStateTransitions().getItemsByParam({ "fromStatePKey": actualStatePKey, "toStatePKey": wfeNextState[i].getPKey() });
+
+          if (wfeStateTransition.length > 0) {
+              result.push(wfeNextState[i]);
+          }
+      }
+
+    ]]></Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

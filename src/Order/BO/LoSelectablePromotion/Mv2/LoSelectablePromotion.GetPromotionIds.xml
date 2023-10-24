@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getPromotionIdsForHurdles" businessObjectClass="LoSelectablePromotion" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promotionIds = [];
+me.getItems().forEach(function (item) {
+  if (!Utils.isEmptyString(item.getPKey()) && item.getConsiderPromotionRewards() == "1") {
+    promotionIds.push(Utils.convertForDBParam(item.getPKey(), 'DomPKey'));
+  }
+});]]>
+</Code>
+  <Return name="promotionIds" value="promotionIds" />
+</BusinessLogic>

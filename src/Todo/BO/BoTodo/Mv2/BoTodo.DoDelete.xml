@@ -1,0 +1,21 @@
+<BusinessLogic methodName="doDelete" businessObjectClass="BoTodo" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(me.getBoTodoNote())) {
+  me.getBoTodoNote().delete();
+}
+
+//Delete Todo Attachments when Deleting the Todo.
+if (Utils.isDefined(me.getLoTodoAttachments())) {
+  me.getLoTodoAttachments().delete();
+}
+
+//Delete related Atm attachments.
+if (Utils.isDefined(me.getLoAtmAttachment())) {
+  me.getLoAtmAttachment().delete();
+}
+
+me.delete();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

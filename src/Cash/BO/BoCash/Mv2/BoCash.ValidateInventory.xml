@@ -1,0 +1,9 @@
+<BusinessLogic methodName="validateInventory" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

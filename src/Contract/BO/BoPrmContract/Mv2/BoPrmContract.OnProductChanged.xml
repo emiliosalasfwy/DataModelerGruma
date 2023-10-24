@@ -1,0 +1,25 @@
+<BusinessLogic methodName="onProductChanged" businessObjectClass="BoPrmContract" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+    for (var i = 0; i < handlerParams.modified.length; i++) {
+        switch (handlerParams.modified[i]) {
+            case "quantity":
+              handlerParams.listItem.setQuantity(this.getValidStepperValue(handlerParams.listItem.getQuantity(), 0, undefined, false));
+			  break;
+        
+            case "specialPrice":
+                handlerParams.listItem.setSpecialPrice(this.getValidStepperValue(handlerParams.listItem.getSpecialPrice(), 0, undefined, true));
+                break;
+                
+            case "discount":
+                handlerParams.listItem.setDiscount(this.getValidStepperValue(handlerParams.listItem.getDiscount(), 0, 100, true));
+                break;
+		  }
+    }
+
+
+    ]]></Code>
+</BusinessLogic>

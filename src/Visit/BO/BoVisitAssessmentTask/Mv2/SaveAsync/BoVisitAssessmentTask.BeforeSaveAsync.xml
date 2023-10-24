@@ -1,0 +1,42 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoVisitAssessmentTask" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+deferreds.push(Facade.saveObjectAsync(me));
+
+var count = 0;
+if (Utils.isDefined(me.getLoRetailVisitKPI())) {
+  var items = me.getLoRetailVisitKPI().getAllItems();
+  items.forEach(function(item){
+    if(Utils.isDefined(item.getActualValue())) {
+      count++;
+    }
+  });
+  var aclBo = me.getACL();
+  if (count ===0) {
+	me.setStatus('NotStarted');
+  } else if(count < me.getLoRetailVisitKPI().getAllItems().length) {
+	me.setStatus('InProgress');
+  } else if(count === me.getLoRetailVisitKPI().getAllItems().length) {
+	me.setStatus('Completed');
+  } 
+  deferreds.push(me.getLoRetailVisitKPI().saveAsync());
+}
+
+var promise = when.all(deferreds)
+.then(function () {
+  //Reset object status for all to prevent multiple saves
+  me.traverse(function(node){
+    node.setObjectStatus(STATE.PERSISTED);
+    if(node.isList) {
+      node.getAllItems().forEach(function (item){
+        item.setObjectStatus(STATE.PERSISTED);
+      });
+    }
+  },function (a, b, c){});
+});]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

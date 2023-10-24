@@ -1,0 +1,9 @@
+<BusinessLogic methodName="onReadChanged" businessObjectClass="BoUsrNotification" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+
+	if(Utils.isPhone()){	
+    	this.setIsUpdated("1");
+	}
+		
+   ]]></Code>
+</BusinessLogic>

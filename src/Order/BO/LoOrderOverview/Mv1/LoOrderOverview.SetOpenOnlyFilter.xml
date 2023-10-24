@@ -1,0 +1,8 @@
+<BusinessLogic methodName="setOpenOnlyFilter" businessObjectClass="LoOrderOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var filter = "Initial";
+me.setFilter("phase", filter);]]>
+</Code>
+  <Return name="filter" value="filter" />
+</BusinessLogic>

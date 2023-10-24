@@ -1,0 +1,36 @@
+<BusinessLogic methodName="checkDeliveryDate" businessObjectClass="BoOrder" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="deliveryDate" type="Date" />
+    <MethodInput name="considerSaturday" type="DomBool" />
+    <MethodInput name="considerSunday" type="DomBool" />
+    <MethodInput name="publicHolidays" type="LoPublicHolidays" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+      var checkResult = true;
+        
+      // Determine day of week and check for saturday and sunday
+      var dayOfWeek = deliveryDate.getDay();
+  
+      // JS code for saturday is "6"
+      if ((checkResult == true) && (considerSaturday == "0") && (dayOfWeek == 6)) {
+        checkResult = false;
+      }
+      
+      // JS code for sunday is "0"
+      if ((checkResult == true) && (considerSunday == "0")  && (dayOfWeek == 0)) {
+        checkResult = false;
+      }
+      
+      // Check for public holiday
+      if (checkResult == true) {
+        var foundHolidays = publicHolidays.getItemsByParam({"holiday" : Utils.convertFullDate2Ansi(deliveryDate)});
+        
+        if (foundHolidays.length > 0) {
+          checkResult = false;
+        }
+      }
+    
+    ]]></Code>
+  <Return name="deliveryDateValid" value="checkResult" />
+</BusinessLogic>

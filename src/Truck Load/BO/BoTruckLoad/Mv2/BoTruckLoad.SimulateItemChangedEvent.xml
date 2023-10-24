@@ -1,0 +1,10 @@
+<BusinessLogic methodName="simulateItemChangedEvent" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loItems = me.getLoItems();
+var changedItem = loItems.getCurrent();
+var handlerParams = loItems.generateItemChangedHandlerParams(loItems.getItems(), changedItem, undefined, undefined, ["quantity"], {"quantity" : "0"});
+var promise = me.onTruckLoadItemChanged.call(me, handlerParams);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

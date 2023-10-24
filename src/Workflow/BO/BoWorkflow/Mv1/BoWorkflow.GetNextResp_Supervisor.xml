@@ -1,0 +1,29 @@
+<BusinessLogic methodName="getNextResp_Supervisor" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="liNextWfeState" type="Object" />
+    <MethodInput name="responsiblePKey" type="DomPkey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (liNextWfeState.getUsrRoleId() == "Supervisor") {
+  promise = BoFactory.loadObjectByParamsAsync("LuSupervisorOfUser", me.getQueryBy("usrPKey", responsiblePKey)).then(
+    function (luSupervisorOfUser) {
+      var supervisorPKey = luSupervisorOfUser.getSupervisorPKey();
+
+      if (!Utils.isEmptyString(supervisorPKey)) {
+        var nextResponsibleCollection = {};
+        nextResponsibleCollection.responsibles = {};
+        nextResponsibleCollection.mainResponsibles = {};
+        nextResponsibleCollection.responsibles[supervisorPKey] = supervisorPKey;
+
+        return nextResponsibleCollection;
+      }      
+    }
+  );
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="nextResponsibleCollection" value="promise" />
+</BusinessLogic>

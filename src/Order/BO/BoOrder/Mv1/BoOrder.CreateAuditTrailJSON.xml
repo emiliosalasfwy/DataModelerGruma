@@ -1,0 +1,178 @@
+<BusinessLogic methodName="createAuditTrailJSON" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var i;
+var promotion;
+var rewardGroup;
+//Creating Audit Trail
+var json = {};
+
+var reward = me.getHurdleEvaluationHelper().getLoRewards().getAllItems();
+for (i = 0; i < reward.length; i++) {
+  promotion = reward[i].getPromotionPKey();
+  if (!(promotion in json)) {
+    json[promotion] = [];
+  }
+
+  rewardGroup = reward[i].getRewardGroupId();
+  if (json[promotion].filter(function (x) {
+    return x.id == rewardGroup;
+  }).length === 0) {
+    json[promotion].push({
+      id: rewardGroup,
+      name: reward[i].getPromotionRewardGroupTitle(),
+      hurdles: [],
+      rewards: []
+    });
+  }
+
+  var privateHurdle = {};
+  if(!Utils.isEmptyString(reward[i].getHurdlePKey())){
+    var hurdleItem = me.getHurdleEvaluationHelper().getLoHurdles().getItemByPKey(reward[i].getHurdlePKey());
+    privateHurdle =
+      {
+      id: hurdleItem.getPKey(),
+      name: hurdleItem.getHurdleTitle(),
+      expressionFunction: hurdleItem.getExpressionFunction(),
+      targetValue: reward[i].getTargetValue(),
+      calculatedValue: reward[i].getCalculatedValue(),
+      operator: hurdleItem.getOperator(),
+      fulfilled: reward[i].getPerFactor() >= 1 ? "1" : "0"
+    };
+  }
+
+  if (reward[i].getRewardType() === "FreeItem") {
+    var invalidRewardProducts = [];
+
+    var freeItems = me.getHurdleEvaluationHelper().getLoRewardProducts().getItemsByParamArray([{
+      "isValidFreeItem": 0
+    }, {
+      "promotionReward": reward[i].getPKey()
+    }]);
+
+    if (freeItems.length > 0) {
+      freeItems.forEach(function (freeItem) {
+        invalidRewardProducts.push({
+          id: freeItem.getPrdId(),
+          name: freeItem.getProductName()
+        });
+      });
+    }
+
+    json[promotion].find(function (x) {
+      return x.id == rewardGroup;
+    }).rewards.push({
+      id: reward[i].getPKey(),
+      name: reward[i].getRewardTitle(),
+      isApplicable: reward[i].getIsApplicable(),
+      selected: reward[i].getSelected(),
+      invalidRewardProducts: invalidRewardProducts,
+      hurdle: privateHurdle
+    });
+  } else {
+    var rewardDictionary = Utils.createDictionary();
+    rewardDictionary.add("id", reward[i].getPKey());
+    rewardDictionary.add("name", reward[i].getRewardTitle());
+    rewardDictionary.add("isApplicable", reward[i].getIsApplicable());
+    rewardDictionary.add("selected", reward[i].getSelected());
+    rewardDictionary.add("hurdle", privateHurdle);
+
+    if (reward[i].getRewardType() === "Special") {
+      if(!Utils.isEmptyString(reward[i].getUserExitResult())) {
+        rewardDictionary.add("userExitResult", reward[i].getUserExitResult());
+      }
+      else if(!Utils.isEmptyString(reward[i].getClassification())){
+        rewardDictionary.add("classification", reward[i].getClassification());
+      }
+    }
+
+    json[promotion].find(function (x) {
+      return x.id == rewardGroup;
+    }).rewards.push(rewardDictionary.data);
+  }
+}
+
+var hurdle = me.getHurdleEvaluationHelper().getLoHurdles().getItemsByParamArray([{"hurdleType": "RewardSpecific", "op":"NE"}]);
+for (i = 0; i < hurdle.length; i++) {
+  promotion = hurdle[i].getPromotionPKey();
+  if (!(promotion in json)) {
+    json[promotion] = [];
+  }
+
+  rewardGroup = hurdle[i].getRewardGroupId();
+  if (json[promotion].filter(function (x) {
+    return x.id == rewardGroup;
+  }).length === 0) {
+    json[promotion].push({
+      id: rewardGroup,
+      name: hurdle[i].getPromotionRewardGroupTitle(),
+      hurdles: []
+    });
+  }
+
+  json[promotion].find(function (x) {
+    return x.id == rewardGroup;
+  }).hurdles.push({
+    id: hurdle[i].getPKey(),
+    name: hurdle[i].getHurdleTitle(),
+    expressionFunction: hurdle[i].getExpressionFunction(),
+    targetValue: hurdle[i].getTargetValue(),
+    calculatedValue: hurdle[i].getCalculatedValue(),
+    operator: hurdle[i].getOperator(),
+    fulfilled: hurdle[i].getIsFulfilled(),
+    operation: hurdle[i].getOperation()
+  });
+}
+
+//Storing Audit Trail
+if (Object.keys(json).length > 0){
+  var fileType = 'zip';
+  var compressed = true;
+  var curDate = Utils.createDateNow();
+  var dateExtension = "_" + (curDate.getUTCMonth() + 1) + "_" + curDate.getUTCDate() + "_" + curDate.getUTCFullYear();
+  var loadLoAttachmentsPromise = when.resolve();
+
+  if (!Utils.isDefined(me.getLoOrderAttachment())) {
+    loadLoAttachmentsPromise = BoFactory.loadObjectByParamsAsync(LO_ORDERATTACHMENT, me.getQueryBy("sdoMainPKey", me.getPKey())).then(
+      function (loAttachments) {
+        me.setLoOrderAttachment(loAttachments);
+      });
+  }
+
+  promise = loadLoAttachmentsPromise.then(
+    function () {
+      return Facade.saveJSONFileAsync(json, compressed).then(
+        function (mediaPath) {
+
+          var items = me.getLoOrderAttachment().getItemsByParam({
+            "usage": "HurdleRewardLog"
+          });
+
+          if (items.length > 0) {
+            items[0].setType(fileType);
+            items[0].setMediapath(mediaPath);
+            items[0].setCreationDate(Utils.convertDate2Ansi(Utils.createDateNow()));
+            items[0].setFileName("Rewards_" + me.getPKey() + dateExtension + "." + fileType);
+          } else {
+            var liNewAttachment = {
+              "pKey": PKey.next(),
+              "sdoMainPKey": me.getPKey(),
+              "attachmentBlobPKey": PKey.next(),
+              "attachmentTextPKey": PKey.next(),
+              "usage": "HurdleRewardLog",
+              "attachmentText": "Audit Trail",
+              "type": fileType,
+              "fileName": "Rewards_" + me.getPKey() + dateExtension + "." + fileType,
+              "mediapath": mediaPath,
+              "creationDate": Utils.convertDate2Ansi(curDate),
+              "objectStatus": STATE.NEW | STATE.DIRTY
+            };
+            me.getLoOrderAttachment().addListItems([liNewAttachment]);
+          }
+        });
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

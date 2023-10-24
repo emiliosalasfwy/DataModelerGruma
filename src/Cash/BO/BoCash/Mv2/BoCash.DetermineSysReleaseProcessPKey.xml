@@ -1,0 +1,44 @@
+<BusinessLogic methodName="determineSysReleaseProcessPKey" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var cashMeta = me.getBoCashMeta();
+var SysReleaseProcessPKey = cashMeta.getSysReleaseProcessPKey();
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') === "Running"){
+  var tourPKey = ApplicationContext.get('currentTourPKey');
+  var cashMetaPKey = cashMeta.getPKey();
+  var cashSdoSubType = cashMeta.getSdoSubType();
+  var usage = "";
+
+  //Usage CashCheckOut/CashCheckIn
+  if (cashSdoSubType === "CashCheckOut"){
+    usage = "SdoMeta.CashCheckOut";
+  }else if (cashSdoSubType === "CashCheckIn"){
+    usage = "SdoMeta.CashCheckIn";
+  }
+
+  var jsonParams = [];
+  var jsonQuery ={};
+
+  jsonParams.push( { "field" : "tmgTourPKey", "value" : tourPKey});
+  jsonParams.push( { "field" : "objectMetaPKey", "value" : cashMetaPKey});
+  jsonParams.push( { "field" : "usage", "value" : usage});
+  jsonQuery.params=jsonParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LuTourObjectRelInformation", jsonQuery).then(
+    function(luTourObjectRelInformation) {
+      if(Utils.isDefined(luTourObjectRelInformation)){
+        SysReleaseProcessPKey = luTourObjectRelInformation.getSysReleaseProcessPKey();
+      }
+
+      return SysReleaseProcessPKey;
+    }
+  );
+}
+else{
+  promise = when.resolve(SysReleaseProcessPKey);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

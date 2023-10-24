@@ -1,0 +1,77 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoApprovablePromotionContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var params = context.jsonQuery
+  , actualStatePKey = params.actualStatePKey
+	, bApprovable = "0"
+	, bRejectable = "0"
+  , bForApproval = "0"
+	, userPKey = ApplicationContext.get('user').getPKey()
+	, boWorkflow = {}
+	, wfeQuery = {}
+;
+
+var workflowLoaded = when.resolve();
+
+if ((!Utils.isEmptyString(params.wfeWorkflowPKey))) {
+
+	if (params.responsiblePKey === userPKey) {
+		wfeQuery.params = ([{
+					"field" : "pKey"
+					, "value" : params.wfeWorkflowPKey
+				}
+			]);
+		workflowLoaded = BoFactory.loadObjectByParamsAsync("BoWorkflow", wfeQuery)
+		.then(function (bo) {
+			if (Utils.isDefined(bo)) {
+				boWorkflow = bo;
+
+				if ((boWorkflow.getNextStatesByStateType(actualStatePKey, 'Rejected').length > 0) || (boWorkflow.getNextStatesByStateType(actualStatePKey, 'initial').length > 0)) {
+					bRejectable = "1";
+				}
+				if (boWorkflow.getNextStatesByStateType(actualStatePKey, 'Committed').length > 0) {
+					bApprovable = "1";
+				}
+        if (boWorkflow.getNextStatesByStateType(actualStatePKey, 'ForApproval').length > 0) {
+          bForApproval = "1";
+        }
+			}
+		});
+	}
+}
+
+var promise = workflowLoaded.then(
+  function () {
+	var contextMenuItemList = [];
+	
+	contextMenuItemList.push({
+		"id" : "0000001"
+		, "actionImg" : "CheckDarkGrey24"
+		, "actionId" : "Approve"
+		, "processEvent" : "Approve"
+		, "actionEnabled" : bApprovable
+	});
+	
+	contextMenuItemList.push({
+		"id" : "0000002"
+		, "actionImg" : "CancelDarkGrey24"
+		, "actionId" : "Reject"
+		, "processEvent" : "Reject"
+		, "actionEnabled" : bRejectable
+	});
+  
+  contextMenuItemList.push({
+    "id" : "0000003"
+		, "actionImg" : "PromotionForwardDarkGrey24"
+		, "actionId" : "ForApproval"
+		, "processEvent" : "ForApproval"
+		, "actionEnabled" : bForApproval
+  });
+	
+	me.addItems(contextMenuItemList);
+});]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

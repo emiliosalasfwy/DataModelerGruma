@@ -1,0 +1,37 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoToDoOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Truncate the Text Description
+var idxAso = -1;
+for (var index in context.jsonQuery.params) {
+  if (context.jsonQuery.params[index].field === 'asoName') {
+    idxAso = index;
+  }
+}
+
+if (idxAso > -1 && (context.jsonQuery.params[idxAso].value === 'AsoToDoOverview' ||
+                    context.jsonQuery.params[idxAso].value === 'AsoToDoOverviewForSupervisor')) {
+  if (ApplicationContext.get('user').getIsSupervisor() == "1") {
+    context.jsonQuery.params[idxAso].value = 'AsoToDoOverviewForSupervisor';
+  }
+  else {
+    context.jsonQuery.params[idxAso].value = 'AsoToDoOverview';
+  }
+}
+
+var promise = Facade.getListAsync("LoToDoOverview", context.jsonQuery).then(
+  function(todo) {
+    for(var i=0; i<todo.length; i++) {
+      if(todo[i].text.length > 25) {
+        todo[i].text= todo[i].text.substr(0, 25);
+        todo[i].text+= "...";
+      }
+    }
+    me.addItems(todo, context.jsonQuery.params);
+    me.addAsoInformation(context.jsonQuery);
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

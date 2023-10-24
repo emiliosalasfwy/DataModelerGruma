@@ -1,0 +1,38 @@
+<BusinessLogic methodName="updateSubstitutionInfo" businessObjectClass="BoCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//If this is a substituted call, check attribut for EA-Rights
+var customerManagementInfoLookup = me.getLuCustomerManagementInfo();
+
+if (customerManagementInfoLookup.getIsSubstituted() == "1") {
+  // if call calendar user is also regular manager of customer and responsible of the call, do not set substitution flag
+  if (me.getResponsiblePKey() !== customerManagementInfoLookup.getReferenceUsrMainPKey()) {
+    me.setSubstitution("1");
+    me.setSubMainPKey(customerManagementInfoLookup.getSubstitutedSubMainPKey());
+
+    if (customerManagementInfoLookup.getSubstitutedInLeadFollowUpTime() == "1") {
+      me.setReadOnlyBySubstitution("1");
+    }
+  }
+}
+else if (customerManagementInfoLookup.getHasSubstitute() == "1") {
+  me.setSubstitution("1");
+  me.setSubMainPKey(customerManagementInfoLookup.getHasSubstituteSubMainPKey());
+  customerManagementInfoLookup.set('substitutedUsrName', me.getLuUser().getName());
+
+  if (me.getResponsiblePKey() === customerManagementInfoLookup.getReferenceUsrMainPKey() && (customerManagementInfoLookup.getHasSubstituteInLeadFollowUpTime() === "0")) {
+    // read only if current user is responsible and being substituted on the call's date
+    me.setReadOnlyBySubstitution("1");
+  }
+}
+else if (customerManagementInfoLookup.getHasSubstitute() === "0") {
+  if (me.getResponsiblePKey() !== customerManagementInfoLookup.getReferenceUsrMainPKey()) {
+    // read only if current user is not responsible and not substituting the responsible
+    // this is not a real substitution case, it is a fallback
+    me.setReadOnlyBySubstitution("1");
+    me.setSubMainPKey("FALLBACK");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

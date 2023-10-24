@@ -1,0 +1,5 @@
+<BusinessLogic methodName="setOpenOnlyFilter" businessObjectClass="LoDeliveryOverview" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+this.setFilter("phase", "Initial");
+]]></Code>
+</BusinessLogic>

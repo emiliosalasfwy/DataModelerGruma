@@ -1,0 +1,13 @@
+<BusinessLogic methodName="setDefaultUnit" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[
+// OBSOLETE!! - No longer called by core - Setting of values is done via the merge engine's defaults feature
+
+orderItem.setQuantityLogisticUnit(orderItem.getDefaultQuantityLogisticUnit());
+orderItem.setPiecesPerSmallestUnit(orderItem.getDefaultPiecesPerSmallestUnit());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

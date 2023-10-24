@@ -1,0 +1,13 @@
+<BusinessLogic methodName="releaseSupportedDocTType" businessObjectClass="BoOrder" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+   
+   var me = this;
+   var releaseSupported = false;
+   var docTaType=me.getDocTaType() =="NonValuatedDeliveryNote";
+   
+   releaseSupported = docTaType;
+   
+		
+]]></Code>
+  <Return name="releaseSupported" value="releaseSupported" />
+</BusinessLogic>

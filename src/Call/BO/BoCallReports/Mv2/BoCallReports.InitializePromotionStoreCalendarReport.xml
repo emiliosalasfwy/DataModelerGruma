@@ -1,0 +1,180 @@
+<BusinessLogic methodName="initializePromotionStoreCalendarReport" businessObjectClass="BoCallReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="promotionList" type="Object" />
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="callDate" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chartHelper = me.getChartHelper();
+
+if(Utils.isDefined(chartHelper)){
+  // Get container and chart container divs
+  var d3Container = chartHelper.getUIContainer(containerName, true);
+  var chartString = "chart_" + containerName;
+  var chartSelector = "#" + chartString;
+  chartHelper.addChartContainers(d3Container, containerName, "1", "0");
+
+  // Get the data
+  var jsonData = me.prepareDataForPromotionStoreCalendarReport(promotionList, callDate);
+  var sizeJson = chartHelper.computeContainerSize(containerName, 0.80, 0.96);
+
+  // Define the colors
+  var colors = jsonData.barColors;
+  var colorFunction = function (color, d){
+    return colors[d.id];
+  };
+
+  // Create the chart
+  var chartReference = c3.generate({
+    bindto : chartSelector,
+    data : {
+      columns : jsonData.data.columns,
+      xs : jsonData.data.xs,
+      names : jsonData.data.names,
+      color : colorFunction
+    },
+    tooltip : {
+      show : jsonData.showTooltip,
+      contents : function (d, defaultTitleFormat, defaultValueFormat, color) {
+        var result = "";
+
+        if (d.length > 0) {
+          var tooltipData = jsonData.tooltips[d[0].id];
+
+          result = "<table class='c3-tooltip'>";
+          result = result + "<tr><th colspan='2' style='background-color: #666e81'>" + tooltipData.slogan + "</th></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_Type") + "</td><td class='name' style='color: #000000'>" + tooltipData.type + "</td></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_ValidTimeFrame") + "</td><td class='name' style='color: #000000'>" + tooltipData.validTimeframe + "</td></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_OrderTimeFrame") + "</td><td class='name' style='color: #000000'>" + tooltipData.orderTimeframe + "</td></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_InStoreTimeFrame") + "</td><td class='name' style='color: #000000'>" + tooltipData.inStoreTimeframe + "</td></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_Anchor") + "</td><td class='name' style='color: #000000'>" + tooltipData.anchor + "</td></tr>";
+          result = result + "<tr class='c3-tooltip-name-data2'><td class='name' style='background-color: #eeeeee; color: #000000'>" + Localization.resolve("Report_PromotionStoreCalendar_Group") + "</td><td class='name' style='color: #000000'>" + tooltipData.group + "</td></tr>";
+          result = result + "</table>";
+
+        }
+        return result;
+      },
+      grouped : false
+    },
+    transition : {
+      duration : 2000
+    },
+    size : sizeJson,
+    axis : {
+      x : {
+        show : false,
+        type : "timeseries",
+        tick : {
+          values : jsonData.axis.x.tick.values,
+          format : function (v, id, i, j) {
+            return ("00" + (v.getMonth() + 1)).slice(-2) + "/" + v.getFullYear();
+          }
+        },
+        min : jsonData.axis.x.min,
+        max : jsonData.axis.x.max,
+        padding : {
+          left : jsonData.isPhone ? 40 : 0
+        }
+      },
+      y : {
+        show : jsonData.axis.y.show,
+        tick : {
+          values : jsonData.yTicks,
+          format : jsonData.axis.y.tick.format
+        }
+      }
+    },
+    legend : {
+      show : false
+    },
+    point : {
+      show : false,
+      r : 1
+    },
+    grid : {
+      x : {
+        show : jsonData.isPhone,
+        lines : jsonData.gridLines
+      },
+      lines : {
+        front : false
+      }
+    }
+  }
+                                  );
+
+  if(!Utils.isPhone() && jsonData.count === 1){
+    var chartInternal = chartReference.internal;
+    chartInternal.currentMaxTickWidths = {
+      x: 0,
+      y: 200,
+      y2: 0
+    };
+
+    chartReference.unload();
+    chartReference.load({
+      data : {
+        columns : jsonData.data.columns,
+        xs : jsonData.data.xs,
+        names : jsonData.data.names,
+        color : colorFunction
+      }
+    });
+  }
+
+  me.getChartHelper().addChartToStorage(containerName, chartReference);
+
+  // update text sizes
+  var svg = d3Container.select(chartSelector);
+  var text = svg.selectAll("text");
+  text.style("font-size", "1.2em");
+  text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+  //set bar width
+  if(jsonData.count > 20) {
+    d3Container.selectAll(".c3-line").style("stroke-width", "0.8em");
+  }
+  else if(jsonData.count > 10) {
+    d3Container.selectAll(".c3-line").style("stroke-width", "1.7em");
+  }
+  else {
+    d3Container.selectAll(".c3-line").style("stroke-width", "3.5em");
+  }
+
+
+  // Prepare the area for the header
+  var chartSvg = chartReference.element.firstChild;
+  var chartWidth = chartSvg.width.baseVal.value;
+  var bufferTop = d3Container.select("#header").append("svg").attr("id", "bufferTop");
+  bufferTop.attr("width", chartWidth).attr("height", 30);
+  var monthSvgHeader = d3Container.select("#header").append("svg").attr("id", "monthSvgHeader");
+  monthSvgHeader.attr("width", chartWidth).attr("height", 30);
+
+  if(!jsonData.isPhone){
+    var weekSvgHeader = d3Container.select("#header").append("svg").attr("id", "weekSvgHeader");
+    weekSvgHeader.attr("width", chartWidth).attr("height", 30);
+  }
+  else{
+    var div = d3Container.select(chartSelector);
+    div.style("text-align","center");
+    var div2 = d3Container.select("#header");
+    div2.style("text-align","center");
+  }
+
+  // Set axis colors
+  me.getChartHelper().setAxisDefaultColor();
+
+  //remove the yAxis
+  d3Container.select(chartSelector).select("svg").selectAll('path').style("stroke-width", 0);
+
+  // Set background to white
+  me.getChartHelper().setChartBackgroundDefaultColor(chartSelector, "92%");
+
+  // Fade in animation
+  setTimeout(function (){
+    me.inputChangedForPromotionStoreCalendarReport(promotionList, containerName, callDate);
+  }, 200);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

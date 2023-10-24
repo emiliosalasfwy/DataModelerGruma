@@ -1,0 +1,19 @@
+<BusinessLogic methodName="isPromotionOnDemandDataAvailable" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var availabilityPromises = [];
+
+if(Utils.isSfBackend() && Utils.isDefined(customerPKey) && !Utils.isEmptyString(customerPKey) && !me.isLocalID(customerPKey)){
+  var request = new BatchNftRequest();
+  availabilityPromises.push(me.addPromotionNftsToRequest(request, customerPKey)
+                            .then(function(request){
+    return Facade.getBatchSfOnDemandDataAvailabilityAsync(request);
+  }));
+}
+
+var promise = when.reduce(availabilityPromises, me.evaluateAvailabilityResult, 1);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,10 @@
+<BusinessLogic methodName="isOrderSyncable" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[
+
+var isSyncable = !(me.getSyncStatus() === BLConstants.Order.NOT_SYNCABLE && me.getPKey().startsWith("Local_"));
+]]>
+</Code>
+  <Return name="isSyncable" value="isSyncable" />
+</BusinessLogic>

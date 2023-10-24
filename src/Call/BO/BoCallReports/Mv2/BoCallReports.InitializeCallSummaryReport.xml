@@ -1,0 +1,111 @@
+<BusinessLogic methodName="initializeCallSummaryReport" businessObjectClass="BoCallReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="storedSurveyData" type="Object" />
+    <MethodInput name="updatedSurveyData" type="Object" />
+    <MethodInput name="containerName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chartHelper = me.getChartHelper();
+// Get container and add title and chart container divs
+var d3Container = chartHelper.getUIContainer(containerName, true);
+var chartString = "chart_" + containerName;
+var chartSelector = "#" + chartString;
+chartHelper.addChartContainers(d3Container, containerName, "0", "1");
+
+// Set title
+chartHelper.setChartTitle(d3Container, Localization.resolve("Report_CallSummary_Title"), containerName);
+
+// Define attributes for chart
+var barColors = ['#008ee4', '#9b59b6', '#6baa01', '#e44a00'];
+var sizeJson = chartHelper.computeContainerSize(containerName, 0.80, 0.96);
+
+var chartReference = c3.generate({
+  bindto : chartSelector,
+  data : {
+    columns : [
+      ['surveyExceptions', 0.03, 0.03, 0.03, 0.03]
+    ],
+    names : {
+      surveyExceptions : Localization.resolve("Report_CallSummary_NoExceptions")
+    },
+    color : function (color, d) {
+      return barColors[d.index];
+    },
+    type : 'bar',
+    labels : {
+      show : true,
+      format : function (v, id, i, j) { return Math.floor(v);}
+    }
+  },
+  bar : {
+    width : {
+      ratio : 0.7
+    }
+  },
+  size : sizeJson,
+  axis : {
+    rotated : true,
+    x : {
+      type : 'category',
+      categories : [Localization.resolve("Report_CallSummary_Distributed"), Localization.resolve("Report_CallSummary_OutOfStock"),
+                    Localization.resolve("Report_CallSummary_Facings"), Localization.resolve("Report_CallSummary_Price")],
+
+    },
+    y : {
+      padding : {
+        top : 0,
+        bottom : 0
+      },
+      show : false,
+      max: 6
+    }
+  },
+  grid : {
+    y: {
+      lines: [
+        {value: 1},
+        {value: 2},
+        {value: 3},
+        {value: 4},
+        {value: 5}
+      ]
+    },
+    x : {
+      show : false
+    },
+    lines : {
+      front : false
+    }
+  },
+  legend : {
+    show : false
+  },
+  tooltip : {
+    format: {
+      value: function (v, id, i, j) { return Math.floor(v);}
+    },
+    contents : me.getChartHelper().getStyledTooltipFunction()
+  }
+});
+
+var svg = d3.select(chartSelector);
+var text = svg.selectAll("text");
+text.style("font-size", "1.2em");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+me.getChartHelper().setAxisDefaultColor();
+me.getChartHelper().addChartToStorage(containerName, chartReference);
+
+// Set background to white
+me.getChartHelper().setChartBackgroundDefaultColor(chartSelector, "100%");
+
+// Set grid lines color
+d3.select(chartSelector).selectAll(".c3-ygrid-line").selectAll("line").style("stroke","#eeeeee");
+
+setTimeout(function () {
+  // center vertically
+  me.centerVerticallyCallSummaryReport(containerName);
+}, 100);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

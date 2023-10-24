@@ -1,0 +1,45 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var selectablePromotionIds = context.jsonQuery.selectablePromotions.getPromotionIdsForHurdles();
+
+var simplePriceCalculatorPromise;
+
+// Order create and load already initialize the SimplePricingCalculator HelperBO if simple pricing is enabled in the order template.
+// In this case no need for re-initialization
+if(!Utils.isDefined(me.getSimplePricingCalculator()))
+{
+  simplePriceCalculatorPromise = BoFactory.createObjectAsync("BoHelperSimplePricingCalculator", {})
+    .then(function (calculator){
+      me.setSimplePricingCalculator(calculator);
+    });
+}
+else{
+  simplePriceCalculatorPromise = when.resolve();
+}
+
+var promise = simplePriceCalculatorPromise
+.then(function () { 
+  return BoFactory.loadObjectByParamsAsync("LoRewardGroups", { promotionPKeyList : selectablePromotionIds } );
+}).then(function(loRewardGroups) {
+  me.setLoRewardGroups(loRewardGroups);
+  return BoFactory.loadObjectByParamsAsync("LoRewards", { promotionPKeyList : selectablePromotionIds } );
+}).then(function(rewards) {
+  me.setLoRewards(rewards);
+  rewards.addItemChangedEventListener(me.onRewardChanged, me);
+  return context.jsonQuery.orderCache.fetchProductsRelevantForReward(rewards);
+}).then(function(loRewardProducts) {
+  me.setLoRewardProducts(loRewardProducts); 
+  loRewardProducts.addItemChangedEventListener(me.onRewardProductChanged, me);
+  return BoFactory.loadObjectByParamsAsync("LoHurdles", { promotionPKeyList : selectablePromotionIds } );
+}).then(function(hurdles) {
+  me.setLoHurdles(hurdles);
+  me.setOrderCache(context.jsonQuery.orderCache);
+  return result;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

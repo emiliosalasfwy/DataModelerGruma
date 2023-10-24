@@ -1,0 +1,50 @@
+<BusinessLogic methodName="getReasonCodesForItemMeta" businessObjectClass="BoItemTabManager" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="sdoItemMetaPkey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var itemMetaPkey;
+
+if(Utils.isDefined(me.getBoOrder().getLoItems()) && Utils.isDefined(me.getBoOrder().getLoItems().getCurrent())) {
+  itemMetaPkey = me.getBoOrder().getLoItems().getCurrent().getSdoItemMetaPKey();
+}
+
+if(Utils.isCasBackend() && Utils.isDefined(itemMetaPkey)) {
+  var modReasonDictionary = me.getModReasonDict();
+
+  if(!Utils.isDefined(modReasonDictionary)) {
+    modReasonDictionary = Utils.createDictionary();
+  }
+
+  if(modReasonDictionary.containsKey(itemMetaPkey)&& Utils.isDefined(modReasonDictionary.get(itemMetaPkey))) {
+    me.setLoModReasonSelectionBox(modReasonDictionary.get(itemMetaPkey));
+  } else {
+    var modReasonParams = [];
+    var modReasonQuery = {};
+    modReasonParams.push({ "field": "sdoItemMetaPKey", "value": itemMetaPkey  });
+
+    modReasonQuery.params = modReasonParams;
+
+    promise = BoFactory.loadListAsync("LoModReason", modReasonQuery).then(
+      function(loModReason) {
+        var subItems = [];
+        var items = loModReason.getAllItems();
+
+        for(var i=0; i < items.length; i++) {
+          subItems[i] = items[i].getModReason();
+        }
+        if(subItems.indexOf(" ") < 0) {
+          subItems.push(" ");
+        }
+
+        var selectionBoxList = Utils.getToggleListObject("SdoModReason", subItems);
+        me.setLoModReasonSelectionBox(selectionBoxList);
+        modReasonDictionary.add(itemMetaPkey, selectionBoxList);
+        me.setModReasonDict(modReasonDictionary);
+      });
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

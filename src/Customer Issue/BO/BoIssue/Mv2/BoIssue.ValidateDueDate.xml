@@ -1,0 +1,27 @@
+<BusinessLogic methodName="validateDueDate" businessObjectClass="BoIssue" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Validate if Due Date is blank
+if (Utils.isDefined(me.getDueDate())){
+  var dueDate = getDateOnly(me.getDueDate());
+  
+  if((dueDate != Utils.getMinDateTimeAnsi()) && (dueDate < getDateOnly(me.getInitiationDate())) && me.getObjectStatus() !== (STATE.DELETED + STATE.NEW + STATE.DIRTY)){
+    messageCollector.add({
+      "level": "error",
+      "objectClass": "BoIssue", 
+      "messageID": "CasBoIssueInitiationDateGTDueDate"
+    });
+  }
+}
+else{
+  me.setDueDate(Utils.getMinDateTimeAnsi());
+}
+
+function getDateOnly(date){
+  return Utils.convertFullDate2Ansi(Utils.convertAnsiDate2Date(date));
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

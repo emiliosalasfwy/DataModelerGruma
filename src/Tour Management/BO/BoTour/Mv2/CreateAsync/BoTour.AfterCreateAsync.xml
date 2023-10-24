@@ -1,0 +1,185 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoTour" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.updateProperties(context.jsonQuery);
+
+var user = ApplicationContext.get("user");
+var pKey = PKey.next();
+me.setPKey(pKey);
+me.setDateFrom(Utils.createAnsiDateTimeToday());
+me.setDateThru(Utils.getMaxDate());
+me.setTmgStatus("Open");
+me.setReleaseButton(true);
+me.setCompleteButton(false);
+me.setReleaseInfoButton(false);
+me.setCompleteInfoButton(false);
+me.setDefaultUsrMainPKey(user.getPKey());
+me.setActualUsrMainPKey(user.getPKey());
+me.setTimeFrom(Utils.createAnsiTimeNow());
+me.setTimeThru("00:00");
+me.setCancelReason(" ");
+me.setVehicleStatusStart(" ");
+me.setVehicleStatusEnd(" ");
+var jsonParams = me.prepareLookupsLoadParams(me);
+
+var promise = Facade.loadLookupsAsync(jsonParams)
+  .then(function (lookups) {
+    me.assignLookups(lookups);
+
+    return BoFactory.loadObjectByParamsAsync(
+      "BoTourMeta",
+      me.getQueryBy("pKey", me.getTmgMetaPKey())
+    );
+  })
+  .then(function (object) {
+    me.setBoTourMeta(object);
+    me.setSalesOrg(ApplicationContext.get("user").getSalesOrg());
+    me.setSealOK("0");
+    me.setCashHandlingRequired(me.getBoTourMeta().getCashHandlingRequired());
+    me.setExpressCheckOutAllowed(
+      me.getBoTourMeta().getExpressCheckOutAllowed()
+    );
+    me.setPalletCheckOutAllowed(me.getBoTourMeta().getPalletCheckOutAllowed());
+    me.setCountingGroupCheckOutAllowed(
+      me.getBoTourMeta().getCountingGroupCheckOutAllowed()
+    );
+    me.setConsiderMileage(me.getBoTourMeta().getConsiderMileage());
+    me.setConsiderVehicle(me.getBoTourMeta().getConsiderVehicle());
+    me.setConsiderVehicleStatus(me.getBoTourMeta().getConsiderVehicleStatus());
+    me.setConsiderSealCheck(me.getBoTourMeta().getConsiderSealCheck());
+    me.setDeleteCallAllowed(me.getBoTourMeta().getDeleteCallAllowed());
+    me.setDisplaySealWarning(me.getBoTourMeta().getDisplaySealWarning());
+    me.setDeliveryListPreviewPrintout(
+      me.getBoTourMeta().getDeliveryListPreviewPrintout()
+    );
+    me.setPrintUIGroup(me.getBoTourMeta().getPrintUIGroup());
+    me.setSealCheckPresettingPolicy(
+      me.getBoTourMeta().getSealCheckPresettingPolicy()
+    );
+    me.setAgendaScanBehavior(me.getBoTourMeta().getAgendaScanBehavior());
+    me.setCoDriverRequired(me.getBoTourMeta().getCoDriverRequired());
+    me.setCompletionReleaseTime(Utils.getMinDate());
+    me.setCashCheckInRequired(me.getBoTourMeta().getCashCheckInRequired());
+    me.setMultipleCashCheckInAllowed(
+      me.getBoTourMeta().getMultipleCashCheckInAllowed()
+    );
+    me.setDefaultCurrency(me.getBoTourMeta().getDefaultCurrency());
+    me.setAdvancedUOMAllowed(me.getBoTourMeta().getAdvancedUOMAllowed());
+    me.setTSRLevelOfDetail(me.getBoTourMeta().getTSRLevelOfDetail());
+    me.setTSRShowTourInfo(me.getBoTourMeta().getTSRShowTourInfo());
+    me.setTSRShowVisitInfo(me.getBoTourMeta().getTSRShowVisitInfo());
+    me.setTSRShowInventoryInfo(me.getBoTourMeta().getTSRShowInventoryInfo());
+    me.setTSRShowDeliveryDocInfo(
+      me.getBoTourMeta().getTSRShowDeliveryDocInfo()
+    );
+    me.setTSRShowSalesDocInfo(me.getBoTourMeta().getTSRShowSalesDocInfo());
+    me.setTSRShowCashInfo(me.getBoTourMeta().getTSRShowCashInfo());
+    me.setPreviewPrintout(me.getBoTourMeta().getPreviewPrintout());
+    me.setInclDSDActivities(me.getBoTourMeta().getInclDSDActivities());
+    me.setInclPreSalesActivities(
+      me.getBoTourMeta().getInclPreSalesActivities()
+    );
+    me.setInclMerchActivities(me.getBoTourMeta().getInclMerchActivities());
+    me.setInclOffRouteActivities(
+      me.getBoTourMeta().getInclOffRouteActivities()
+    );
+    me.setUsrDocMetaPKey(me.getBoTourMeta().getUsrDocMetaPKey());
+    me.setEARights();
+    me.getACL().addRight(AclObjectType.PROPERTY, "message", AclPermission.EDIT);
+
+    return BoFactory.loadObjectByParamsAsync("LoTmgMetaObjectRel", {
+      tmgMetaPKey: me.getTmgMetaPKey(),
+    });
+  })
+  .then(function (tmgMetaObjRel) {
+    var objRels = BoFactory.instantiate("LoTmgTourObjectRelations");
+    objRels.addItems(tmgMetaObjRel.serialize());
+    var objRelItems = objRels.getAllItems();
+
+    me.setLoTmgTourObjectRelations(objRels);
+    for (var i = 0; i < objRels.getAllItems().length; i++) {
+      objRelItems[i].setPKey(PKey.next());
+      objRelItems[i].setTmgTourPKey(me.getPKey());
+      objRelItems[i].setObjectStatus(STATE.NEW | STATE.DIRTY);
+    }
+    return BoFactory.loadObjectByParamsAsync("LoTmgMetaCheckRel", {
+      tmgMetaPKey: me.getTmgMetaPKey(),
+    });
+  })
+  .then(function (tmgMetaChkRel) {
+    var chkRel = BoFactory.instantiate("LoTmgTourCheckRelations");
+    chkRel.addItems(tmgMetaChkRel.serialize());
+    me.setLoTmgTourCheckRelations(chkRel);
+
+    var chkRelItems = chkRel.getAllItems();
+    for (var i = 0; i < chkRel.getAllItems().length; i++) {
+      chkRelItems[i].setPKey(PKey.next());
+      chkRelItems[i].setTmgTourPKey(me.getPKey());
+      chkRelItems[i].setObjectStatus(STATE.NEW | STATE.DIRTY);
+    }
+    //Call Number generator to create TourId
+    if (!Utils.isEmptyString(me.getBoTourMeta().getSysNumberPKey())) {
+      return SysNumber.getSysNumberAsync(me.getBoTourMeta().getSysNumberPKey());
+    } else {
+      return me.getPKey();
+    }
+  })
+  .then(function (sysnumber) {
+    //Set id
+    me.setTourId(sysnumber);
+
+    //create a description text for the newly created tour
+    var tourDescription;
+    if (!Utils.isEmptyString(me.getBoTourMeta().getSysNumberPKey())) {
+      tourDescription = me.getTourId();
+    } else {
+      tourDescription = "";
+    }
+
+    var loTourDescription = BoFactory.instantiate("LoTourDescription");
+
+    var liTourDescription = {
+      pKey: PKey.next(),
+      tmgTourPKey: me.getPKey(),
+      language: user.getLanguageSpoken(),
+      text: tourDescription,
+      objectStatus: STATE.NEW | STATE.DIRTY,
+    };
+
+    loTourDescription.addListItems([liTourDescription]);
+    loTourDescription.setCurrentByPKey(liTourDescription.getPKey());
+    me.setLoTourDescription(loTourDescription);
+
+    if (
+      !Utils.isEmptyString(
+        ApplicationContext.get("currentTourPKey")
+      ) &&
+      ApplicationContext.get("currentTourPKey") !== me.getPKey()
+    ) {
+      return BoFactory.loadObjectByParamsAsync("LuRunningTour", {}).then(
+        function (result) {
+          if (
+            !Utils.isDefined(result) ||
+            Utils.isEmptyString(result.getPKey())
+          ) {
+            ApplicationContext.set(
+              "currentTourPKey",
+              me.getPKey()
+            );
+          }
+
+          return me;
+        }
+      );
+    } else {
+      ApplicationContext.set("currentTourPKey", me.getPKey());
+
+      return me;
+    }
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

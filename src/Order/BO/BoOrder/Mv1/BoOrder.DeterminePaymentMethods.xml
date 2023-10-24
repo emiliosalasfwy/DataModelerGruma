@@ -1,0 +1,78 @@
+<BusinessLogic methodName="determinePaymentMethods" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+//Check document transaction type that allows payment taking
+var isCashCreditOrderPaymentAllowed = (me.getDocumentType() === "OrderEntry") &&
+    (me.getDocTaType() === "CashOrder" || me.getDocTaType() === "CreditOrder");
+var isCashCreditInvoicePaymentAllowed = (me.getDocumentType() === "Invoice") && 
+    (me.getDocTaType() === "InvoiceCashInvoice" || me.getDocTaType() === "InvoiceCreditInvoice");
+var paymentAllowed = isCashCreditOrderPaymentAllowed || isCashCreditInvoicePaymentAllowed;
+var syncStatus = me.getSyncStatus();
+
+var currentDate = Utils.createAnsiDateToday();
+var isPayerRoleValid = me.getLuOrderer().getPayerValidFrom() <= currentDate && me.getLuOrderer().getPayerValidThru() >= currentDate;
+
+if(isPayerRoleValid && paymentAllowed){
+  me.setIsOrderPaymentRelevant('1');
+} else {
+  me.setIsOrderPaymentRelevant('0'); 
+}
+
+if (me.getIsOrderPaymentRelevant() === '1') {
+  var jsonParams = [];
+  jsonParams.push({
+    field: "sdoMetaPKey",
+    operator: "EQ",
+    value: me.getSdoMetaPKey()
+  });
+
+  var jsonQuery = {};
+  jsonQuery.params = jsonParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LoPaymentMeta", jsonQuery)
+    .then(function(loPaymentMeta) {
+    if (Utils.isDefined(loPaymentMeta)) {
+      me.getBoOrderMeta().setLoPaymentMeta(loPaymentMeta);
+
+      var paymentMethodsDict = Utils.createDictionary();
+      var paymentTemplates = loPaymentMeta.getAllItems();
+
+      paymentTemplates.forEach(function(paymentTemplate) {
+        paymentMethodsDict.add(paymentTemplate.getPaymentMethod());
+      });
+
+      var customerPaymentMode = me.getLuOrderer().getPaymentMode();
+
+      //Check if order payment method is already set on order load then no need to set the payment method again
+      if (!paymentMethodsDict.containsKey(me.getPaymentMethod()) && me.getPhase() === BLConstants.Order.PHASE_INITIAL && me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE) {
+        //Set customer's preferred payment mode
+        if(!Utils.isEmptyString(customerPaymentMode) && paymentMethodsDict.containsKey(customerPaymentMode)) {
+          me.setPaymentMethod(customerPaymentMode);
+        } 
+        //Set Cash as preferred payment method if customer payment mode not available
+        else if(paymentMethodsDict.containsKey("Cash")) {
+          me.setPaymentMethod("Cash");
+        }
+        //Set first found payment method
+        else if (paymentTemplates.length > 0) {
+          me.setPaymentMethod(paymentTemplates[0].getPaymentMethod());
+        }
+        //Set payment method as empty if no order payment template assigned
+        else {
+          me.setPaymentMethod(" ");
+        }
+      }
+
+      var paymentMethodToggleList = Utils.getToggleListObject("PaymentMethod", paymentMethodsDict.keys());
+      me.setAllowedPaymentMethods(paymentMethodToggleList);
+    }
+  });
+}
+else {
+  me.setPaymentMethod(" ");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

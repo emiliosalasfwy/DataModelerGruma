@@ -1,0 +1,66 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoIssue" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+var userPKey = ApplicationContext.get('user').getPKey();
+var customerManagementInfoLookup = me.getLuCustomerManagementInfo();
+var readOnlyBySubstitution = "0";
+var substitutedIssue = "0";
+
+if (Utils.isDefined(customerManagementInfoLookup)) {
+
+  // Hide substitution information if no substitution is active
+  if ((customerManagementInfoLookup.getIsSubstituted() == "0") && (customerManagementInfoLookup.getHasSubstitute() == "0")
+      || ((me.getResponsiblePKey() == userPKey) && (customerManagementInfoLookup.getHasSubstitute() == "0"))
+      || ((customerManagementInfoLookup.getIsSubstituted() == "1") && (me.getResponsiblePKey() != customerManagementInfoLookup.getSubstitutedUsrMainPKey()) )) {
+
+    var aclLuCustomerManagementInfo = customerManagementInfoLookup.getACL();
+    aclLuCustomerManagementInfo.removeRight(AclObjectType.PROPERTY, "combinedSubstitutedName", AclPermission.VISIBLE);
+    aclLuCustomerManagementInfo.removeRight(AclObjectType.PROPERTY, "combinedSubstituteName", AclPermission.VISIBLE);
+  }
+
+  // Set edit rights based on substitution
+  // a) Substituted user looses edit rights during an active substitution
+  if (customerManagementInfoLookup.getHasSubstitute() == "1") {
+    substitutedIssue = "1";
+
+    if ((me.getResponsiblePKey() === customerManagementInfoLookup.getReferenceUsrMainPKey()) && (customerManagementInfoLookup.getHasSubstituteInLeadFollowUpTime() === "0")) {
+      readOnlyBySubstitution = "1";
+    }
+  }
+
+  // b) Substitute gets edit rights during active substitution
+  if (customerManagementInfoLookup.getIsSubstituted() == "1") {
+    substitutedIssue = "1";
+
+    // If in lead or followup time - no edit rights for substiute
+    if ((me.getResponsiblePKey() !== customerManagementInfoLookup.getReferenceUsrMainPKey()) && (customerManagementInfoLookup.getSubstitutedInLeadFollowUpTime() == "1")) {
+      readOnlyBySubstitution = "1";
+    }
+  }
+}
+
+if (me.getIssuePhase().toLowerCase() === "closed" || me.getIssuePhase().toLowerCase() === "cancelled"
+    || readOnlyBySubstitution == "1"
+    || ((readOnlyBySubstitution === "0") && (substitutedIssue == "0") && (me.getResponsiblePKey()  != userPKey))) {
+
+  // Issue fields should not be editable.
+  acl.removeRight(AclObjectType.OBJECT, "BoIssue", AclPermission.EDIT);
+
+  //Issue Note should also be not editable
+  if(Utils.isDefined( me.getBoIssueNote())) {
+    acl = me.getBoIssueNote().getACL();
+    acl.removeRight(AclObjectType.OBJECT, "BoIssueNote", AclPermission.EDIT);
+  }
+}
+else {
+  acl.setAce({
+    "objectType" : AclObjectType.OBJECT,
+    "objectName" : "BoIssue",
+    "rights" : AclPermission.ALL,
+    "grant" : true
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

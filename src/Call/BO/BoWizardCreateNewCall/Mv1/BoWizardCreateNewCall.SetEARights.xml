@@ -1,0 +1,53 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+if(me.getCallMetaLookup().getCompanyRequired()==="Not required") {
+  me.getCustomerLookup().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  me.setCustomerPKey(" ");
+}
+else {
+  me.getCustomerLookup().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+  me.getCustomerLookup().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  me.setCustomerPKey(me.getCustomerLookup().getPKey());
+}
+
+if(me.getAllDay() == "1") {
+  acl.removeRight(AclObjectType.PROPERTY, "timeFrom", AclPermission.VISIBLE);
+}
+else {
+  acl.addRight(AclObjectType.PROPERTY, "timeFrom", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "timeFrom", AclPermission.VISIBLE);
+}
+
+// additional info
+me.getJobListLookup().getACL().removeRight(AclObjectType.OBJECT, "LuJobList", AclPermission.EDIT);
+acl.removeRight(AclObjectType.PROPERTY, "tripListName", AclPermission.EDIT);
+
+if(me.getMode() == "JobListPlanning") {
+  acl.removeRight(AclObjectType.PROPERTY, "tripListName", AclPermission.VISIBLE);
+  me.getCustomerLookup().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  me.getCallMetaLookup().getACL().removeRight(AclObjectType.PROPERTY, "text", AclPermission.VISIBLE);
+}
+else if(me.getMode() == "TripListPlanning") {
+  me.getJobListLookup().getACL().removeRight(AclObjectType.OBJECT, "LuJobList", AclPermission.VISIBLE);
+  me.getCustomerLookup().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "timeFrom", AclPermission.VISIBLE);
+}
+else if(me.getMode() == "CustomerPlanning") {
+  me.getJobListLookup().getACL().removeRight(AclObjectType.OBJECT, "LuJobList", AclPermission.VISIBLE);
+  me.getCustomerLookup().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "tripListName", AclPermission.VISIBLE);
+}
+else {
+  me.getJobListLookup().getACL().removeRight(AclObjectType.OBJECT, "LuJobList", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "tripListName", AclPermission.VISIBLE);
+}
+
+if(me.getMode() === "Overdue" || me.getMode() === "FollowUp") {
+  me.getCustomerLookup().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

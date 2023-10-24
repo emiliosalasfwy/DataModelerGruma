@@ -1,0 +1,149 @@
+<BusinessLogic methodName="loadTourChecklist" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var questionlist = [];
+
+// CreateTourCheckQuestionList
+var createTourCheckQtn = function(tmgTourPKey, tmgCheckPKey, usage, sort) {
+  var jsonQuery = {};
+  var tourCheckType;
+  var tourText;
+  var tourCheckTypeDefText;
+  var sortTextUI;
+
+  jsonQuery.params = [{ "field" : "pKey", "value" : tmgCheckPKey }];
+  
+  return BoFactory.loadObjectByParamsAsync("LuTourCheck", jsonQuery).then(
+    function(luTourCheck) {
+
+      //Get Tour check-CheckType, Text
+      if(Utils.isDefined(luTourCheck)){
+        tourCheckType = luTourCheck.getCheckType();
+        tourText = luTourCheck.getText();
+      }
+
+      // Get Tour Check Type Definitions
+      if(usage == "S" && tourCheckType == "SecurityCheck"){
+        tourCheckTypeDefText = Localization.resolve("BoTour_StartOfDaySecurityCheck");
+        sortTextUI = "1";
+      }
+      if(usage == "S" && tourCheckType == "VehicleCheck"){
+        tourCheckTypeDefText = Localization.resolve("BoTour_StartOfDayVehicleCheck");
+        sortTextUI = "2";
+      }
+      if(usage == "E" && tourCheckType == "SecurityCheck"){
+        tourCheckTypeDefText = Localization.resolve("BoTour_EndOfDaySecurityCheck");
+        sortTextUI = "3";
+      }
+      if(usage == "E" && tourCheckType == "VehicleCheck"){
+        tourCheckTypeDefText = Localization.resolve("BoTour_EndOfDayVehicleCheck");
+        sortTextUI = "4";
+      }
+      //Build dictionary on PKey for repeated questions.
+      var questionitem = {
+        "pKey" : PKey.next(),
+        "tmgTourPKey" : tmgTourPKey,
+        "tmgCheckPKey" : tmgCheckPKey,
+        "value" : "0",
+        "usage" :  usage,
+        "checkType" : tourCheckType,
+        "text" : tourText,
+        "sort" : sort,
+        "checkDefinitionText" : tourCheckTypeDefText,
+        "sortTextUI" : sortTextUI,
+        "objectStatus": STATE.NEW | STATE.DIRTY
+      };
+      questionlist.push(questionitem);
+    }
+  );
+};
+
+//New Tour - Tour Check Questions.
+if(me.getLoTourChecks() === undefined || me.getLoTourChecks().getAllItems().length === 0) {
+  var stateNewDirty = STATE.NEW | STATE.DIRTY;
+  if(me.getObjectStatus() == stateNewDirty){
+    
+    promise = BoFactory.loadObjectByParamsAsync("LoTmgMetaCheckRel",{"tmgMetaPKey" : me.getTmgMetaPKey()}).then(
+      function (loTmgMetaCheckRel) {
+        
+        var createTourChkQtnPromise=[];
+        if(Utils.isDefined(loTmgMetaCheckRel)){
+          var liTourCheckRelItems = loTmgMetaCheckRel.getAllItems();
+          if(liTourCheckRelItems.length > 0){
+            for (var i = 0; i < liTourCheckRelItems.length; i++){ 
+              createTourChkQtnPromise.push(createTourCheckQtn(me.getPKey(), liTourCheckRelItems[i].getTmgCheckPKey(),liTourCheckRelItems[i].getUsage(),liTourCheckRelItems[i].getSort()));
+            }
+          }
+        }
+
+        return when.all(createTourChkQtnPromise).then(
+          function () {
+            //check on questionlist
+            if(questionlist.length > 0){
+              var loQuestions= me.getLoTourChecks();
+              loQuestions.addObjectItems(questionlist);
+              me.setLoTourChecks(loQuestions);
+              if( me.getLoTourChecks().getAllItems().length > 0){
+                for (var i = 0; i < me.getLoTourChecks().getAllItems().length; i++) {
+                  // Set DataType and ToggleId for enabling checkbox on UI
+                  me.getLoTourChecks().getAllItems()[i].setDataType("Toggle");
+                  me.getLoTourChecks().getAllItems()[i].setToggleId("Bool");
+                }
+              }
+              me.getLoTourChecks().setEARights(me.getTmgStatus());
+              me.addItemChangedEventListener('loTourChecks', me.onQuestionChanged);
+              me.getLoTourChecks().orderBy({
+                "sortTextUI" : "ASC",
+                "sort" : "ASC"
+              });
+            }
+          }
+        );
+      }
+    );
+  } else { // Load TruckCheckList
+    var jqueryQuery = {};
+    jqueryQuery.params = [{ "field" : "tmgMainPKey", "value" : me.getPKey() }];
+
+    promise = BoFactory.loadObjectByParamsAsync("LoTourChecks", jqueryQuery).then(
+      function (loTourChecks) {
+        // Set DataType and ToggleId for enabling checkbox on UI
+        if(Utils.isDefined(loTourChecks)){
+          if(loTourChecks.getAllItems().length > 0){
+            for (var i = 0; i < loTourChecks.getAllItems().length; i++) {
+              loTourChecks.getAllItems()[i].setDataType("Toggle");
+              loTourChecks.getAllItems()[i].setToggleId("Bool");
+            }
+          }
+        }
+        me.setLoTourChecks(loTourChecks);
+        me.getLoTourChecks().setEARights(me.getTmgStatus());
+        me.addItemChangedEventListener('loTourChecks', me.onQuestionChanged);
+        me.getLoTourChecks().orderBy({
+          "sortTextUI" : "ASC",
+          "sort" : "ASC"
+        });
+      }
+    );
+  }
+} else {
+
+  for (var i = 0; i < me.getLoTourChecks().getAllItems().length; i++) {
+    // Set DataType and ToggleId for enabling checkbox on UI
+    me.getLoTourChecks().getAllItems()[i].setDataType("Toggle");
+    me.getLoTourChecks().getAllItems()[i].setToggleId("Bool");
+  }
+
+  me.getLoTourChecks().setEARights(me.getTmgStatus());
+  me.addItemChangedEventListener('loTourChecks', me.onQuestionChanged);
+  me.getLoTourChecks().orderBy({
+    "sortTextUI" : "ASC",
+    "sort" : "ASC"
+  });
+  
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

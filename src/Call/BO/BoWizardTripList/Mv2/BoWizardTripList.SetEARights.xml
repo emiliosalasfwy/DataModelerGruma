@@ -1,0 +1,42 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardTripList" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tripListMode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Hide trip list lookup field for create trip list
+if(tripListMode === "CreateTripList") {
+  this.getTripListLookup().getACL().removeRight(AclObjectType.PROPERTY, "text", AclPermission.VISIBLE);
+}
+// For update trip list, if no trip list is selected then hide other fields
+if(tripListMode === "UpdateTripList") {
+  if (Utils.isEmptyString(this.getTripListLookup().getPKey())) {
+    this.getACL().removeRight(AclObjectType.PROPERTY, "description", AclPermission.VISIBLE);
+    this.getACL().removeRight(AclObjectType.PROPERTY, "type", AclPermission.VISIBLE);
+    this.getACL().removeRight(AclObjectType.PROPERTY, "validFrom", AclPermission.VISIBLE);
+    this.getACL().removeRight(AclObjectType.PROPERTY, "validThru", AclPermission.VISIBLE);
+    this.getACL().removeRight(AclObjectType.PROPERTY, "dayOfWeek", AclPermission.VISIBLE);
+    this.getACL().removeRight(AclObjectType.PROPERTY, "responsibleUser", AclPermission.VISIBLE);
+
+  } else {
+    this.getACL().addRight(AclObjectType.PROPERTY, "description", AclPermission.VISIBLE);
+    this.getACL().addRight(AclObjectType.PROPERTY, "type", AclPermission.VISIBLE);
+    this.getACL().addRight(AclObjectType.PROPERTY, "validFrom", AclPermission.VISIBLE);
+    this.getACL().addRight(AclObjectType.PROPERTY, "validThru", AclPermission.VISIBLE);
+    this.getACL().addRight(AclObjectType.PROPERTY, "dayOfWeek", AclPermission.VISIBLE);
+    this.getACL().addRight(AclObjectType.PROPERTY, "responsibleUser", AclPermission.VISIBLE);
+
+    this.getACL().removeRight(AclObjectType.PROPERTY, "type", AclPermission.EDIT);
+  }
+}
+
+if (tripListMode === "DeleteTripList") {
+  this.getACL().removeRight(AclObjectType.PROPERTY, "description", AclPermission.VISIBLE);
+  this.getACL().removeRight(AclObjectType.PROPERTY, "type", AclPermission.VISIBLE);
+  this.getACL().removeRight(AclObjectType.PROPERTY, "validFrom", AclPermission.VISIBLE);
+  this.getACL().removeRight(AclObjectType.PROPERTY, "validThru", AclPermission.VISIBLE);
+  this.getACL().removeRight(AclObjectType.PROPERTY, "dayOfWeek", AclPermission.VISIBLE);
+  this.getACL().removeRight(AclObjectType.PROPERTY, "responsibleUser", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

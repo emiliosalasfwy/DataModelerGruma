@@ -1,0 +1,36 @@
+<BusinessLogic methodName="checkLocationCapturing" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+if (me.getCaptureLocation() == "1") {
+  promise = Utils.getCurrentPosition().then(function (position) {
+    if (!Utils.isDefined(position)) {
+      position = { longitude: 0, latitude: 0 };
+    }
+    if (Utils.isSfBackend()) {
+      me.getReferenceObject().setReleaseGeolocationLatitude(position.latitude);
+      me.getReferenceObject().setReleaseGeolocationLongitude(
+        position.longitude
+      );
+    } else {
+      var loGeoLoc = BoFactory.instantiate("LoCallLocation");
+      var liGeoLoc = {
+        pKey: PKey.next(),
+        logDate: Utils.createAnsiDateTimeNow(),
+        locationStatus: "Ok",
+        signalDate: Utils.createAnsiDateTimeNow(),
+        latitude: position.latitude,
+        longitude: position.longitude,
+        referencePKey: me.getReferenceObject().getPKey(),
+        usage: "SysRelease",
+        referenceObjectPhase: "Released",
+        objectStatus: STATE.NEW | STATE.DIRTY,
+      };
+      loGeoLoc.addListItems([liGeoLoc]);
+      me.getReferenceObject().setLoGeoLocation(loGeoLoc);
+    }
+  });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

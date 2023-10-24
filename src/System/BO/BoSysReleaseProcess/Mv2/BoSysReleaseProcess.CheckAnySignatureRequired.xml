@@ -1,0 +1,12 @@
+<BusinessLogic methodName="checkAnySignatureRequired" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+var signRequired = "0";
+
+if(stepItems.length > 0){
+  signRequired = "1";
+}]]>
+</Code>
+  <Return name="result" value="signRequired" />
+</BusinessLogic>

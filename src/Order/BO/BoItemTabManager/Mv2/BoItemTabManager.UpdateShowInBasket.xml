@@ -1,0 +1,28 @@
+<BusinessLogic methodName="updateShowInBasket" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.getBoOrder().getLoItems().suspendListRefresh();
+
+var uomPKeyDict = Utils.createDictionary();
+var orderItems =  me.getBoOrder().getLoItems().getAllItems();
+
+orderItems.forEach(function(item) {
+  if(item.getQuantity() > 0) {
+    uomPKeyDict.add(item.getRefPKey().trim() + item.getSdoParentItemPKey().trim());
+  }
+});
+
+// Display uoms for ordered products in the basket
+orderItems.forEach(function(item) {
+  if(uomPKeyDict.containsKey(item.getRefPKey().trim() + item.getSdoParentItemPKey().trim())) {
+    item.setShowInBasket("1");
+  }
+  else {
+    item.setShowInBasket("0");
+  }
+});
+
+me.getBoOrder().getLoItems().resumeListRefresh(true);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

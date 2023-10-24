@@ -1,0 +1,75 @@
+<BusinessLogic methodName="validateScannedItem" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PrdMainPKey" type="DomPKey" />
+    <MethodInput name="FilterByBpaAssortment" type="DomBool" />
+    <MethodInput name="CurrentItemTemplate" type="LiOrderItemMeta" />
+    <MethodInput name="Listing" type="DomString" />
+    <MethodInput name="ListingWithModules" type="DomString" />
+    <MethodInput name="HitClosedListing" type="DomBool" />
+    <MethodInput name="CollectClosedListing" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var items = [];
+var result = "";
+
+if ((Utils.isEmptyString(me.getSelectedPromotionPKey())) && !((me.getBoOrderMeta().getConsiderSelectablePromotion() == "1") && (me.getBoOrderMeta().getSpecialOrderHandling() == "ExclusiveSpecialOrder"))) {
+  if (CurrentItemTemplate.getUseClosedListing() == "1") {
+    // If listings for current customer are closed for hit algorithm
+    if (HitClosedListing.getId() == 1) {
+      if (Listing == "Hit")  {
+        items = me.getLoProductForAdd().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}, {"listing" : "Hit", "op" : "EQ"} ]);
+      }
+      else {
+        if (ListingWithModules == "Hit") {
+          items = me.getLoProductForAdd().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}, {"listingWithModules" : "Hit", "op" : "EQ"} ]);
+        }
+      }
+    }
+    // If listings for current customer are closed for collection algorithm
+    if (CollectClosedListing.getId() == 1) {
+      if (Listing == "Collection") {
+        items = me.getLoProductForAdd().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}, {"listing" : "None", "op" : "NE"} ] );
+      }
+      else {
+        if (ListingWithModules == "Collection") {
+          items = me.getLoProductForAdd().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}, {"listingWithModules" : "None", "op" : "NE"} ] );
+        }
+      }
+    }
+  }
+  else {
+    items = me.getLoProductForAdd().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}]);
+  }
+}
+else {
+  if (me.getBoOrderMeta().getConsiderSelectablePromotion() == "1"){
+    if (CurrentItemTemplate.getMain() == "1") {
+      items = me.getLoItems().getItemsByParamArray([ {"prdMainPKey" : PrdMainPKey, "op" : "EQ"}, {"promotionPKey" : me.getSelectedPromotionPKey(), "op" : "EQ"} ] );
+    }
+  }
+}
+
+//If returned array is empty, the product is not valid for the current customer
+if (items.length > 0) {
+  promise = when.resolve("valid");
+}
+else {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  if (me.getBoOrderMeta().getConsiderSelectablePromotion() == "1") {
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("Product_ScanProductProcess.ProductScannedNotInPromotionMsg"), buttonValues)
+      .then(function (input) {
+      return "notValid";
+    });
+  }
+  else {
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"), Localization.resolve("OrderInvalidProductDuringBarcodeScan"), buttonValues)
+      .then(function (input) {
+      return "notValid";
+    });
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

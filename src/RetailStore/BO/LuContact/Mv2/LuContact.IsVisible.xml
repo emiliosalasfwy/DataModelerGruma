@@ -1,0 +1,22 @@
+<BusinessLogic methodName="isVisible" businessObjectClass="LuContact" businessObjectType="lookupobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fieldName" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+var visible = true;
+
+
+switch (fieldName) { 
+  case 'email':
+    if (Utils.isEmptyString(me.getEmail())) {
+ visible = false;
+	}
+    break;
+    case 'phone':
+    if (Utils.isEmptyString(me.getPhone())) {
+ visible = false;
+	}
+    break;
+}]]></Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

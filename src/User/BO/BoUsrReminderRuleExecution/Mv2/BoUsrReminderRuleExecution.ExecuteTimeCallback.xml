@@ -1,0 +1,71 @@
+<BusinessLogic methodName="executeTimeCallback" businessObjectClass="BoUsrReminderRuleExecution" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timerId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isDefined(timerId) && !Utils.isEmptyString(timerId)) {
+  promise = BoFactory.loadObjectByParamsAsync("LuUsrReminderRuleById", this.getQueryBy("ruleId", timerId)).then(
+    function (result) {
+      if (result && Utils.isDefined(result.getMessageContent())) {
+        //if user exit is defined
+        if (Utils.isDefined(result.getConditionUserExitId()) && !Utils.isEmptyString(result.getConditionUserExitId())) {
+
+          return me.getReminderRuleConditionResult(result.getConditionUserExitId(), parseInt(result.getConditionThreshold(), 10)).then(
+            function (conditionNotFullfilled) {
+              if (conditionNotFullfilled) {
+                var buttonValues = {};
+                buttonValues[Localization.resolve("OK")] = "ok";
+                return MessageBox.displayMessage(result.getMessageTitle(), result.getMessageContent(), buttonValues);
+              }
+            }
+          );
+
+        } else { //if no user exit is defined
+
+          return BoFactory.loadObjectByParamsAsync("LoTimeEntryByActivityType", {
+            "activityType" : result.getConditionActivityType(),
+            "timeCardPKey" : ApplicationContext.get("openTimeCardPKey")
+          }).then(
+            function (timeEntries) {
+
+              var conditionThreshold = parseInt(result.getConditionThreshold(), 10);
+
+              //calculate duration also for running time entries
+              var timeEntryList = timeEntries.getAllItems();
+              var duration = 0;
+              var now;
+              var now_utc;
+              var from_utc;
+              var dateDiffInMins;
+              for (var i = 0; i < timeEntryList.length; i++) {
+                //check if TE is running
+                if (timeEntryList[i].getDuration() === 0 && timeEntryList[i].getEffectiveUTCTimeThru() === Utils.getMinDate()) {
+                  now = Utils.createDateNow();
+                  now_utc = Utils.createSpecificDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+                  from_utc = Utils.convertAnsiDate2Date(timeEntryList[i].getEffectiveUTCTimeFrom());
+                  dateDiffInMins = parseInt(((now_utc - from_utc) / (60 * 1000)), 10);
+                  duration = duration + dateDiffInMins;
+                } else {
+                  duration = duration + timeEntryList[i].getDuration();
+                }
+              }
+
+              if (duration < conditionThreshold) {
+                var buttonValues = {};
+                buttonValues[Localization.resolve("OK")] = "ok";
+                return MessageBox.displayMessage(result.getMessageTitle(), result.getMessageContent(), buttonValues);
+              }
+            }
+          );
+        } //end if message content
+      }
+    }
+  ); //end read LuUsrReminderRuleById
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,104 @@
+<BusinessLogic methodName="createTransactionForOrderItem" businessObjectClass="LoInventoryTransaction" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="LiOrderItem" />
+    <MethodInput name="ivcInformation" type="Object" />
+    <MethodInput name="checkUserInventoryOver" type="DomSdoCheckType" />
+    <MethodInput name="checkQuotaOver" type="DomSdoCheckType" />
+    <MethodInput name="commitDate" type="DomDate" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var jsonIvcTaData = {};
+var convertedTransactionValue;
+
+// Create inventory transaction
+jsonIvcTaData = {};
+jsonIvcTaData.pKey = PKey.next();
+jsonIvcTaData.ivcMainPKey = ivcInformation.ivcMainPKey;
+jsonIvcTaData.ivcTaMetaPKey = ivcInformation.ivcMetaByItemMeta.getIvcTaMetaPKey();
+jsonIvcTaData.sdoMainPKey = mainItem.getSdoMainPKey();
+jsonIvcTaData.sdoItemPKey = mainItem.getPKey();
+jsonIvcTaData.accounted = "0";
+jsonIvcTaData.initiationDate = Utils.createAnsiDateToday();
+jsonIvcTaData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+jsonIvcTaData.initiatorUsrMainPKey = ApplicationContext.get('user').getPKey();
+jsonIvcTaData.chargeDate = commitDate;
+jsonIvcTaData.paymentMethod = "";
+//Get the uom from inventory
+var uom = ivcInformation.unitConversionInformation.filter(function(x){
+  if(x.getUnitType() ==  mainItem.getQuantityLogisticUnit()){
+    return x;
+  }
+});
+
+//Convert inventory balance to unit of item 
+if(uom.length > 0) {
+  convertedTransactionValue = ivcInformation.unitConversionInformation.convertLogisticUnitToIvcMeasure(ivcInformation.ivcMetaByItemMeta.getIvcMeasure(), mainItem.getQuantity(), mainItem.getQuantityLogisticUnit(), uom[0].getPiecesPerSmallestUnit());
+}
+else {
+  convertedTransactionValue = ivcInformation.unitConversionInformation.convertLogisticUnitToIvcMeasure(ivcInformation.ivcMetaByItemMeta.getIvcMeasure(), mainItem.getQuantity(), mainItem.getQuantityLogisticUnit(), mainItem.getPiecesPerSmallestUnit());
+}
+
+//Determine amount and algebraic sign        
+if (ivcInformation.ivcMetaByItemMeta.getTaControl() == "Withdraw") {
+  jsonIvcTaData.amount = convertedTransactionValue * (-1);
+} else {
+  jsonIvcTaData.amount = convertedTransactionValue;
+}
+
+//Validate inventory overdrawn
+var balanceAfterTransaction = ivcInformation.balance + jsonIvcTaData.amount;
+var validationError;
+
+if (balanceAfterTransaction < 0) {
+  var valueForMessage = Math.round(ivcInformation.unitConversionInformation.convertIvcMeasureToLogisticUnit(ivcInformation.ivcMetaByItemMeta.getIvcMeasure(), Math.abs(balanceAfterTransaction), mainItem.getQuantityLogisticUnit(), mainItem.getPiecesPerSmallestUnit()));
+
+  //Validate user inventory over
+  if ((ivcInformation.ivcMetaByItemMeta.getMetaId() == "UserInventory") && (checkUserInventoryOver != "0")) {
+    if (checkUserInventoryOver == "1") {
+      // "Yes" - Prevent save 
+
+      validationError = {
+        "level": "error",
+        "objectClass": "BoOrder",
+        "messageID": "CasSdoOrderQuantityExceedsUserInventorySummary",
+        "messageParams": { "summary": mainItem.getText1() + " (" + valueForMessage + " " + mainItem.getQuantityLogisticUnit() + ")" }
+      };
+    } else {
+      // "Warning" - Display warning message and proceed with save
+
+      validationError = {
+        "level": "warning",
+        "objectClass": "BoOrder",
+        "messageID": "CasSdoOrderQuantityExceedsUserInventoryWarningSummary",
+        "messageParams": { "summary": mainItem.getText1() + " (" + valueForMessage + " " + mainItem.getQuantityLogisticUnit() + ")" }
+      };
+    }
+  }
+
+  //Validate quota over
+  if ((ivcInformation.ivcMetaByItemMeta.getMetaId() == "Quota") && (checkQuotaOver != "0")) {
+    if (checkQuotaOver == "1") {
+      // "Yes" - Prevent save
+
+      validationError = {
+        "level": "error",
+        "objectClass": "BoOrder",
+        "messageID": "CasSdoOrderQuantityExceedsQuotaSummary",
+        "messageParams": { "summary": mainItem.getText1() + " (" + valueForMessage + " " + mainItem.getQuantityLogisticUnit() + ")" }
+      };
+    } else {
+      // "Warning" - Display warning message and proceed with save
+
+      validationError = {
+        "level": "warning",
+        "objectClass": "BoOrder",
+        "messageID": "CasSdoOrderQuantityExceedsQuotaWarningSummary",
+        "messageParams": { "summary": mainItem.getText1() + " (" + valueForMessage + " " + mainItem.getQuantityLogisticUnit() + ")" }
+      };
+    }
+  }
+}
+
+me.addItems([jsonIvcTaData]);
+me.getItemsByParam({ "pKey": jsonIvcTaData.pKey })[0].setObjectStatus(STATE.NEW | STATE.DIRTY);]]></Code>
+  <Return name="validationError" value="validationError" />
+</BusinessLogic>

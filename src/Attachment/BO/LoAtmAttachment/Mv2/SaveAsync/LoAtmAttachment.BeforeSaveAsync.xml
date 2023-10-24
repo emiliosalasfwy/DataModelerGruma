@@ -1,0 +1,8 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoAtmAttachment" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[Facade.saveListAsync(this);
+var promise=when.resolve(context);]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

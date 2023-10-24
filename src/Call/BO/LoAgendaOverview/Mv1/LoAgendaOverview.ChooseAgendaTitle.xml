@@ -1,0 +1,48 @@
+<BusinessLogic methodName="chooseAgendaTitle" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentDate" type="String" />
+    <MethodInput name="displayCalendarWeek" type="Bool" />
+    <MethodInput name="autoPlanning" type="String" />
+    <MethodInput name="userName" type="String" />
+    <MethodInput name="pKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var updateCurrentDate = function(){
+  var startDayOfWeek = Utils.convertAnsiDate2Date(currentDate);
+  var dayValue = startDayOfWeek.getDay();
+  var difference = startDayOfWeek.getDate() - dayValue + (dayValue === 0 ? -6:1);
+  startDayOfWeek = Utils.createDateByMilliSec(startDayOfWeek.setDate(difference));
+  var currentweek = Utils.getCalendarWeekISO(startDayOfWeek);
+  currentDate = Localization.localize(Utils.convertAnsiDate2Date(currentDate), "date");
+  currentDate = Localization.resolve("Display_Current_Week") + " " + currentweek + " - " + currentDate;
+};
+
+var promise = BoFactory.loadObjectByParamsAsync("LuRunningTour", {"UserPKey" : ApplicationContext.get('user').getPKey()}).then(
+  function(runningTour) {
+    var tourPkey = (ApplicationContext.get("currentTourPKey"));
+    if(Utils.isDefined(tourPkey) && !Utils.isEmptyString(tourPkey)) {
+      if(!Utils.isPhone() && Utils.isDefined(userName) && pKey !== ApplicationContext.get('user').getPKey()){
+        updateCurrentDate();
+        return currentDate + " - " + userName;
+      } else {
+        updateCurrentDate();
+        return currentDate;
+      }
+    }
+    else {
+      if((autoPlanning == "1") || (displayCalendarWeek.getId() == "1")) {
+        updateCurrentDate();
+      } else {
+        currentDate = Localization.localize(Utils.convertAnsiDate2Date(currentDate), "date");
+      }
+
+      if(!Utils.isPhone() && Utils.isDefined(userName) && pKey !== ApplicationContext.get('user').getPKey()) {
+        return currentDate + " - " + userName;
+      } else {
+        return currentDate;
+      }
+    }
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,54 @@
+<BusinessLogic methodName="esCopySignatures" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingDoc" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var deferreds = [];
+
+if(Utils.isDefined(me.getLoSysSignatureBlob()) && Utils.isDefined(splittingDoc.getLoSysSignatureBlob()))
+{
+  var sourceBlobs = me.getLoSysSignatureBlob().getAllItems();
+  var targetBlobs = splittingDoc.getLoSysSignatureBlob().getAllItems();
+  var numberOfBlobs = sourceBlobs.length;
+
+  for(var i = 0; i < numberOfBlobs; i++)
+  {
+    deferreds.push(Facade.copyAttachmentAsync(sourceBlobs[i].getPKey(), targetBlobs[i].getPKey(), 'SysSignature'));
+  }
+
+  promise = when.all(deferreds)
+    .then(
+    function(infoArray)
+    {
+      var targets = splittingDoc.getLoSysSignatureBlob();
+
+      for (var i = 0; i < infoArray.length; i++)
+      {
+        var copiedAttachmentPKey = infoArray[i].path.split("/");
+
+        if (copiedAttachmentPKey.length > 1)
+        {
+          copiedAttachmentPKey = copiedAttachmentPKey[1].split(".");
+
+          if (copiedAttachmentPKey.length > 0)
+          {
+            var copiedAttachmentType = copiedAttachmentPKey[1];
+            copiedAttachmentPKey = copiedAttachmentPKey[0];
+
+            var liCopiedAttachment = targets.getItemByPKey(copiedAttachmentPKey);            
+            liCopiedAttachment.setMediaPath(infoArray[i].path);
+            liCopiedAttachment.setType(copiedAttachmentType);
+          }
+        }
+      }
+    }
+  );
+}
+else
+{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

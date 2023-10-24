@@ -1,0 +1,21 @@
+<BusinessLogic methodName="onTabChange" businessObjectClass="LoProductCategoryFilter" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bo" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Add selected quick filter item from QuickFilterCache to LoProductCategoryFilter on tab change
+var quickFilterCache = bo.getCategoryQuickFilterCache();
+
+if(Utils.isDefined(quickFilterCache) && !Utils.isEmptyString(quickFilterCache) && bo.getLoProductCategoryFilter().getItemsByParam({"text": quickFilterCache}).length === 0){
+  var liProductCategoryFilter =  {
+    "pKey": PKey.next(),
+    "text": quickFilterCache,
+    "isSelected": true,
+    "specialOption": "",
+    "filter": "Category"
+  };
+  bo.getLoProductCategoryFilter().addListItems([liProductCategoryFilter]);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

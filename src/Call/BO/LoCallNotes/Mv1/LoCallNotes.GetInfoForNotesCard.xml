@@ -1,0 +1,24 @@
+<BusinessLogic methodName="getInfoForNotesCard" businessObjectClass="LoCallNotes" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var count = me.cardItemCount;
+var numberVisibleNotes = 5;
+
+if(Utils.isPhone()) {
+	numberVisibleNotes = 3;
+}
+
+if(count <= numberVisibleNotes){
+  numberVisibleNotes = count;
+}
+
+var info = " ";
+if(numberVisibleNotes != "0"){
+	info = numberVisibleNotes.toString() + " / " + count;
+}
+
+
+]]></Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

@@ -1,0 +1,33 @@
+<BusinessLogic methodName="validateTotalQuantityOfFreeItems" businessObjectClass="BoRewardProductValidation" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentRewardFreeProducts = me.getLoRewardProducts().getItems();
+var reward = me.getHurdleEvaluationHelper().getLoRewards().getCurrent();
+var totalQuantity = 0;
+var maxItemsForReward;
+
+if(reward.getPerFactor() >= 1) {
+  maxItemsForReward = reward.getDefaultValue() * reward.getPerFactor();
+}
+else {
+  maxItemsForReward = reward.getDefaultValue();
+}
+
+if(maxItemsForReward > 0) {
+  currentRewardFreeProducts.forEach(function(freeProduct) { 
+    totalQuantity += freeProduct.getQuantity();
+  });
+
+  if(totalQuantity > maxItemsForReward) {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoRewardProductValidation",
+      "messageID" : "CasSdoFreeProductTotalMaxValueExceeded",      
+    });
+  }
+}]]>
+</Code>
+  <Return name="messageCollector" value="messageCollector" />
+</BusinessLogic>

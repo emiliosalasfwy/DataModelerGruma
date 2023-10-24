@@ -1,0 +1,33 @@
+<BusinessLogic methodName="captureProceedingTime" businessObjectClass="BoCall" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CallComplete" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// CallComplete = true -> Execution of this method is during cancellation / completion of call
+
+if (me.getLuCallMeta().getCaptureProceedingTime() == "1") {
+  if (CallComplete === "true") {
+    if (me.getClbStatus() === "Abandoned") {
+      me.setBeginTime(Utils.createAnsiDateTimeNow());
+      me.setFinishTime(Utils.createAnsiDateTimeNow());
+    } else {
+      me.setFinishTime(Utils.createAnsiDateTimeNow());
+      me.setStopTimeEffective(Utils.createAnsiDateTimeNow());
+      me.setStopTimeEffectiveTimezoneOffset(Utils.createDateNow().getTimezoneOffset());
+    }
+  } else {
+    if (me.getClbStatus() === "Planned") {
+      me.setBeginTime(Utils.createAnsiDateTimeNow());
+    }
+  }
+  // if ActualStartDateTime/StartTimeEffective & ActaulEndDateTime/StopTimeEffective is equal, add 1 second to ActaulEndDateTime to avoid sync issue
+  if(Utils.isDefined(me.getStartTimeEffective()) && Utils.isDefined(me.getStopTimeEffective()) && me.getStartTimeEffective() === me.getStopTimeEffective()) {
+    var stopTimeEffective = Utils.convertAnsiDate2Date(me.getStopTimeEffective());
+    stopTimeEffective.setSeconds(stopTimeEffective.getSeconds()+1);
+    me.setStopTimeEffective(Utils.convertDateTime2Ansi(stopTimeEffective));
+    me.setStopTimeEffectiveTimezoneOffset(stopTimeEffective.getTimezoneOffset());
+  }
+}]]>
+</Code>
+  <Return name="returnName" value="true" />
+</BusinessLogic>

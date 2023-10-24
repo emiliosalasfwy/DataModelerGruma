@@ -1,0 +1,45 @@
+<BusinessLogic methodName="validateOrderValue" businessObjectClass="BoOrder" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var newError;
+var limit;
+var totalValue=this.getTotalValue();
+if (this.getPhase() != "Canceled" ) {
+  //Validate min order value
+  limit = this.getBoOrderMeta().getMinOrderValue();
+  if (limit > 0.01) {
+    if (totalValue < limit) {
+      newError = {"level": "error", 
+                  "objectClass": "BoOrder", 
+                  "simpleProperty": "totalValue", 
+                  "messageID": "CasSdoMainTotalValueTooSmall",
+                  "messageParams": { "totalValue": totalValue.toFixed(2) , "minValue": limit }};
+      messageCollector.add(newError);
+      me.setSetPhaseInBeforeSave("0");
+      me.setValidateForRelease("0");
+      me.setReleaseTime(Utils.getMinDate());
+    }
+  }
+
+  //Validate max order value
+  limit = this.getBoOrderMeta().getMaxOrderValue();
+  if (limit > 0.01) {
+    if (totalValue  > limit) {
+      newError = {"level": "error", 
+                  "objectClass": "BoOrder", 
+                  "simpleProperty": "totalValue", 
+                  "messageID": "CasSdoMainTotalValueTooLarge",
+                  "messageParams": { "totalValue": totalValue.toFixed(2) , "maxValue": limit }};
+      messageCollector.add(newError);
+      me.setSetPhaseInBeforeSave("0");
+      me.setValidateForRelease("0");
+      me.setReleaseTime(Utils.getMinDate());
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

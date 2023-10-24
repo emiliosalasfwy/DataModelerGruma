@@ -1,0 +1,26 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoRetailVisitKPIAttachment" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = result.getAllItems();
+
+var keys = [];
+
+var maxLimit = 5;
+
+for(var index = maxLimit; index < items.length; index++) {
+  keys.push(items[index].pKey);
+} 
+
+for(var index = 0; index < keys.length; index++) {
+   result.removeItemByPKey(keys[index]);
+}
+
+var promise=when.resolve(result);
+
+]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

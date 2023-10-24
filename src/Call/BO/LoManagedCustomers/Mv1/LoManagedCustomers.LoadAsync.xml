@@ -1,0 +1,13 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoManagedCustomers" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_MANAGEDCUSTOMERS, jsonQuery)
+		.then(function(items) {
+			me.addItems(items, jsonQuery);
+			me.orderBy({"customerName":"ASC"});
+	});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

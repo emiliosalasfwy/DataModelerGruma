@@ -1,0 +1,31 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoContactPartner" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_CONTACTPARTNER, jsonParams).then(
+  function(items) {
+        
+    // Due to differences regarding the validation of emails on the mobile device compared to the salesforce backend,
+    // we are checking whether an email is valid as per the mobile device validation upon load.
+    // If the email is NOT valid as per the mobile device validation, it will be set to readonly and cannot be changed.
+    for(var i = 0; i < items.length; i++) {
+      var email1 = items[i].email1;
+      
+      var isValidEmail = '1';
+      if (!Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1)) {
+        isValidEmail = '0';
+      }     
+      items[i].emailEditable = isValidEmail;
+    }
+    
+    me.addItems(items, jsonParams);
+    
+    me.setObjectStatus(STATE.PERSISTED);
+    
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="loContactPartner" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getMainItemTemplate" businessObjectClass="LoOrderItemMetas" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var mainItemTemplates = me.getItemsByParamArray([ { "main" : "1" , "op" : "EQ" } , { "active" : "1" , "op" : "EQ" } , { "validFrom" : Utils.createAnsiDateToday() , "op" : "LE" } , { "validThru" : Utils.createAnsiDateToday() , "op" : "GE" } ]);
+var mainItemTemplate;
+
+if (mainItemTemplates.length > 0) {
+  mainItemTemplate = mainItemTemplates[0];
+}]]>
+</Code>
+  <Return name="mainItemTemplate" value="mainItemTemplate" />
+</BusinessLogic>

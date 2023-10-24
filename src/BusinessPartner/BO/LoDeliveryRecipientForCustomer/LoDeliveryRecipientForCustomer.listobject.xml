@@ -1,0 +1,5 @@
+<ListObject name="LoDeliveryRecipientForCustomer" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoDeliveryRecipientForCustomer" />
+  <Item objectClass="LiDeliveryRecipientForCustomer" />
+  <Methods></Methods>
+</ListObject>

@@ -1,0 +1,87 @@
+<BusinessLogic methodName="navigateToCustomer" businessObjectClass="LoVisit" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="VisitPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/**
+1. First Step: check retail store lat&long or address fields like ( city, street, zipcode)
+2. Second Step: check Lat and long of Location
+3. Final: check if visitor address if present or not ( only address fields not Lat&Long)
+4. If it fails in all the steps then show pop up message.
+
+**/
+
+var currList = me.getItemByPKey(VisitPKey);
+
+var latitude = currList.getRetailStoreLatitude();
+var longitude = currList.getRetailStoreLongitude();
+var street  = currList.getRetailStoreStreet();
+var zipCode = currList.getRetailStorePostalCode();
+var city = currList.getRetailStoreCity();
+
+
+var destinationLongitude = 0, destinationLatitude = 0, destinationCity = '', destinationStreet = ' ', destinationZipCode = ' ';
+
+
+var isLocationFound = false;
+
+
+if( (latitude !== 0 && longitude !== 0) || ( !Utils.isEmptyString(street) || !Utils.isEmptyString(zipCode) || !Utils.isEmptyString(city))){
+    
+    destinationLongitude =  longitude;
+    destinationLatitude = latitude;
+    destinationCity  = city;
+    destinationStreet = street;
+    destinationZipCode = zipCode;
+    isLocationFound = true;
+}
+
+if(!isLocationFound) {
+  
+  // check for  location Lat&Long.
+  // if above lat& long are zero and below are non zero it means Location has Lat & Long. 
+  longitude = currList.getLongitude();
+  latitude =  currList.getLatitude();
+  
+  if(longitude !== 0 && latitude !== 0) {
+    isLocationFound = true;
+    destinationLongitude =  longitude;
+    destinationLatitude = latitude;
+  }
+  
+}
+
+if(!isLocationFound) {
+  // finally check if we have visitor address.
+   street  = Utils.isDefined(currList.getVisitorStreet()) ? currList.getVisitorStreet() : ' ';
+   city    = Utils.isDefined(currList.getVisitorCity()) ? currList.getVisitorCity() : ' ';
+   zipCode = Utils.isDefined(currList.getVisitorPostalCode()) ? currList.getVisitorPostalCode() : ' ';
+  
+  if( !Utils.isEmptyString(street) ||  !Utils.isEmptyString(city) ||  !Utils.isEmptyString(zipCode)) {
+     
+    isLocationFound = true;
+    destinationCity  = city;
+    destinationStreet = street;
+    destinationZipCode = zipCode;
+  }
+  
+}
+if(!isLocationFound) {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("NoRouteFound"), buttonValues);
+
+}
+else
+{
+  promise = BoFactory.createObjectAsync("BoGeoHelper", {})
+    .then(
+    function(geoHelper)
+    {
+      return geoHelper.startNavigation(destinationLatitude, destinationLongitude, destinationStreet, "",  destinationZipCode, destinationCity);
+    }
+  );
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

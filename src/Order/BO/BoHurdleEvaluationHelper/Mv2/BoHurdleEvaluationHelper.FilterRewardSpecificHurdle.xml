@@ -1,0 +1,15 @@
+<BusinessLogic methodName="filterRewardSpecificHurdle" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reset" type="String" />
+    <MethodInput name="selectedPromotionPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(reset == 1) {
+  me.getLoHurdles().resetFilter("hurdleType");
+}
+else {
+  me.getLoHurdles().setFilterArray([{"hurdleType": 'RewardSpecific', "op": "NE"}, {"promotionPKey": selectedPromotionPKey, "op": "EQ"}]);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

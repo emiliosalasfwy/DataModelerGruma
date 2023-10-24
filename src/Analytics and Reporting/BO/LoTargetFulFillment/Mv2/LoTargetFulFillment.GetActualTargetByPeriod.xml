@@ -1,0 +1,55 @@
+<BusinessLogic methodName="getActualTargetByPeriod" businessObjectClass="LoTargetFulFillment" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="target" type="LiTargetFulFillment" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+// Get all the parameters for loading LoOrdersByTargetSetting
+var jqueryParams = [];
+var jqueryQuery = {};
+jqueryParams.push({
+  "field" : "FromDate",
+  "value" : Utils.convertDate2Ansi(Utils.convertAnsiDate2Date(target.getValidFrom()))
+});
+jqueryParams.push({
+  "field" : "ThruDate",
+  "value" : Utils.convertDate2Ansi(Utils.convertAnsiDate2Date(target.getValidThru()))
+});
+jqueryQuery.params = jqueryParams;
+var totalActual = 0;
+// Load orders for current target period
+
+var promise = BoFactory.loadObjectByParamsAsync("LoOrdersByTargetSetting", jqueryQuery)
+  .then(function(loOrdersByTargetSetting){
+  // Check if the orders are loaded properly
+  if(Utils.isDefined(loOrdersByTargetSetting))
+  {
+    // loop through the targets
+    var items = loOrdersByTargetSetting.getAllItems();
+    for(var i = 0; i < items.length; i++)
+    {
+      // Check the value for targetSettingConsideration to add the gross value to the total
+      switch(items[i].getTargetSettingConsideration())
+      {
+        case "PositiveSalesOnly":
+          deferreds.push(loOrdersByTargetSetting.getOrderValueForPositiveSalesTarget(items[i].getSdoMainPKey()));
+          break;
+        case "CompleteOrder":
+          totalActual += items[i].getGrossTotalValue();
+          break;
+      }
+    }
+    // When all the positiveOnly Sales are calculated, return
+   return when.all(deferreds)
+      .then(function(totals){
+      for(var i = 0; i < totals.length; i++){
+        totalActual += totals[i];
+      }
+      target.setActualTarget(totalActual);
+    });
+  }
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,31 @@
+<BusinessLogic methodName="checkOutdated" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//check whether to check for outdated check
+var boMeta = me.getBoOrderMeta();
+var checkOutdated = boMeta.getNotifyOutdatedCalculation();
+var recalcRequired = boMeta.getRecalculationRequired();
+var promise = when.resolve();
+
+if(checkOutdated == "1")
+{
+  /*The system checks whether the order is outdated. The order is outdated if
+    Order.Calculation_Time <> empty (Min.Date)
+    Order.Calculation_Time <> current date (only date, time not considered)
+    get date part of calc time*/
+  var calcTime = Utils.convertAnsiDateTime2AnsiDate(me.getCalculationTime());
+  var doctatype = me.getDocTaType();
+  var outdated = calcTime !== Utils.getMinDateAnsi() && calcTime !== Utils.createAnsiDateToday() && doctatype !== "NonValuatedDeliveryNote";
+
+  if(outdated)
+  {
+
+    //show the notification
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("OrderOutdated"), buttonValues);
+  } 
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

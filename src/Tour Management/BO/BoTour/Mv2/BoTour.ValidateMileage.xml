@@ -1,0 +1,52 @@
+<BusinessLogic methodName="validateMileage" businessObjectClass="BoTour" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError; 
+
+if (Utils.isDefined(me.getMileageStart()) && Utils.isDefined(me.getMileageEnd()))
+{
+  // Validation for tour state transition from 'open' to 'running' state
+  if (me.getTmgStatus().toLowerCase() === "open")
+  {
+    if (Utils.isDefined(me.getConsiderMileage()) && me.getConsiderMileage()==="Yes")
+    {
+      if(Utils.isEmptyString(me.getMileageStart()) || me.getMileageStart()=="0")
+      {
+        newError = {"level": "error", 
+                    "objectClass": "BoTour", 
+                    "messageID": "CasTmgMileageStart"};
+        messageCollector.add(newError); 
+      }
+    }
+  }
+
+
+  // Validation for tour state transition from 'running' to 'completed' state
+  if (me.getTmgStatus().toLowerCase() === "running")
+  {
+    if (Utils.isDefined(me.getConsiderMileage()) && me.getConsiderMileage()=="Yes")
+    {
+
+      if (Utils.isDefined(me.getMileageStart()) && Utils.isDefined(me.getMileageEnd()))
+      {
+        if((me.getMileageStart() > me.getMileageEnd()))
+        {   
+          newError = 
+            {
+            "level": "error", 
+            "objectClass": "BoTour", 
+            "messageID": "CasBoTourMileage"
+          };
+          messageCollector.add(newError);
+        }      
+      }
+    }
+
+  }
+
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

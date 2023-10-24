@@ -1,0 +1,23 @@
+<BusinessLogic methodName="prepopulateQuantity" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var actualPrdCheckOutType = me.getActualPrdCheckOutType();
+var orderItems = me.getLoItems().getAllItems();
+
+if(me.getBoOrderMeta().getItemPresettingPolicy() === "Prepopulated"){
+  me.getLoItems().resetFilter("edited");
+
+  for (var i = 0; i < orderItems.length; i++) {
+    var orderItem = orderItems[i];
+    if(orderItem.getEdited() === "0" || (me.getDocumentType() === "ProductCheckOut" && actualPrdCheckOutType === "SKU")){
+      orderItem.setQuantity(orderItem.getTargetQuantity());
+      orderItem.setQtyDifference(0);
+      orderItem.setEdited("1");
+    }
+  }
+}
+
+me.createDisplayInformationForList(orderItems);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

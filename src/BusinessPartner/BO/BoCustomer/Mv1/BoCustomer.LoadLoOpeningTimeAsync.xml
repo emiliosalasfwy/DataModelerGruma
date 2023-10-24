@@ -1,0 +1,27 @@
+<BusinessLogic methodName="loadLoOpeningTimeAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+/** Account Harmonization: obsolete
+var promise;
+if (bReload == "1" || !Utils.isDefined(me.getLoCustomerOpeningTime())) {
+  promise = BoFactory.loadListAsync(LO_CUSTOMEROPENINGTIME, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (loCustomerOpeningTimeJson) {
+      loCustomerOpeningTimeJson.orderBy({"timeFrom":"ASC"});
+      //set opening time list and reset object status for save handling 
+      //(make not BoCustomer DIRTY after reloading data via tab click)
+      var objectState = me.getObjectStatus();
+      me.setLoCustomerOpeningTime(loCustomerOpeningTimeJson);
+      me.setObjectStatus(objectState);
+    });	
+}
+else {
+  promise = when.resolve();
+}
+Account Harmonization: obsolete */]]>
+</Code>
+  <Return name="BoCustomer_LoadLoOpeningTimeAsync" value="promise" />
+</BusinessLogic>

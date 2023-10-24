@@ -1,0 +1,39 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoTour" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getObjectAsync(BO_TOUR, context.jsonQuery).then(
+  function (selfJson){
+    context.selfJson = selfJson;
+
+    if(me.beforeInitialize){
+      me.beforeInitialize.apply(me, [context]);
+    }
+
+    me.setProperties(selfJson);
+
+    if(me.afterInitialize){
+      me.afterInitialize.apply(me, [context]);
+    }
+
+    if(me.getTmgStatus() === "Running"){
+      return me.determineSysReleaseProcessPKey("Running");
+    }
+  }).then(
+  function(pkey){
+    me.setSysReleaseProcessPKey(pkey);
+
+    return BoFactory.loadListAsync("LoSysReleaseProcessStep", me.getQueryBy("sysReleaseProcessPKey", me.getSysReleaseProcessPKey()));
+  }).then(
+  function (loSysReleaseProcessStep) {
+    if (Utils.isDefined(loSysReleaseProcessStep) && loSysReleaseProcessStep.getAllItems().length > 0) {
+      me.setSysReleaseProcessStepsExists("1");
+    } else {
+      me.setSysReleaseProcessStepsExists("0");
+    }
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,22 @@
+<BusinessLogic methodName="loadLoAttachmentAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+if (bReload == "1" || !Utils.isDefined(me.getLoAttachment())) {
+  promise = BoFactory.loadListAsync(LO_BPAATTACHMENT, me.getQueryBy("referencePKey", me.getPKey())).then(
+    function (loAttachment) {
+      //set opening time list and reset object status for save handling 
+      //(make not BoCustomer DIRTY after reloading data via tab click)
+      var objectState = me.getObjectStatus();
+      me.setLoAttachment(loAttachment);
+      me.setObjectStatus(objectState);
+    });
+}
+else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoCustomer_LoadLoAttachmentAsync" value="promise" />
+</BusinessLogic>

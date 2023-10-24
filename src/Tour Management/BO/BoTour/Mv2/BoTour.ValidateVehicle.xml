@@ -1,0 +1,74 @@
+<BusinessLogic methodName="validateVehicle" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+// Start--Validation for tour state transition from 'open' to 'running' state
+if (me.getTmgStatus().toLowerCase() === "open") {
+  if (Utils.isDefined(me.getConsiderVehicle())) {
+    if(me.getConsiderVehicle()!=="No" && Utils.isEmptyString(me.getEtpVehicleTruckPKey())) {
+      newError = {"level": "error",
+                  "objectClass": "BoTour",
+                  "messageID": "CasTmgTruckId"};
+      messageCollector.add(newError);
+    }
+
+    if((me.getConsiderVehicle() === "TruckTrailer" || me.getConsiderVehicle() === "TruckTrailers") && Utils.isEmptyString(me.getEtpVehicleTrailer1PKey())) {
+      newError = {"level": "error",
+                  "objectClass": "BoTour",
+                  "messageID": "CasTmgTrailerId"};
+      messageCollector.add(newError);
+    }
+
+    if(me.getConsiderVehicle() === "TruckTrailers" && Utils.isEmptyString(me.getEtpVehicleTrailer2PKey())) {
+      newError = {"level": "error",
+                  "objectClass": "BoTour",
+                  "messageID": "CasTmgTrailerId2"};
+      messageCollector.add(newError);
+    }
+  }
+
+  if (Utils.isDefined(me.getConsiderVehicleStatus())) {
+    if(me.getConsiderVehicleStatus() === "Status" && me.getVehicleOKStart() !== "1") {
+      newError = {"level": "error",
+                  "objectClass": "BoTour",
+                  "messageID": "CasTmgVehicleOKStartYes"};
+      messageCollector.add(newError);
+    }
+
+    if(me.getConsiderVehicleStatus() === "StatusReason") {
+      if(me.getVehicleOKStart() === "0" && Utils.isEmptyString(me.getVehicleStatusStart())) {
+        newError = {"level": "error",
+                    "objectClass": "BoTour",
+                    "messageID": "CasTmgVehicleStatusStart"};
+        messageCollector.add(newError);
+      }
+    }
+  }
+}
+
+// Validation for tour state transition from 'running to' to 'completed' state
+if (me.getTmgStatus().toLowerCase() === "running") {
+  if (Utils.isDefined(me.getConsiderVehicleStatus())) {
+    if(me.getConsiderVehicleStatus() === "Status" && me.getVehicleOKEnd() !== "1") {
+      newError = {"level": "error",
+                  "objectClass": "BoTour",
+                  "messageID": "CasTmgVehicleOKEndYes"};
+      messageCollector.add(newError);
+    }
+
+    if(me.getConsiderVehicleStatus() === "StatusReason") {
+      if(me.getVehicleOKEnd() === "0" && Utils.isEmptyString(me.getVehicleStatusEnd())) {
+        newError = {"level": "error",
+                    "objectClass": "BoTour",
+                    "messageID": "CasTmgVehicleStatusEnd"};
+        messageCollector.add(newError);
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

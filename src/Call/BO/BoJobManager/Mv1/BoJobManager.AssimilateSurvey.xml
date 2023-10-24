@@ -1,0 +1,20 @@
+<BusinessLogic methodName="assimilateSurvey" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="survey" type="LiSurvey" />
+    <MethodInput name="listed" type="String" />
+    <MethodInput name="planned" type="String" />
+    <MethodInput name="prdPOSContentPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[survey.setPKey(PKey.next());
+survey.setClbMainPKey(me.getClbMainPKey());
+survey.setVisitDate(me.getReferenceDate());
+survey.setVisitTime(me.getTimeFrom());
+survey.setListed(listed);
+survey.setPlanned(planned);
+survey.setDone("1");
+survey.setPrdPOSContentPKey(prdPOSContentPKey);
+survey.setObjectStatus(STATE.NEW | STATE.DIRTY);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

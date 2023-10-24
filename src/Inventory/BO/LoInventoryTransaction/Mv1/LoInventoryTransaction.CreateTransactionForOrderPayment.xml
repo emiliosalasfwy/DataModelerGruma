@@ -1,0 +1,29 @@
+<BusinessLogic methodName="createTransactionForOrderPayment" businessObjectClass="LoInventoryTransaction" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="payment" type="LiOrderPayment" />
+    <MethodInput name="ivcInformation" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonIvcTaData = {};
+
+// Create inventory transaction
+jsonIvcTaData = {};
+
+jsonIvcTaData.pKey = PKey.next();
+jsonIvcTaData.ivcMainPKey = ivcInformation.ivcMainPKey;
+jsonIvcTaData.ivcTaMetaPKey = ivcInformation.ivcMetaByPaymentMeta.getIvcTaMetaPKey();
+jsonIvcTaData.sdoMainPKey = payment.getSdoMainPKey();
+jsonIvcTaData.sdoPaymentPKey = payment.getPKey();
+jsonIvcTaData.accounted = "0";
+jsonIvcTaData.initiationDate = Utils.createDateToday();
+jsonIvcTaData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+jsonIvcTaData.initiatorUsrMainPKey = ApplicationContext.get('user').getPKey();
+jsonIvcTaData.chargeDate = Utils.createDateToday();
+jsonIvcTaData.amount = payment.getAmountReceipt();
+jsonIvcTaData.paymentMethod = payment.getPaymentMethod();
+
+this.addItems([jsonIvcTaData]);
+this.getItemsByParam({ "pKey": jsonIvcTaData.pKey })[0].setObjectStatus(this.self.STATE_NEW_DIRTY);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

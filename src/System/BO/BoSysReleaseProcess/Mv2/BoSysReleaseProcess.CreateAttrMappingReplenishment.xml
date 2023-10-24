@@ -1,0 +1,50 @@
+<BusinessLogic methodName="createAttrMappingReplenishment" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+
+var tourId;
+var warehouse;
+var driver;
+var date;
+var amount;
+var currency;
+
+if (tour) {
+  tourId = tour.getId();
+}
+
+if (ref.getLuEtpWarehouse) {
+  warehouse = ref.getLuEtpWarehouse().getText();
+}
+
+if(Utils.isDefined(tour)){
+  driver = tour.getDriverName();
+}
+
+if (ref.getCommitDate) {  
+  date = Localization.localize(ref.getCommitDate(), "date");
+}
+
+if (ref.getGrossTotalValue) {  
+  amount = Localization.localize(ref.getGrossTotalValue().toFixed(2), "number");
+}  
+
+
+if (ref.getCurrency) {  
+  currency = Utils.getToggleText("DomCurrency", ref.currency, false);
+}
+
+attributes.add("TourId", tourId);
+attributes.add("Warehouse", warehouse);
+attributes.add("Driver", driver);
+attributes.add("Date", date);
+
+if (!Utils.isEmptyString(amount) && !Utils.isEmptyString(currency)) {
+  attributes.add("Amount", amount + " " + currency);
+}]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

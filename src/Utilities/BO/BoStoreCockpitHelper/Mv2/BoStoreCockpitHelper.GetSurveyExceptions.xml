@@ -1,0 +1,82 @@
+<BusinessLogic methodName="getSurveyExceptions" businessObjectClass="BoStoreCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentSurveys" type="LoSurveys" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var notDistributedLength = 0;
+var outOfStockLength = 0;
+var facingMismatchLength = 0;
+var priceMismatchLength = 0;
+
+currentSurveys.forEach(function(survey){
+  if(survey.hide != "1"){
+
+    if(survey.value == "NotDistributed"){
+      notDistributedLength++;
+    }
+
+    if(survey.value == "OutOfStock"){
+      outOfStockLength++;
+    }
+
+    if((survey.targetValue != " " && survey.surveyText == Localization.resolve("CardSurveyExceptions_Facings") && ((!Utils.isEmptyString(survey.targetValue) && survey.value!= survey.targetValue) || (!Utils.isEmptyString(survey.lastValue) && survey.value != survey.lastValue))) || (survey.targetValue == " " && survey.lastValue == " " && survey.value != "0" && survey.surveyText == Localization.resolve("CardSurveyExceptions_Facings"))){
+      facingMismatchLength++;
+    }
+
+    if((survey.targetValue != " " && survey.surveyText == Localization.resolve("CardSurveyExceptions_Price") && ((!Utils.isEmptyString(survey.targetValue) && survey.value != survey.targetValue) || (!Utils.isEmptyString(survey.lastValue) && survey.value != survey.lastValue))) || (survey.targetValue == " " && survey.lastValue == " " && survey.value != "0" && survey.surveyText == Localization.resolve("CardSurveyExceptions_Price"))){
+      priceMismatchLength++;
+    }
+  }
+});
+
+// reset currentSurveys state when exceptions are reset
+if (notDistributedLength === 0 && outOfStockLength === 0 && facingMismatchLength === 0 && priceMismatchLength === 0) {
+  me.setCurrentSurveys("0");
+}
+else {
+  me.setCurrentSurveys("1");
+}
+
+// Small bars in case of no exceptions
+if (notDistributedLength === 0) {notDistributedLength = 0.03;}
+if (outOfStockLength === 0) {outOfStockLength = 0.03;}
+if (facingMismatchLength === 0) {facingMismatchLength = 0.03;}
+if (priceMismatchLength === 0) {priceMismatchLength = 0.03;}
+
+// Determine maximum for axis
+var valueArray = [];
+valueArray.push(notDistributedLength);
+valueArray.push(outOfStockLength);
+valueArray.push(facingMismatchLength);
+valueArray.push(priceMismatchLength);
+
+var maxValue = valueArray.reduce(function (p, v) {
+  return (p > v ? p : v);
+});
+
+var axisMax = Math.ceil(maxValue * 1.2);
+
+// Generate grid lines
+var gridLines = [];
+var tick = maxValue / 5;
+
+gridLines.push({"value": (tick)});
+gridLines.push({"value": (tick * 2)});
+gridLines.push({"value": (tick * 3)});
+gridLines.push({"value": (tick * 4)});
+gridLines.push({"value": (tick * 5)});
+
+var jsonData = {
+  "data" : {
+    columns : [['surveyExceptions', notDistributedLength, outOfStockLength, facingMismatchLength, priceMismatchLength]]
+  },
+  "axisRange" : {
+    "max" : {
+      "y" : axisMax
+    }
+  },
+  "gridLines" : gridLines
+};]]>
+</Code>
+  <Return name="jsonData" value="jsonData" />
+</BusinessLogic>

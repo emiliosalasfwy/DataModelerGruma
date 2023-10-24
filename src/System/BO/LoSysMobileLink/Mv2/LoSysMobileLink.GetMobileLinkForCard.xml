@@ -1,0 +1,29 @@
+<BusinessLogic methodName="getMobileLinkForCard" businessObjectClass="LoSysMobileLink" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="cockpit" type="String" />
+    <MethodInput name="card" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+jsonQuery.params = jsonParams;
+
+jsonParams.push({"field" : "cockpit", "value" : cockpit});
+jsonParams.push({"field" : "card", "value" : card});
+
+//Visible items /Default:  5 items /Phone:    3 items
+var spliceValue = 5;
+if(Utils.isPhone()){
+  spliceValue = 3;
+}
+
+var promise = Facade.getListAsync("LoSysMobileLink",jsonQuery).then(
+  function(mobileLink) {
+    me.cardItemCount = mobileLink.length;
+    mobileLink = mobileLink.splice(0, spliceValue);
+    me.removeAllItems();
+    me.addItems(mobileLink);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

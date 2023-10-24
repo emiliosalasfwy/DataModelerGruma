@@ -1,0 +1,17 @@
+<BusinessLogic methodName="getAvailableUoMForProduct" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemPKey" type="DomPKey" />
+    <MethodInput name="itemTemplate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var logisticUnitQuery = {};
+
+logisticUnitQuery.params = [
+  { "field": "ProductPKey", "value":itemPKey },
+  { "field": "LogisticCategory", "value":  itemTemplate.getLogisticCategory() }
+];
+
+var promise = BoFactory.loadListAsync("LoLogisticUnit", logisticUnitQuery);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

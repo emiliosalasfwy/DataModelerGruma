@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getAvailableUoMSelectionBox" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="availableUnits" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var subItems = availableUnits.getAllItems().map(
+  function(item) {
+    return item.getUnitType();
+  }
+);
+
+var selectionBoxList = Utils.getToggleListObject("PrdLogisticUnit", subItems);]]>
+</Code>
+  <Return name="result" value="selectionBoxList" />
+</BusinessLogic>

@@ -1,0 +1,25 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoTmgTourOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var navigation="";
+
+if (Utils.isDefined(Framework.getProcessContext().navigationMode)){
+  navigation = Framework.getProcessContext().navigationMode;
+} 
+
+if(navigation === "StartOfDay") 
+{
+  this.setFilter("tmgStatus", "Completed", "NE");	
+}
+if(navigation === "Overview") 
+{
+  this.resetFilter("tmgStatus");
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

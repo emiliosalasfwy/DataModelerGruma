@@ -1,0 +1,10 @@
+<BusinessLogic methodName="checkListTabVisibility" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+if(Utils.isDefined(me.getLoTmgTourCheckRelations)){
+  visible = me.getLoTmgTourCheckRelations().getAllItems().length > 0;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

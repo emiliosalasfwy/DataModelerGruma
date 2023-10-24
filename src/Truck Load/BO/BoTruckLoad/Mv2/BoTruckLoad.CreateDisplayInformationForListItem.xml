@@ -1,0 +1,50 @@
+<BusinessLogic methodName="createDisplayInformationForListItem" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var orderUnitInformation = " ";
+var unitInformation = " ";
+var orderUnitInformationForFreeItem = " ";
+var unitInformationForFreeItem = " ";
+var info = " ";
+var unitOfMeasureItem;
+var userPKey = ApplicationContext.get('user').getPKey();
+
+// Used getItemObjects() here as getAllItems() does not consider the orderBy() of the list
+// as we use no filters on the nested list here, this use is ok and does not return different result in terms of number of items
+var unitOfMeasureItems = me.getLoItems().getUnitOfMeasureItemsForMainItem(mainItem);
+
+for (var i = 0; i < unitOfMeasureItems.length; i++){
+  unitOfMeasureItem = unitOfMeasureItems[i];
+  info = me.createDisplayInformationForUoMItem(unitOfMeasureItem, userPKey);
+
+  if (unitOfMeasureItem.getIsOrderUnit() == "1"){
+    orderUnitInformation += info.unitInformationForTruckInventory;
+    orderUnitInformationForFreeItem += info.unitInformationForFreeItems;
+    //Assign values for Stock display
+    if(me.getDocumentType() == "TruckIvcTransferInward"){
+      me.setInventoryBalanceOfItem(mainItem.getPKey());
+    }
+    else{
+      mainItem.setIvcBalance(unitOfMeasureItem.getTargetQuantity());
+    }
+    mainItem.setIvcBalanceUnitType(Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit()));
+  }
+  else{
+    if(!Utils.isEmptyString(unitInformation)){
+      unitInformation += ", ";
+      unitInformationForFreeItem += ", ";
+    }
+    unitInformation += info.unitInformationForTruckInventory;
+    unitInformationForFreeItem +=info.unitInformationForFreeItems;
+  }
+}
+
+mainItem.setOrderUnitInformation(orderUnitInformation);
+mainItem.setUnitInformation(unitInformation);
+mainItem.setOrderUnitInformationForFreeItems(orderUnitInformationForFreeItem);
+mainItem.setUnitInformationForFreeItems(unitInformationForFreeItem);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

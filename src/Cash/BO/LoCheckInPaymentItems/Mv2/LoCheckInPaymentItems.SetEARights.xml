@@ -1,0 +1,39 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoCheckInPaymentItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="phase" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var payments = me.getAllItems();
+var acl, payment;
+
+// The object is not editable if the document is released or canceled.
+//Workaround for .getId()
+if(phase != "Initial"){
+  acl = me.getACL();
+  acl.removeRight(AclObjectType.OBJECT, "LoCheckInPaymentItems", AclPermission.EDIT);
+}
+
+if(Utils.isDefined(payments) && payments.length > 0){
+  for(var index = 0; index < payments.length; index++){
+    payment = payments[index];
+    acl = payment.getACL();
+    //Workaround for .getId()
+    if(phase != "Initial")
+    {
+      acl.removeRight(AclObjectType.PROPERTY, "difference", AclPermission.EDIT);
+      acl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.EDIT);
+    }  
+
+    if(payment.getLevel() !== "main")
+    {
+      acl.removeRight(AclObjectType.OBJECT, "LiCheckInPaymentItems", AclPermission.EDIT);
+      acl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+      acl.removeRight(AclObjectType.PROPERTY, "difference", AclPermission.VISIBLE);
+    }
+  }
+}
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

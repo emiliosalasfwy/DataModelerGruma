@@ -1,0 +1,22 @@
+<BusinessLogic methodName="validateMaxPictures" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var maxNoOfPictures = me.getLuCallMeta().getMaxPictures();
+var iPicturesCount = me.getLoCallAttachments().getPicturesCount();
+var bPicsCountExceed = false;    
+//Check the count of pictures exceeding the max count
+if (iPicturesCount >= maxNoOfPictures) {
+  bPicsCountExceed = true;
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbNoOfPicturesExceedsMaxCount"), buttonValues) 
+    .then(function (input) {
+    return bPicsCountExceed;						
+  });
+} else {
+  promise = when.resolve(bPicsCountExceed);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

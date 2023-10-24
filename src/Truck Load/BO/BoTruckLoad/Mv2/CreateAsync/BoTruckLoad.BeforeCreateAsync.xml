@@ -1,0 +1,24 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoTruckLoad" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var initializeProperty = function (propertyName)
+{
+  if (!Utils.isDefined(context.jsonQuery[propertyName])) {
+	context.jsonQuery[propertyName] = ' ';
+  }
+};
+
+initializeProperty("responsiblePKey");
+initializeProperty("ownerPKey");
+initializeProperty("senderPKey");
+initializeProperty("recipientPKey");
+initializeProperty("etpWarehousePKey");
+initializeProperty("tmgMainPKey");
+
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

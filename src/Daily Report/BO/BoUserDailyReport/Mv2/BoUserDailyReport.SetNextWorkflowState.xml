@@ -1,0 +1,109 @@
+<BusinessLogic methodName="setNextWorkflowState" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="actionName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var nextStates = [];
+
+switch (actionName){
+  case "Release":
+    nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+    break;
+  case "Approve":
+    nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Approved");
+    break;  
+  case "Reject":
+    nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Correction");
+    break;     
+}
+
+if(me.getBoWorkflow().getRecentStatePolicy() == "1"){
+  me.getLoUserDRRecentState().addRecentState(me.getPKey(), me.getActualStatePKey(), me.getResponsiblePKey());    
+}
+
+if(Utils.isDefined(nextStates[0])){
+  me.setActualStatePKey(nextStates[0].getPKey());
+  me.setNextStatePKey(me.getActualStatePKey());
+  switch(nextStates[0].getStateType()){
+    case "Released":
+      var origPhase = me.getPhase();
+      me.setPhase("Released");
+
+      //Time Card: close WorkingTime Time Entry:
+      if(me.getBoUserDocMeta().getUiGroup()==="TimeCard"){
+
+        ApplicationContext.set('openTimeCardPKey', "");
+        ApplicationContext.set('openTimeCardBreakMetaPKey', "");
+
+        if(origPhase!=="Correction"){
+          var loTimeEntries = me.getLoUsrTimeEntry().getItemsByParamArray([{"usrTimeEntryMetaPKey":  me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey()}]);
+          for(var idxloTimeEntries = 0; idxloTimeEntries < loTimeEntries.length;  idxloTimeEntries++){
+            if (loTimeEntries[idxloTimeEntries].getSystemTimeThru() == Utils.getMinDate()){
+              var now = Utils.createDateNow();
+              me.closeTimeEntry(loTimeEntries[idxloTimeEntries].getPKey(), false);
+              TM.clear();
+            }
+          }
+        }
+        me.calculateTotalActivityDuration();
+
+      }
+
+      //Workaround for mapping released --> forapproval
+      if(Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+      {
+        nextStates[0].setPKey("ForApproval");
+      }
+
+      break;
+    case "Approved":
+      me.setPhase("Approved");
+      break;
+    case "Correction":
+      me.setPhase("Correction");
+      break;
+  }
+
+  promise = me.getBoWorkflow().getNextResponsible(nextStates[0].getPKey(), me.getResponsiblePKey(), me.getOwnerUsrMainPKey()).then(
+    function (respPKey) {
+      if(me.getResponsiblePKey() != respPKey) {
+        me.setResponsiblePKey(respPKey);
+
+        return BoFactory.loadObjectByParamsAsync(LU_USER, me.getQueryBy("pKey", respPKey)).then(
+          function (luUser){
+            me.setResponsible(luUser.getName());
+
+            //Update list item of daily report overview list
+            if(Utils.isDefined(Framework.getProcessContext().dailyReportList)){
+              if(Utils.isDefined(Framework.getProcessContext().dailyReportList.getCurrent())){
+                Framework.getProcessContext().dailyReportList.getCurrent().setPhase(me.getPhase());
+              }
+            }
+
+            //refresh EA rights for button visibility and detail area
+            me.setEARights();
+            BindingUtils.refreshEARights();
+            return me;
+          }
+        );
+
+      } else {
+        //Update list item of daily report overview list
+        if(Utils.isDefined(Framework.getProcessContext().dailyReportList.getCurrent())){
+          Framework.getProcessContext().dailyReportList.getCurrent().setPhase(me.getPhase());
+        }
+
+        //refresh EA rights for button visibility and detail area
+        me.setEARights();
+        BindingUtils.refreshEARights();
+        return me;
+      }
+    }
+  );
+} else {
+  promise = when.resolve(); 
+}]]>
+</Code>
+  <Return name="BoDailyReport_setNextWorkflowState" value="promise" />
+</BusinessLogic>

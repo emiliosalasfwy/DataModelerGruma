@@ -1,0 +1,35 @@
+<BusinessLogic methodName="esCreateItemSplittingData" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var mainItems = me.getLoItems().getAllItems();
+
+
+//main Dictionary that holds the item data for each group (key: group name)
+var itemSplittingData = Utils.createDictionary();
+
+//function to sort the nested items
+var itemSplittingFunction = function(mainItem)
+{
+  //only process items with quantity
+  if(mainItem.getQuantity() <= 0)
+  {
+    return;
+  }
+
+  var splittingGroupName = mainItem.getSplittingGroup();
+
+  //getting or creating the entry for this splitting group
+  if(!itemSplittingData.containsKey(splittingGroupName))
+  {
+    itemSplittingData.add(splittingGroupName, []);
+  }
+  var groupItemData = itemSplittingData.get(splittingGroupName);
+  groupItemData.push(mainItem);
+};
+
+//triggering the sorting
+mainItems.forEach(itemSplittingFunction);]]>
+</Code>
+  <Return name="itemSplittingData" value="itemSplittingData" />
+</BusinessLogic>

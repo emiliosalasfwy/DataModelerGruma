@@ -1,0 +1,17 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoSvcRequestMeta" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(result);
+
+// no task template is used in CGCloud; active and private use hardcoded default values instead
+if(Utils.isSfBackend() && !Utils.isDefined(me.pKey))
+{
+  me.active = "1";
+  me.isPrivate = "0";
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

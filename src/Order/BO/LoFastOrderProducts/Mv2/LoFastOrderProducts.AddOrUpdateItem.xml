@@ -1,0 +1,24 @@
+<BusinessLogic methodName="addOrUpdateItem" businessObjectClass="LoFastOrderProducts" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+    <MethodInput name="quantity" type="DomDecimal" />
+    <MethodInput name="productNumber" type="DomString" />
+    <MethodInput name="productDescription" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[quantity = Math.max(0, quantity);
+
+me.removeItemByPKey(pKey);
+
+var fastOrderItem = {
+  "pKey" : pKey,
+  "productNumber": productNumber,
+  "productDescription": productDescription,
+  "quantity": quantity
+};
+
+me.addListItem(fastOrderItem);
+me.setCurrentByPKey(fastOrderItem.pKey);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

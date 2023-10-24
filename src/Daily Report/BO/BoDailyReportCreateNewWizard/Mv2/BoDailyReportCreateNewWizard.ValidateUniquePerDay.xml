@@ -1,0 +1,20 @@
+<BusinessLogic methodName="validateUniquePerDay" businessObjectClass="BoDailyReportCreateNewWizard" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(me.getUniquePerDay() == "1") {
+
+  if(Utils.isDefined(Framework.getProcessContext().luUniquePerDay.getDailyReportCount())) {
+    if(Framework.getProcessContext().luUniquePerDay.getDailyReportCount() > 0) {
+      var newError = {"level": "error",
+                  "objectClass": "BoUserDailyReport",
+                  "messageID": "CasUsrDailyReportUniquePerDay"};
+      messageCollector.add(newError);
+      me.setObjectStatus("0");
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

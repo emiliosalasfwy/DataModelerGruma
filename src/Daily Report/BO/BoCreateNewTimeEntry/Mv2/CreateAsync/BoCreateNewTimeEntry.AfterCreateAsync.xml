@@ -1,0 +1,50 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoCreateNewTimeEntry" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setEventChanged("0");
+
+var newDate = Utils.createDateNow();
+var loTimeEntries;
+var newParams = context.jsonQuery;
+var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+}
+if (Utils.isDefined(newParams.workUsrTimeEntryMetaPKey)) {
+  me.setWorkUsrTimeEntryMetaPKey(newParams.workUsrTimeEntryMetaPKey);
+}
+if (Utils.isDefined(newParams.timeEntries)) {
+
+  var timeEntries = newParams.timeEntries.getAllItems().slice();
+  me.timeEntries = timeEntries;
+}
+
+me.setStartdate(Utils.convertFullDate2Ansi(newDate));
+me.setEnddate(Utils.convertFullDate2Ansi(newDate));
+
+var minutes = newDate.getMinutes() > 9 ? newDate.getMinutes() : "0" +  newDate.getMinutes();
+var hours = newDate.getHours()> 9 ? newDate.getHours() : "0" +  newDate.getHours();
+me.setStarttime(hours + ":" + minutes);
+me.setEndtime(hours + ":" + minutes);
+
+//calculate offsets
+var offsets;
+offsets = dateTimeHelper.getTimeZoneOffset(Utils.convertFullDate2Ansi(newDate));
+if(Utils.isDefined(offsets)){
+  me.setTimeFromGeoOffset(offsets.geoOffset);
+  me.setTimeThruGeoOffset(offsets.geoOffset);
+  me.setTimeFromDSTOffset(offsets.dstOffset);
+  me.setTimeThruDSTOffset(offsets.dstOffset);
+}
+
+me.setShowDetails("0");
+me.setEARights();
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

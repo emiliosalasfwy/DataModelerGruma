@@ -1,0 +1,5 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoBpaContextMenu" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+        
+   ]]></Code>
+</BusinessLogic>

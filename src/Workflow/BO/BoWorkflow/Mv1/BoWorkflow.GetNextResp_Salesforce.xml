@@ -1,0 +1,23 @@
+<BusinessLogic methodName="getNextResp_Salesforce" businessObjectClass="BoWorkflow" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="nextStatePKey" type="DomPKey" />
+    <MethodInput name="responsiblePKey" type="DomPKey" />
+    <MethodInput name="ownerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (nextStatePKey == 'ForApproval') {
+  promise = BoFactory.loadObjectByParamsAsync("LuSupervisorOfUser", { "usrPKey": ownerPKey }).then(
+    function (luSupervisorOfUser) {
+      var supervisorPKey = luSupervisorOfUser.getSupervisorPKey();      
+
+      return Utils.isEmptyString(supervisorPKey) ? responsiblePKey : supervisorPKey;
+    }
+  );
+} else {
+  promise = when.resolve(ownerPKey);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,36 @@
+<BusinessLogic methodName="getDSForSdoAssortment" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="sdoMetaPKey" type="DomPKey" />
+    <MethodInput name="commitDate" type="DomDate" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Datasource name (required by merge engine)
+var LO_MESDOASSORTMENT = "LoMeSdoAssortment";
+
+var datasourceDefiniton = {
+	"boName" : LO_MESDOASSORTMENT,
+	"dsParams" : {
+		"params" : [{
+				"field" : "sdoMetaPKey",
+				"value" : sdoMetaPKey
+			}, {
+				"field" : "commitDate",
+				"value" : commitDate
+			}
+		]
+	},
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "sdoAssortment",
+			"alias" : "sdoAssortment",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : mergeProperty,
+	"lookupDataSource" : "false"
+};
+]]>
+</Code>
+  <Return name="dsForSdoAssortment" value="datasourceDefiniton" />
+</BusinessLogic>

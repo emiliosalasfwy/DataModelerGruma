@@ -1,0 +1,51 @@
+<BusinessLogic methodName="inputChangedForTimeCardReport" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryData" type="Object" />
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="dataIndex" type="String" />
+    <MethodInput name="userName" type="String" />
+    <MethodInput name="team" type="String" />
+    <MethodInput name="startDate" type="String" />
+    <MethodInput name="endDate" type="String" />
+    <MethodInput name="loActivityItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chart = me.getChartHelper().getChartFromStorage(containerName);
+var chartString = "chart_" + containerName;
+var chartSelector = "#" + chartString;
+var d3Container = me.getChartHelper().getUIContainer(containerName);
+
+if (Utils.isDefined(chart)) {
+  var jsonData = me.prepareDataForTimeCardReport(timeEntryData, userName, team, startDate, endDate, loActivityItem);
+
+  if(jsonData.noDataAvailable == "1") {
+    return;
+  }
+  
+  chart.load({
+    columns: [jsonData.data.columns[dataIndex]]
+  });
+  
+  chart.revert();
+}
+
+if(!Utils.isPhone()) {
+  var arcs = d3Container.selectAll(".c3-chart-arcs");
+  var texts = arcs.selectAll("text");
+  texts.style("font-size", "1.5em");
+}
+
+if(Utils.isPhone()) {
+  var chartCont = d3Container.selectAll("#chart_Reporting_TimeCardReportContainer").select("svg");
+  var pieCont = d3Container.selectAll(".c3-chart-arcs");
+  var chartWidth = chartCont.node().getBoundingClientRect().width;
+  var chartHeight = chartCont.node().getBoundingClientRect().height;
+  pieCont.attr("transform", "translate(" + (chartWidth*0.5) +","+ (chartHeight*0.5) +")");
+}
+
+var svg = d3Container.select(chartSelector);
+var text = svg.selectAll("text");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

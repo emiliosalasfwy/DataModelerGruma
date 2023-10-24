@@ -1,0 +1,42 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoOrderOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Set appropriate advanced search profile
+if (Utils.isDefined(jsonParams.callCustomerPKey) && !Utils.isEmptyString(jsonParams.callCustomerPKey)){
+  // Take profile for visit navigation
+  jsonParams.params.push({
+    "field" : "asoName",
+    "value" : "AsoOrderCallOverview"
+  });    
+}
+else{
+  // Stand alone mode
+  jsonParams.params.push({
+    "field" : "asoName",
+    "value" : "AsoOrderOverview"
+  });
+}
+
+var promise = me.addAsoInformation(jsonParams).then(
+  function() {
+    return Facade.getListAsync(LO_ORDEROVERVIEW, jsonParams);
+  }).then(
+  function (items) {
+    me.addItems(items, jsonParams);
+    var jsonQuerySysSetting = {};
+    jsonQuerySysSetting.iD = "CndCpUoMRoundingFactor";
+    return BoFactory.loadObjectByParamsAsync("LuSysSettingById", jsonQuerySysSetting);
+  }).then(
+  function (luSysSettingById) {
+    if(Utils.isEmptyString(luSysSettingById.getValue())){
+      CP.CalcMatrix.getInstance();
+    }else{
+      CP.CalcMatrix.getInstance(+luSysSettingById.getValue());
+    }
+    return me;
+  });]]>
+</Code>
+  <Return name="loOrderOverview" value="promise" />
+</BusinessLogic>

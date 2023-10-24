@@ -1,0 +1,92 @@
+<BusinessLogic methodName="setInventoryBalanceOfItem" businessObjectClass="BoTruckLoad" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var ivcMetaPKeys = [];
+var usrMainPKeys = [];
+var bpaMainPKeys = [];
+var prdMainPKeys = [];
+var tmgTourPKeys = [];
+var etpVehiclePKeys = [];
+
+var mainItem = me.getLoItems().getItemByPKey(itemPKey);
+var itemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemTemplateByPKey(mainItem.getSdoItemMetaPKey());
+var objectStatus = mainItem.getObjectStatus();
+// Get inventory meta information with prepared search keys
+var ivcMetasByItemMeta = this.getBoOrderMeta().getIvcMetasByItemMeta(mainItem.getSdoItemMetaPKey());
+
+for (var i = 0; i < ivcMetasByItemMeta.length; i++) {
+  ivcMetaPKeys.push(ivcMetasByItemMeta[i].getIvcMetaPKey());
+  usrMainPKeys.push(ivcMetasByItemMeta[i].getUsrMainPKey());
+  bpaMainPKeys.push(ivcMetasByItemMeta[i].getBpaMainPKey());
+  tmgTourPKeys.push(ivcMetasByItemMeta[i].getTmgTourPKey());
+  etpVehiclePKeys.push(ivcMetasByItemMeta[i].getEtpVehiclePKey());
+}
+
+prdMainPKeys.push(mainItem.getPrdMainPKey());
+
+var jsonQueryForFinding = {};
+jsonQueryForFinding.params = [
+  { "field": "ivcMetaPKeys", "value": "'" + ivcMetaPKeys.join("','") + "'" },
+  { "field": "usrMainPKeys", "value": "'" + usrMainPKeys.join("','") + "'" },
+  { "field": "bpaMainPKeys", "value": "'" + bpaMainPKeys.join("','") + "'" },
+  { "field": "prdMainPKeys", "value": "'" + prdMainPKeys.join("','") + "'" },
+  { "field": "tmgTourPKeys", "value": "'" + tmgTourPKeys.join("','") + "'" },
+  { "field": "etpVehiclePKeys", "value": "'" + etpVehiclePKeys.join("','") + "'" }
+];
+
+var jsonQueryForUnitConversion =
+    {
+      "params": [
+        {
+          "field": "productPKey",
+          "value": mainItem.getPrdMainPKey()
+        }
+      ]
+    };
+
+var loUnitFactorForProduct;
+var luLogUnit;
+
+var promise = BoFactory.loadObjectByParamsAsync("LoUnitFactorForProduct", jsonQueryForUnitConversion).then(
+  function (unitFactorForProductLo) {
+    // Get conversion information for product
+    loUnitFactorForProduct = unitFactorForProductLo;
+    return BoFactory.loadObjectByParamsAsync("LuLogisticUnit", { "ProductPKey": mainItem.getPrdMainPKey(), "UnitType": mainItem.getQuantityLogisticUnit() });
+  }
+).then(
+  function (luLogisticUnit) {
+    luLogUnit = luLogisticUnit;
+    return BoFactory.loadObjectByParamsAsync("LoInventoryFinding", jsonQueryForFinding);
+  }
+).then(
+  function (loInventoryFinding) {
+    // Build inventory information object and store at item
+    var liInventory;
+    var params = {};
+    var existingInvBalance;
+
+    for (var i = 0; i < ivcMetasByItemMeta.length; i++) {
+      params = {};
+      params.ivcMetaPKey = ivcMetasByItemMeta[i].getIvcMetaPKey();
+      params.usrMainPKey = ivcMetasByItemMeta[i].getUsrMainPKey();
+      params.bpaMainPKey = ivcMetasByItemMeta[i].getBpaMainPKey();
+      params.prdMainPKey = mainItem.getPrdMainPKey();
+      params.tmgTourPKey = ivcMetasByItemMeta[i].getTmgTourPKey();
+      params.etpVehiclePKey = ivcMetasByItemMeta[i].getEtpVehiclePKey();
+
+      liInventory = loInventoryFinding.getItemsByParam(params);
+
+      // If inventory found
+      if (liInventory.length > 0) {
+        existingInvBalance = loUnitFactorForProduct.convertIvcMeasureToLogisticUnit(ivcMetasByItemMeta[i].getIvcMeasure(), liInventory[0].getBalance(), mainItem.getQuantityLogisticUnit(), luLogUnit.getPiecesPerSmallestUnit());
+      }
+    }
+    mainItem.setIvcBalance(existingInvBalance);
+    mainItem.setObjectStatus(objectStatus);
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

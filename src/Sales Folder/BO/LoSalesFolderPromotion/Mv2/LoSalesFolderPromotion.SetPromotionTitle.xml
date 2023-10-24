@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setPromotionTitle" businessObjectClass="LoSalesFolderPromotion" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Parameters>
+    <MethodInput name="sloganText" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var sloganTextValue = sloganText;
+
+if (Utils.isPhone() && sloganTextValue.length >= 28){
+  sloganTextValue = sloganTextValue.substring(0,28) + "...";
+}
+]]></Code>
+  <Return name="sloganTextValue" value="sloganTextValue" />
+</BusinessLogic>

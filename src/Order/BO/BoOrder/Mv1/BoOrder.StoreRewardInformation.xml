@@ -1,0 +1,41 @@
+<BusinessLogic methodName="storeRewardInformation" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[/* Storing applicable and selected rewards (and their free items) in the form:
+{promotionId: [{id: rewardGroupId, rewards: [{id: rewardId, freeItems: [{id, quantity}]}] }]}*/
+
+var json = {};
+
+var rewards = me.getHurdleEvaluationHelper().getLoRewards().getAllItems();
+
+rewards.forEach(function(reward){
+  var promotion = reward.getPromotionPKey();
+  if(reward.getIsApplicable() === '1'){
+    if(!(promotion in json)){
+      json[promotion] = [];
+    }
+
+    var rewardGroup = reward.getRewardGroupId();
+    if(json[promotion].filter(function(x){return x.id == rewardGroup;}).length === 0){
+      json[promotion].push({id: rewardGroup, rewards:[]});
+    }
+
+    if(reward.getSelected() === '1'){
+      var rewardInfo = {id: reward.getPKey(), perFactor: reward.getPerFactor()};
+
+      if(reward.getRewardType() === "FreeItem"){
+        me.getHurdleEvaluationHelper().getLoRewardProducts().resetAllFilters();
+        me.getHurdleEvaluationHelper().getLoRewardProducts().setFilter("isValidFreeItem", "1", "EQ");
+        var freeItems = me.getHurdleEvaluationHelper().getLoRewardProducts().getItems().filter(function(x){return x.getPromotionReward() === reward.getPKey();});
+
+        rewardInfo.freeItems = freeItems.map(function(item){return {id: item.getPKey(), qty: item.getQuantity()};});
+      }
+
+      json[promotion].filter(function(x){return x.id == rewardGroup;})[0].rewards.push(rewardInfo);
+    }}
+});
+
+me.setSelectedRewards(JSON.stringify(json));]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,27 @@
+<BusinessLogic methodName="mergeOrderItemList" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isCasBackend()) {
+  // Get merge engine parameters
+  var mergeEngineParams = me.getMEParamsForProposalList(jsonParams);
+
+  // Truncate temporary table
+  promise = Facade.deleteFromTableAsync("TmpSdoItemMergeResult").then(function () {
+    // Call merge engine and do not return merge result
+    return Facade.getMergedListAsync(mergeEngineParams, "TmpSdoItemMergeResult", false);
+  });
+}
+else {
+  promise = Facade.deleteFromTableAsync("TmpOrderItemMergeResult_T").then(function () {
+    var dataSource = AppManager.getDataSourceByDataSourceName("DsOrderItemPreparation");
+    var statement = dataSource.getCustomStatement("PrepareOrderItems")(jsonParams);
+    return Facade.executeQueries([statement]);
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

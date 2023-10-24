@@ -1,0 +1,72 @@
+<BusinessLogic methodName="updateActivities" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var callStatisticItems;
+var dicActivityUpdate = Utils.createDictionary();
+var dateFrom;
+
+if(Utils.isSfBackend()) {
+  dateFrom = Utils.convertForDBParam(me.getDateFrom(), "DomDate");
+}
+else {
+  dateFrom = me.getDateFrom();
+}
+
+//########################
+//### Load UserDocCalls
+//########################
+var callParams = [];
+var callQuery = {};
+callParams.push({ "field" : "dateFrom", "value" : dateFrom});
+callParams.push({ "field" : "usrDocMetaPKey", "value" :  me.getUsrDocMetaPKey()});
+callParams.push({ "field" : "ownerPKey", "value" :  me.getOwnerUsrMainPKey()});
+callQuery.params = callParams;
+
+var promise = BoFactory.loadObjectByParamsAsync(LO_USERDRCALLSTATISTIC, callQuery).then(
+  function (loUserDRCallStatistic) {
+
+    callStatisticItems = loUserDRCallStatistic.getAllItems();
+
+    //#############################
+    //### Update UserDocActivities
+    //#############################
+    //loop over new call items from db
+    for ( var i = 0, len = callStatisticItems.length; i < len; i++) {
+      if(!dicActivityUpdate.containsKey(callStatisticItems[i].getClbMetaPKey())){
+        var activityItem = {
+          "hours" : parseInt(callStatisticItems[i].getHours(), 10),
+          "minutes" : parseInt(callStatisticItems[i].getMinutes(), 10)
+        };
+        dicActivityUpdate.add(callStatisticItems[i].getClbMetaPKey(), activityItem);
+      }else{
+        dicActivityUpdate.get(callStatisticItems[i].getClbMetaPKey()).hours =  dicActivityUpdate.get(callStatisticItems[i].getClbMetaPKey()).hours + parseInt(callStatisticItems[i].getHours(), 10);
+        dicActivityUpdate.get(callStatisticItems[i].getClbMetaPKey()).minutes =  dicActivityUpdate.get(callStatisticItems[i].getClbMetaPKey()).minutes + parseInt(callStatisticItems[i].getMinutes(), 10);
+      }
+    }
+
+    //loop over dic
+    var currentDicItem;
+    var key;
+    var currentActivityItem;
+    var duration = 0;
+    for (var j = 0, lenj = dicActivityUpdate.keys().length; j < lenj; j++) {
+      key = dicActivityUpdate.keys()[j];
+      duration = 0;
+      currentDicItem = dicActivityUpdate.get(key);
+      currentActivityItem = me.getLoUsrDRActivity().getItemsByParam({"clbMetaPKey":key});
+
+      if(Utils.isDefined(currentActivityItem[0])){
+        duration += currentDicItem.minutes;
+        duration += currentDicItem.hours * 60;
+        currentActivityItem[0].setDuration(duration.toString());
+        currentActivityItem[0].setHours(Math.floor(duration/60));
+        currentActivityItem[0].setMinutes((duration % 60).toString());
+      }
+    }
+
+    me.calculateTotalActivityDuration();
+  }
+);]]>
+</Code>
+  <Return name="BoUserDailyReport_updateActivities" value="promise" />
+</BusinessLogic>

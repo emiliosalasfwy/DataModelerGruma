@@ -1,0 +1,46 @@
+<BusinessLogic methodName="loadAsyncIncremental" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+    <MethodInput name="criterionFilterValue" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var orderItems;
+var loadPromise;
+
+if (Utils.isCasBackend() || !jsonParams.useMergeEngine){
+  loadPromise = Facade.getListAsync("LoOrderItemsPrepopulation", jsonParams);
+}
+else{
+  // Get merge engine parameters
+  var mergeEngineParams = me.getMEParamsForProposalList(jsonParams, criterionFilterValue);
+  // Call merge engine
+  loadPromise = Facade.getMergedListAsync(mergeEngineParams);
+}
+
+var promise = loadPromise.then(
+  function (items) {
+    orderItems = items;
+    // Define criteria for containsItem() function
+    var itemComparisonParams = [];
+    itemComparisonParams.push({"fieldName" : "prdMainPKey"});
+    itemComparisonParams.push({"fieldName" : "sdoItemMetaPKey"});
+    itemComparisonParams.push({"fieldName" : "sdoParentItemPKey"});
+    itemComparisonParams.push({"fieldName" : "quantityLogisticUnit"});
+
+    // Add items to list incrementally
+    me.addItemsIncremental(orderItems, jsonParams, itemComparisonParams);
+    // Default sort order
+    me.orderByDefaultOrder();
+
+    var mainItems = me.getAllItems();
+    for (var j = 0; j < mainItems.length; j++) {
+      if (Utils.isEmptyString(mainItems[j].getPKey())) {
+        mainItems[j].setPKey(PKey.next());
+        //setter makes li dirty
+        mainItems[j].setObjectStatus(STATE.NEW);
+      }
+    }
+  });]]>
+</Code>
+  <Return name="loOrderItems" value="promise" />
+</BusinessLogic>

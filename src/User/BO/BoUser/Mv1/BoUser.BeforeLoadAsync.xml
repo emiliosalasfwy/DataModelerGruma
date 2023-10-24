@@ -1,0 +1,82 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getObjectAsync(BO_USER, context.jsonQuery).then(
+  function (selfJson) {
+    context.selfJson = selfJson;
+    me.setProperties(selfJson);
+    //set temporary FW language, to be able to execute LoDataTypesForPicklistCache (setting whole user into context is not allowed before addPicklistValuesToToggleCache)
+    Utils.setFallbackSalesforceLangPostfix(me.getSfLanguagePostfix());
+    return Facade.getListAsync("LoDataTypesForPicklistCache", {});
+  }).then(    
+  function (loDatatype) {
+    //Add further toggles into toggle cache - these are not coming from Picklist Repo, but from DataType (used in call survey as dynamic picklists for which no real backend field - and picklist - exists)
+    SalesforceTools.addPicklistValuesToToggleCache(loDatatype);
+    
+    // put user in app context so that macro replacement is already available during rest of load
+    ApplicationContext.set('user', me);
+
+    return BoFactory.loadObjectByParamsAsync("BoUserSettings", me.getQueryBy("usrMainPKey", me.getPKey()));
+  }).then(
+  function (settings) {
+    me.setBoUserSettings(settings);
+    if(settings.getUsrLandingPageMobility() == "MainMenu"){
+      me.setShowCockpitInDashboard(true);
+    } else{
+      me.setShowCockpitInDashboard(false);
+    }
+
+    return BoFactory.loadObjectByParamsAsync("BoUserSales", me.getQueryBy("usrMainPKey", me.getPKey()));
+  }).then(
+  function (boUserSales) {
+    me.setBoUserSales(boUserSales);
+
+    var jsonParams = [];
+
+    jsonParams.push({
+      "field" : "usrRole",
+      "value" : "KeyAccountManager"
+    });
+
+    jsonParams.push({
+      "field" : "usrPKey",
+      "value" : me.getPKey()
+    });
+
+    var jsonQuery = {};
+    jsonQuery.params = jsonParams;
+
+    return BoFactory.loadObjectByParamsAsync("LuUserHasRoleById", jsonQuery);
+  }).then(
+  function (luUserHasRoleById) {
+    me.setLuUserHasRoleById(luUserHasRoleById);
+
+    return BoFactory.loadListAsync(LO_USRATTACHMENTS, me.getQueryBy("usrMainPKey", me.getPKey()));
+  }).then(
+  function (loUsrAttachments) {
+    if (Utils.isDefined(loUsrAttachments)) {
+      loUsrAttachments.setFilter("usage", "Picture");
+      if (loUsrAttachments.getCount() > 0) {
+        me.setProfilePicture(loUsrAttachments.getItems()[0].getMediaPath());
+      } 
+    }
+
+    return BoFactory.loadObjectByParamsAsync("LuIsSupervisor", me.getQueryBy("usrPKey", me.getPKey()));
+  }).then(
+  function (luIsSupervisor) {
+
+    //#########################################
+    //### check if user has supervisor role
+    //#########################################
+    if (Utils.isEmptyString(luIsSupervisor.getPKey())) {
+      me.setIsSupervisor("0");
+    } else {
+      me.setIsSupervisor("1");
+    }
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

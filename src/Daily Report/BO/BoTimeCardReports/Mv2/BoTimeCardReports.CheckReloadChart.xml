@@ -1,0 +1,24 @@
+<BusinessLogic methodName="checkReloadChart" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryData" type="Object" />
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="team" type="String" />
+    <MethodInput name="userName" type="String" />
+    <MethodInput name="startDate" type="String" />
+    <MethodInput name="endDate" type="String" />
+    <MethodInput name="loActivityItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chartHelper = me.getChartHelper();
+var chart = me.getChartHelper().getChartFromStorage(containerName);
+
+if(Utils.isDefined(chart)) {
+  var d3Container = chartHelper.getUIContainer(containerName, false);
+
+  if(Utils.isDefined(d3Container)) {
+    me.initializeTimeCardReport(timeEntryData, containerName, team, userName, startDate, endDate, loActivityItem, "reload");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

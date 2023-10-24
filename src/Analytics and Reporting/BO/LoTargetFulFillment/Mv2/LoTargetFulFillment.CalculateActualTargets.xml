@@ -1,0 +1,18 @@
+<BusinessLogic methodName="calculateActualTargets" businessObjectClass="LoTargetFulFillment" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+// Run through all the targets
+var targets = me.getAllItems();
+for(var i = 0; i < targets.length; i++) {
+  deferreds.push(me.getActualTargetByPeriod(targets[i]));
+}
+
+var promise = when.all(deferreds)
+.then(function () {
+  return me;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

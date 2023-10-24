@@ -1,0 +1,28 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoCustomerOpeningTime" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_CUSTOMEROPENINGTIME, jsonParams).then(
+  function(items) {
+    if (Utils.isSfBackend()){
+      items.forEach(function(item) {
+        if (Utils.isEmptyString(item.timeFrom)) {
+          item.timeFrom = "00:00";
+        }
+
+        if (Utils.isEmptyString(item.timeThru)) {
+          item.timeThru = "00:00";
+        }
+      });
+    }
+    me.addItems(items, jsonParams);
+    //Set days for which the Customer is open
+    me.setOpenDays();
+    //Reset dirty flag
+    me.setObjectStatus(STATE.PERSISTED);
+    return me;
+  });]]>
+</Code>
+  <Return name="loCustomerOpeningTime" value="promise" />
+</BusinessLogic>

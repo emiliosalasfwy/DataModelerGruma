@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (Utils.isEmptyString(me.getPrmMetaPKey()) || Utils.isEmptyString(me.getCustomerPKey()) || (Utils.isEmptyString(me.getContractName()) || !Utils.isDefined(me.getDateFrom()) || !Utils.isDefined(me.getDateThru()))) {
+  newError = {"level": "error",
+              "objectClass": "BoPrmCttFlyoutCreateContract",
+              "messageID": "CasPrmFillInAllValues"};
+  messageCollector.add(newError);
+}
+else if (Utils.isEmptyString(me.getDateFrom())) {
+  newError = {"level": "error",
+              "objectClass": "BoPrmCttFlyoutCreateContract",
+              "messageID": "CasPrmFillInAllValues"};
+  messageCollector.add(newError);
+}
+
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

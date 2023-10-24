@@ -1,0 +1,101 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+var itemTemplate = me.getBoOrderMeta().getLoOrderItemMetas().getMainItemTemplate();
+var runningTour = "";
+
+if (Utils.isDefined(ApplicationContext.get('currentTourPKey')))  {
+  runningTour = ApplicationContext.get('currentTourPKey');
+}
+
+//Show buttons only when a running tour is in context
+if (runningTour === me.getTmgMainPKey()) {
+  if(!(Utils.isDefined(ApplicationContext.get('currentTourStatus')) &&
+       ApplicationContext.get('currentTourStatus').toLowerCase() !== "running")) {
+
+    var nextStates;
+    switch (mode) {
+      case "ProductCheckOutRelease":
+        //Show release button if next state is "released"
+        nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+        if(Utils.isDefined(nextStates[0])) {
+          visible = true;
+        }
+        if(me.getDocumentType() === "TruckIvcTransferInward" || me.getPhase() == "Canceled") {
+          visible = false;
+        }
+        break;
+
+      case "AddProduct":
+        nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+        if(Utils.isDefined(nextStates[0])) {
+          visible = true;
+        }
+        //Btn availability based on truck load document template
+        if (Utils.isDefined(itemTemplate)) {
+          if (itemTemplate.getAddAllowed() === "0" || (itemTemplate.getCreationPlatform() !== "Mobility" && itemTemplate.getCreationPlatform() !== "Both")) {
+            visible = false;
+          }
+        }
+        if(me.getPhase() == "Canceled") {
+          visible = false;
+        }
+        break;
+
+      case "ScanProduct":
+        nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+        if(Utils.isDefined(nextStates[0])) {
+          visible = true;
+        }
+        if (me.getPhase() == "Canceled" || me.getDocumentType() === "TruckIvcTransferInward") {
+          visible = false;
+        }
+        break;
+
+      case "Calculate":
+        nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+        if(false && CP && Utils.isDefined(nextStates[0]) && me.getBoOrderMeta().getComputePrice() ==="4" && !Utils.isEmptyString(me.getBoOrderMeta().getCndCpCalculationSchemaPKey())){ // TODO: ComplexPricing
+          visible = true;
+        }
+        break;
+
+      case "Settings":
+        //Settings menu only displayed if 'Scan Increment' has to be displayed or DocumentType = 'Product Check In'
+        if(me.isEditable) {
+          visible = true;
+        }
+        break;
+
+      case "Approve":
+        if(me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() === "Initial") {
+          nextStates = me.getBoWorkflow().getNextStatesByStateType(me.getActualStatePKey(), "Released");
+          if(Utils.isDefined(nextStates[0])) {
+            if(me.getRecipientPKey() == ApplicationContext.get('user').getPKey()) {
+              visible = true;
+            }
+          }
+        }
+        break;
+
+      case "Reject":
+        if(me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() === "Initial") {
+          if(me.getRecipientPKey() == ApplicationContext.get('user').getPKey()) {
+            visible = true;
+          }
+        }
+        break;
+
+      case "Confirm":
+        if(me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() == "Initial" && me.getSenderPKey() == ApplicationContext.get('user').getPKey() && Utils.isEmptyString(me.getInwardTransferDocumentPKey())) {
+          visible = true;
+        }
+        break;
+    }
+  }
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

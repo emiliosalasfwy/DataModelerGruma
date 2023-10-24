@@ -1,0 +1,49 @@
+<BusinessLogic methodName="determineSysReleaseProcessPKey" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var docMeta = me.getBoOrderMeta();
+var SysReleaseProcessPKey = docMeta.getSysReleaseProcessPKey();
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') === "Running") {
+  var tourPKey = ApplicationContext.get('currentTourPKey');
+  var docMetaPKey = docMeta.getPKey();
+  var docSdoSubType = docMeta.getSdoSubType();
+  var usage = "";
+
+  //Usage ProductCheckOut/ProductCheckIn/TruckAudit
+  if (docSdoSubType === "ProductCheckOut"){
+    usage = "SdoMeta.ProductCheckOut";
+  }else if (docSdoSubType === "ProductCheckIn"){
+    usage = "SdoMeta.ProductCheckIn";
+  }else if (docSdoSubType === "TruckAudit"){
+    usage = "SdoMeta.TruckAudit";
+  }else if (docSdoSubType === "TruckIvcTransferOutward"){
+    usage = "SdoMeta.TckIvcTransferOutward";
+  }else if (docSdoSubType === "TruckIvcTransferInward"){
+    usage = "SdoMeta.TckIvcTransferInward";
+  }
+
+  var jsonQuery ={};
+
+  jsonQuery.params= [
+    { "field" : "tmgTourPKey", "value" : tourPKey },
+    { "field" : "objectMetaPKey", "value" : docMetaPKey },
+    { "field" : "usage", "value" : usage }
+  ];
+
+  promise = BoFactory.loadObjectByParamsAsync("LuTourObjectRelInformation", jsonQuery).then(
+    function(luTourObjectRelInformation) {
+      if(Utils.isDefined(luTourObjectRelInformation)) {
+        SysReleaseProcessPKey = luTourObjectRelInformation.getSysReleaseProcessPKey();
+      }
+
+      return SysReleaseProcessPKey;
+    }
+  );
+} else {
+  promise = when.resolve(SysReleaseProcessPKey);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

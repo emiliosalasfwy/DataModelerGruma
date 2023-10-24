@@ -1,0 +1,84 @@
+<BusinessLogic methodName="setItemFilter" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterCode" type="DomString" />
+    <MethodInput name="categoryId" type="DomString" />
+    <MethodInput name="promotionPKey" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var filterArray = [];
+var paramsForPkeys = [];
+var selectablePromotionUoMsOfItems = [];
+
+// Reset filters of image selector    
+me.resetAllFilters();
+
+if(Utils.isDefined(promotionPKey) && !Utils.isEmptyString(promotionPKey)){
+  paramsForPkeys = [{"promotionPKey":promotionPKey, "op":"EQ"}];
+} else {
+  paramsForPkeys = [{"promotionPKey":" ", "op":"EQ"},{"quantity":"0", "op":"GT"},{"showInBasket" : "1", "op" : "EQ"}]; 
+}
+
+var items = me.getItemsByParamArray(paramsForPkeys,undefined,'OR');
+
+switch (filterCode) 
+{
+  case "All":                       
+    // never use an empty filterArray because it will reset all filters,
+    // reapply the always existing filter instead in order to filter out free items that have just been deleted
+    // for all other cases the existing filter will be applied anyway because the filters are changed
+    filterArray.push({"deletedFreeItem" : "0", "op" : "EQ"});
+    break;
+  case "Promotion":
+    filterArray.push({"promoted" : "1", "op" : "EQ"});
+    // do not show deleted free Items
+    filterArray.push({"deletedFreeItem" : "0", "op" : "EQ"});
+    break;
+  case "New":
+    filterArray.push({"newState" : "Available", "op" : "EQ"});
+    break;
+  case "History":
+    filterArray.push({"history" : "1", "op" : "EQ"});
+    break;
+  case "OutOfStock":
+    filterArray.push({"outOfStock" : "1", "op" : "EQ"});
+    break;
+  case "Basket":
+    // Reset GroupId filter of breadcrumb control
+    me.resetFilter("groupId");
+    // do not show deleted free Items
+    filterArray.push({"deletedFreeItem" : "0", "op" : "EQ"});
+    //show Basket relevant items
+    filterArray.push({"showInBasket" : "1", "op" : "EQ"});
+    break;
+}
+
+var selectRefPKeys = {};
+for(var i = 0; i < items.length; i++){
+  selectRefPKeys[items[i].getRefPKey()] = items[i].getRefPKey();
+
+}
+filterArray.push({"refPKey" : selectRefPKeys, "op" : "IN"});
+
+// Filter item list by category if basket is not selected
+if (Utils.isDefined(categoryId) && !Utils.isEmptyString(categoryId) && filterCode != "Basket") {
+  filterArray.push({"groupId" : categoryId, "op" : "EQ"});
+}
+
+//Filter item list by quick filters
+var registerFilter = ApplicationContext.get("registerFilter");
+var categoryFilter = ApplicationContext.get("categoryFilter");
+var quickFilter;
+
+if(Utils.isDefined(registerFilter)){
+  quickFilter = {"groupName" : registerFilter, "op" : "EQ"};
+  filterArray.push(quickFilter);
+}
+if(Utils.isDefined(categoryFilter)){
+  quickFilter = {"category" : categoryFilter, "op" : "EQ"};
+  filterArray.push(quickFilter);
+}
+
+me.setFilterArray(filterArray);]]>
+</Code>
+  <Return name="filterCode" value="filterCode" />
+</BusinessLogic>

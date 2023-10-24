@@ -1,0 +1,63 @@
+<BusinessLogic methodName="validateQuantityModifications" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!this.isEditable() || this.getReleaseIgnored() == "1")
+{
+  return;    
+}
+
+if (this.getValidateForQuantity() !== "1")
+{
+  if(this.getReleaseTriggered() !== "1")
+  {
+    if(messageCollector.onCancel !== "setValidateForQuantityFlag")
+    {
+      return;
+    }
+  }
+
+
+  var params=[{ "qtyDifference" : "0", "op" : "NE" },{ "modReason" : " ", "op" : "EQ" },{ "targetQuantity" : "0", "op" : "NE" }];
+
+  var items = this.getLoItems().getItemsByParamArray(params);
+  var newError;
+  var displayMsg;
+
+  items = this.getLoItems().getAllItems();
+  var index;
+
+  if( this.getActualPrdCheckOutType() === "Express" || this.getBoOrderMeta().getItemPresettingPolicy() === "Prepopulated")
+  {
+    for(var i=0; i< items.length; i++)
+    {
+      var currentItem = items[i]; 
+      var itemMetas = this.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(currentItem.getSdoItemMetaPKey());
+
+      if(currentItem.getModReasonEntered() === 'PrioHigh24'){
+        displayMsg = "yes";
+      }    
+    }
+  }
+
+  if(displayMsg ==="yes")
+  {
+    this.setValidateForQuantity("1") ;
+    if(this.getReleaseTriggered() == "1")
+    {
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoTruckLoad",			
+        "messageID" : "CasSdoMainModReasonRequiredToRelease"
+      };
+	  messageCollector = this.addMessageToContainer(messageCollector, newError);
+    }
+    
+
+  }
+
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

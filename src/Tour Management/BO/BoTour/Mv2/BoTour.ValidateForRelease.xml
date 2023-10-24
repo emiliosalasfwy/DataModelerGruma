@@ -1,0 +1,49 @@
+<BusinessLogic methodName="validateForRelease" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(me.getTmgStatus() === "Open" || me.getTmgStatus() === "Running"){
+  var result = "validateOk"; 
+
+  me.validateContextRunningTour(messageCollector);
+  me.validateTourDate(messageCollector);
+  me.validateVehicle(messageCollector);
+  me.validateMileage(messageCollector);
+  me.validateChecksAnswered(messageCollector);
+
+  promise = me.validateOpenDocuments(messageCollector).then(
+    function(){
+      return me.validateOpencalls(messageCollector);
+    }).then(
+    function(){
+      if(Utils.isDefined(ApplicationContext.get('openTimeCardPKey')) && !Utils.isEmptyString(ApplicationContext.get('openTimeCardPKey'))) {
+        var currentUserPKey = ApplicationContext.get('user').getPKey();
+
+        return BoFactory.loadObjectByParamsAsync("BoUserDailyReport", me.getQueryBy("pKey", ApplicationContext.get('openTimeCardPKey'))).then(
+          function (boUserDailyReport){
+            //Validation is not required if the tiemcard is not realted to the current user
+            if(boUserDailyReport.getOwnerUsrMainPKey() !== currentUserPKey || boUserDailyReport.getResponsiblePKey() !== currentUserPKey ) {
+
+              return result;
+            } else {
+              me.setBoUserDailyReport(boUserDailyReport);
+
+              //set validate for release for checking if TEs are all in working time slot
+              me.getBoUserDailyReport().setReleaseProcessActive("1");
+
+              return me.getBoUserDailyReport().doValidateAsync(messageCollector);
+            }
+          }
+        );
+      }
+    }
+  );
+} else {
+  promise = when.resolve("validateDiscard");
+}]]>
+</Code>
+  <Return name="validationResult" value="promise" />
+</BusinessLogic>

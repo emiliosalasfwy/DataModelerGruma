@@ -1,0 +1,10 @@
+<BusinessLogic methodName="addMessageToContainer" businessObjectClass="BoOrder" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+    <MethodInput name="message" type="message" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[messageCollector.extendParams(message);]]>
+</Code>
+  <Return name="messageCollector" value="messageCollector" />
+</BusinessLogic>

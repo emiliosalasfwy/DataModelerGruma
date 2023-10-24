@@ -1,0 +1,63 @@
+<BusinessLogic methodName="addSurvey" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="prdMainPKey" type="String" />
+    <MethodInput name="posId" type="String" />
+    <MethodInput name="jobDefMetaPKey" type="String" />
+    <MethodInput name="surveyColumn" type="LiSurveyColumn" />
+    <MethodInput name="value" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loCurrentPOS = me.getLoPOS().getItemsByParam({"posId" : posId});
+
+if (loCurrentPOS.length > 0) {
+  var liCurrentPOS = loCurrentPOS[0];
+
+  var surveyItemData = {
+    "pKey" : PKey.next(),
+    "clbMainPKey" : me.getClbMainPKey(),
+    "bpaMainPKey" : me.getBpaMainPKey(),
+    "visitDate" : me.getReferenceDate(),
+    "visitTime" : me.getTimeFrom(),
+    "prdMainPKey" : prdMainPKey,
+    "posId" : posId,
+    "jobDefinitionMetaPKey" : jobDefMetaPKey,
+    "surveyText" : surveyColumn.getJobDefinitionMetaText(),
+    "jobDefinitionListText" : "Manual",
+    "jobListPKey" : " ",
+    "jobMetaPKey" : surveyColumn.getJobMetaPKey(),
+    "jobDefinitionPKey" : " ",
+    "defaultValue" : 0,
+    "pOS" : liCurrentPOS.getIsPOS(),
+    "manual" : "1",
+    "clbPOSCheckPKey" : liCurrentPOS.getPosId(),
+    "prdPOSContentPKey" : liCurrentPOS.getPosContentPKey(),
+    "dataType" : surveyColumn.getDataType(),
+    "dataLength" : surveyColumn.getDataLength(),
+    "toggleId" : surveyColumn.getToggleId(),
+    "listed" : "0",
+    "planned" : "0",
+    "history" : "0",
+    "thresholdViolation" : "No",
+    "value" : value,
+    "done" : Utils.isEmptyString(value) ? "0" : "1",
+    "dataWareHouseKey" : surveyColumn.getDataWareHouseKey(),
+    "useStepper" : surveyColumn.getUseStepper(),
+    "stepSize" : surveyColumn.getStepSize(),
+    "considerMinValue" : surveyColumn.getConsiderMinValue(),
+    "minValue" : surveyColumn.getMinValue(),
+    "minDatePolicy" : surveyColumn.getMinDatePolicy(),
+    "considerMaxValue" : surveyColumn.getConsiderMaxValue(),
+    "maxValue" : surveyColumn.getMaxValue(),
+    "decimalPlaces" : surveyColumn.getDecimalPlaces(),
+    "maxDatePolicy" : surveyColumn.getMaxDatePolicy(),
+    "hide" : "0",
+    "mandatory" : "0",
+    "jobActionSuccess" : "None",
+    "objectStatus" : STATE.NEW | STATE.DIRTY
+  };
+
+  liCurrentPOS.getSurveys().addItem(surveyItemData);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

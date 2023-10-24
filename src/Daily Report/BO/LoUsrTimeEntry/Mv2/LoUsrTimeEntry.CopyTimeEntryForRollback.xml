@@ -1,0 +1,42 @@
+<BusinessLogic methodName="copyTimeEntryForRollback" businessObjectClass="LoUsrTimeEntry" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="state" type="String" />
+    <MethodInput name="workUsrTimeEntryMetaPKey" type="String" />
+    <MethodInput name="tePKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(this.getCurrent())){
+  this.setCurrentByPKey(tePKey);
+}
+
+var origPKey = this.getCurrent().getPKey();
+
+var newliUsrTimeEntry = {
+  "pKey" : PKey.next(),
+  "effectiveDateFrom" : this.getCurrent().getEffectiveDateFrom(),
+  "effectiveDateThru" : this.getCurrent().getEffectiveDateThru(),
+  "effectiveTimeFrom" : this.getCurrent().getEffectiveTimeFrom(),
+  "effectiveTimeThru" : this.getCurrent().getEffectiveTimeThru(),
+  "effectiveTimeFromGeoOffset" : this.getCurrent().getEffectiveTimeFromGeoOffset(),
+  "effectiveTimeThruGeoOffset" : this.getCurrent().getEffectiveTimeThruGeoOffset(),
+  "effectiveTimeFromDSTOffset" : this.getCurrent().getEffectiveTimeFromDSTOffset(),
+  "effectiveTimeThruDSTOffset" : this.getCurrent().getEffectiveTimeThruDSTOffset(),
+  "note" : this.getCurrent().getNote(),
+  "reasonCode" : this.getCurrent().getReasonCode(),
+  "description" : "Hidden",
+  "orgPKey" : origPKey,
+  "filter" : ("description", "Hidden", "NE")
+};
+this.addListItems([newliUsrTimeEntry]);
+
+//Before Time Card is released, the user cannot edit the endtime for worktime entry.
+if(this.getCurrent().getUsrTimeEntryMetaPKey() == workUsrTimeEntryMetaPKey && state.getId() !=="Correction")
+{
+  this.getACL().removeRight(AclObjectType.PROPERTY,"effectiveTimeThru", AclPermission.EDIT);
+  this.getACL().removeRight(AclObjectType.PROPERTY,"effectiveDateThru", AclPermission.EDIT);
+}
+
+this.setCurrentByPKey(origPKey);]]>
+</Code>
+  <Return name="origTimeEntry" value="newliUsrTimeEntry" />
+</BusinessLogic>

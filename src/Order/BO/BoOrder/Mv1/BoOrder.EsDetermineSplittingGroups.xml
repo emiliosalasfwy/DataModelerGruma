@@ -1,0 +1,40 @@
+<BusinessLogic methodName="esDetermineSplittingGroups" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if (me.isGroupingEnabled())
+{
+  me.getLoSplittingGroups().removeAllItems();
+  var splittingGroups = Utils.createDictionary();
+
+  var itemsWithQuantity = me.getLoItems().getItemsByParamArray([{ "quantity": 0, op: "GT" }]);
+  for (var i = 0; i < itemsWithQuantity.length; i++)
+  {
+    var item = itemsWithQuantity[i];
+    if (!splittingGroups.containsKey(item.getSplittingGroup()))
+    {
+      splittingGroups.add(item.getSplittingGroup(), {
+        "splittingGroup": item.getSplittingGroup(),
+        "totalValue":0,
+        "totalValueReceipt": 0,
+        "grossTotalValue": 0,
+        "grossTotalValueReceipt": 0,
+        "currency": me.getCurrency()
+      });
+    }
+    var splittingGroup = splittingGroups.get(item.getSplittingGroup());
+    splittingGroup.totalValue += item.getValue();
+    splittingGroup.totalValueReceipt += item.getValueReceipt();
+    splittingGroup.grossTotalValue += item.getGrossValue();
+    splittingGroup.grossTotalValueReceipt += item.getGrossValueReceipt();
+  }
+  var splittingGroupArray = [];
+  var keys = splittingGroups.keys();
+  for (var j = 0; j < keys.length; j++)
+  {
+    splittingGroupArray.push(splittingGroups.get(keys[j]));
+  }
+  me.getLoSplittingGroups().addItems(splittingGroupArray);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

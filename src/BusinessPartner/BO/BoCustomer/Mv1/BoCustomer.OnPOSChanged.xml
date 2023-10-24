@@ -1,0 +1,21 @@
+<BusinessLogic methodName="onPOSChanged" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Changed handler is needed for disabling the "Discontinue" menu entry without reloading the POS-Relation list
+
+for (var i = 0; i < handlerParams.modified.length; i++) {
+  switch (handlerParams.modified[i]) {
+    case "validThru":
+      if(Utils.isDefined(handlerParams.listItem.getValidThru())) {
+        if(Utils.convertAnsiDate2Date(handlerParams.listItem.getValidThru()) < Utils.createDateToday()) {
+          handlerParams.listItem.continued = '0';
+        }
+      }
+      break;
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

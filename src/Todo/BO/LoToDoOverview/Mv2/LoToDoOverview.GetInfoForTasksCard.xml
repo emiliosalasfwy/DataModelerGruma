@@ -1,0 +1,24 @@
+<BusinessLogic methodName="getInfoForTasksCard" businessObjectClass="LoToDoOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var count = me.cardItemCount;
+var numberVisibleTasks = 5;
+
+if(Utils.isPhone()) {
+	numberVisibleTasks = 3;
+}
+
+if(count <= numberVisibleTasks){
+  numberVisibleTasks = count;
+}
+
+var info = " ";
+if(numberVisibleTasks != "0"){
+	info = numberVisibleTasks.toString() + " / " + count;
+}
+
+
+]]></Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

@@ -1,0 +1,13 @@
+<BusinessLogic methodName="fillItemUoMList" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="allLogistics" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var additionalItems = [];
+
+me.addItemUoMsToList(mainItem, allLogistics, additionalItems, [mainItem]);
+me.addItems(additionalItems);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

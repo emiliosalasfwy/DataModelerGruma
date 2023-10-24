@@ -1,0 +1,81 @@
+<BusinessLogic methodName="navigate" businessObjectClass="LoVisitMap" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+if(me.getAllItemsCount() > 0){
+
+var nextVisit = me.getAllItems()[0];
+
+var latitude = nextVisit.getRetailStoreLatitude();
+var longitude = nextVisit.getRetailStoreLongitude();
+var street  = nextVisit.getRetailStoreStreet();
+var zipCode = nextVisit.getRetailStorePostalCode();
+var city = nextVisit.getRetailStoreCity();
+
+
+var destinationLongitude = 0, destinationLatitude = 0, destinationCity = '', destinationStreet = ' ', destinationZipCode = ' ';
+
+
+var isLocationFound = false;
+
+
+if( (latitude !== 0 && longitude !== 0) || ( !Utils.isEmptyString(street) || !Utils.isEmptyString(zipCode) || !Utils.isEmptyString(city))){
+    
+    destinationLongitude =  longitude;
+    destinationLatitude = latitude;
+    destinationCity  = city;
+    destinationStreet = street;
+    destinationZipCode = zipCode;
+    isLocationFound = true;
+}
+
+if(!isLocationFound) {
+  
+  // check for  location Lat&Long.
+  // if above lat& long are zero and below are non zero it means Location has Lat & Long. 
+  longitude = nextVisit.getLongitude();
+  latitude =  nextVisit.getLatitude();
+  
+  if(longitude !== 0 && latitude !== 0) {
+    isLocationFound = true;
+    destinationLongitude =  longitude;
+    destinationLatitude = latitude;
+  }
+  
+}
+
+if(!isLocationFound) {
+  // finally check if we have visitor address.
+   street  = Utils.isDefined(nextVisit.getVisitorStreet()) ? nextVisit.getVisitorStreet() : ' ';
+   city    = Utils.isDefined(nextVisit.getVisitorCity()) ? nextVisit.getVisitorCity() : ' ';
+   zipCode = Utils.isDefined(nextVisit.getVisitorPostalCode()) ? nextVisit.getVisitorPostalCode() : ' ';
+  
+  if( !Utils.isEmptyString(street) ||  !Utils.isEmptyString(city) ||  !Utils.isEmptyString(zipCode)) {
+     
+    isLocationFound = true;
+    destinationCity  = city;
+    destinationStreet = street;
+    destinationZipCode = zipCode;
+  }
+  
+}
+if(!isLocationFound) {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("NoRouteFound"), buttonValues);
+
+}
+else
+{
+  promise = BoFactory.createObjectAsync("BoGeoHelper", {})
+    .then(
+    function(geoHelper)
+    {
+      return geoHelper.startNavigation(destinationLatitude, destinationLongitude, destinationStreet, "",  destinationZipCode, destinationCity);
+    }
+  );
+}
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,77 @@
+<BusinessLogic methodName="validateTactics" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+var loTactics = me.getLoPrmCttTactics().getItemsByParamArray([{"objectStatus" : STATE.DELETED, "op" : "NCB"}]);
+var prmCttTacticDateFromGTDateThruMessages = [];
+var prmCttTacticDateThruGTCttDateThruMessages = [];
+var prmCttTacticDateFromLTCttDateFromMessages = [];
+var idxTctDateFromGTDateThru = 0;
+var idxTctDateThruGTCttDateThru = 0;
+var idxTctDateFromLTCttDateFrom = 0;
+
+for(var idxTct = 0; idxTct < loTactics.length; idxTct++){
+  var liTactic = loTactics[idxTct];
+
+  if((liTactic.getDateFrom()) > (liTactic.getDateThru())){
+    if (prmCttTacticDateFromGTDateThruMessages.indexOf(liTactic.getTacticMetaName()) == -1){
+      prmCttTacticDateFromGTDateThruMessages[idxTctDateFromGTDateThru] = liTactic.getTacticMetaName();
+      idxTctDateFromGTDateThru++;
+    }
+  }
+  else if(Utils.isDefined(me.getDateThru()) && (liTactic.getDateThru()) > (me.getDateThru())){
+    if (prmCttTacticDateThruGTCttDateThruMessages.indexOf(liTactic.getTacticMetaName()) == -1){
+      prmCttTacticDateThruGTCttDateThruMessages[idxTctDateThruGTCttDateThru] = liTactic.getTacticMetaName();
+      idxTctDateThruGTCttDateThru++;
+    }
+  }
+  else if(Utils.isDefined(me.getDateFrom()) && (liTactic.getDateFrom()) < (me.getDateFrom())){
+    if (prmCttTacticDateFromLTCttDateFromMessages.indexOf(liTactic.getTacticMetaName()) == -1){
+      prmCttTacticDateFromLTCttDateFromMessages[idxTctDateFromLTCttDateFrom] = liTactic.getTacticMetaName();
+      idxTctDateFromLTCttDateFrom++;
+    }
+  }
+}
+
+if (prmCttTacticDateFromGTDateThruMessages.length > 0){
+  newError = {
+    "level": "error",
+    "objectClass": "BoPrmContract",
+    "messageID": "CasPrmCttTacticDateFromGTDateThru",
+    "messageParams": {
+      "item": prmCttTacticDateFromGTDateThruMessages.join(", ")
+    }
+  };
+  messageCollector.add(newError);
+}
+
+if (prmCttTacticDateThruGTCttDateThruMessages.length > 0){
+  newError = {
+    "level": "error",
+    "objectClass": "BoPrmContract",
+    "messageID": "CasPrmCttTacticDateThruGTCttDateThru",
+    "messageParams": {
+      "item": prmCttTacticDateThruGTCttDateThruMessages.join(", "),
+      "slogan": me.getBoSlogan().getText()
+    }
+  };
+  messageCollector.add(newError);
+}
+
+if (prmCttTacticDateFromLTCttDateFromMessages.length > 0){
+  newError = {
+    "level": "error",
+    "objectClass": "BoPrmContract",
+    "messageID": "CasPrmCttTacticDateFromLTCttDateFrom",
+    "messageParams": {
+      "item": prmCttTacticDateFromLTCttDateFromMessages.join(", "),
+      "slogan": me.getBoSlogan().getText()
+    }
+  };
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

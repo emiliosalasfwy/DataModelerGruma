@@ -1,0 +1,64 @@
+<BusinessLogic methodName="createDisplayInformationForList" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="truckLoadItemsMain" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var addDisplayInformation = function(mainItem, orderUnitInformation, unitInformation){
+  mainItem.setOrderUnitInformation(orderUnitInformation.ForTruckLoad);
+  mainItem.setUnitInformation(unitInformation.ForTruckLoad);
+  mainItem.setOrderUnitInformationForFreeItems(orderUnitInformation.ForFreeItem);
+  mainItem.setUnitInformationForFreeItems(unitInformation.ForFreeItem);
+  //Assign values for Stock display
+  if(me.getDocumentType() == "TruckIvcTransferInward"){
+    me.setInventoryBalanceOfItem(mainItem.getPKey());
+  }
+  else{
+    mainItem.setIvcBalance(mainItem.getTargetQuantity());
+  }
+  mainItem.setIvcBalanceUnitType(Utils.getToggleText("DomPrdLogisticUnit", mainItem.getQuantityLogisticUnit()));
+};
+
+
+var mainItem;
+var orderUnitInformation = [];
+var unitInformation = [];
+orderUnitInformation.ForTruckLoad = "";
+unitInformation.ForTruckLoad = "";
+orderUnitInformation.ForFreeItem = "";
+unitInformation.ForFreeItem = "";
+
+if(Utils.isDefined(truckLoadItemsMain)){
+  var userPKey = ApplicationContext.get('user').getPKey();
+  var currentRefPKey = truckLoadItemsMain.length > 0 ? truckLoadItemsMain[0].getRefPKey() : null;
+
+  // items are ordered by refPKey
+  for(var i = 0; i < truckLoadItemsMain.length; i++){
+    var currentItem = truckLoadItemsMain[i];
+
+    if (currentRefPKey !== currentItem.getRefPKey()){
+      addDisplayInformation(mainItem, orderUnitInformation, unitInformation);
+      currentRefPKey = currentItem.getRefPKey();
+      orderUnitInformation.ForTruckLoad = "";
+      unitInformation.ForTruckLoad = "";
+      orderUnitInformation.ForFreeItem = "";
+      unitInformation.ForFreeItem = "";
+    }
+
+    var info = me.createDisplayInformationForUoMItem(currentItem, userPKey);
+    if (currentItem.getIsOrderUnit() == "1"){
+      mainItem = currentItem;
+      orderUnitInformation.ForTruckLoad += info.unitInformationForTruckInventory;
+      orderUnitInformation.ForFreeItem += info.unitInformationForFreeItems;
+    } else{
+      unitInformation.ForTruckLoad += Utils.isEmptyString(unitInformation.ForTruckLoad) ? info.unitInformationForTruckInventory : ", " + info.unitInformationForTruckInventory;
+      unitInformation.ForFreeItem += Utils.isEmptyString(unitInformation.ForFreeItem) ? info.unitInformationForFreeItems : ", " + info.unitInformationForFreeItems;
+    }
+  }
+
+  if (Utils.isDefined(mainItem)){
+    addDisplayInformation(mainItem, orderUnitInformation, unitInformation);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

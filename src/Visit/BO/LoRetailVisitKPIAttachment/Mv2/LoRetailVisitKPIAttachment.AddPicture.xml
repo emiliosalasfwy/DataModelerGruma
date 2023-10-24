@@ -1,0 +1,47 @@
+<BusinessLogic methodName="addPicture" businessObjectClass="LoRetailVisitKPIAttachment" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mediaPath" type="Object" />
+    <MethodInput name="parentId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var type = Utils.getFileExtensionFromMediaPath(mediaPath);
+
+AppLog.info("MediaPath:{}" +JSON.stringify(mediaPath));
+var pKeyAttachment = PKey.next();
+var fileName = '';
+
+if(Utils.isDefined(mediaPath.path)) {
+
+  fileName = mediaPath.path.split('/').pop();
+}
+else { 
+  fileName = mediaPath.split('/').pop();
+}
+
+//default values
+var creationDate;
+var creationTime;
+
+creationDate = Utils.createAnsiDateToday();
+creationTime = Utils.createAnsiTimeNow();
+
+
+var attachmentData = {
+  "pKey" : PKey.next(),
+  "creationDate" : creationDate,
+  "creationTime" : creationTime,
+  "fileName" : fileName,
+  "fileType" : type,
+  "fileSize" : 0,
+  "attachmentTextPKey" : PKey.next(),
+  "attachmentText" : fileName,
+  "attachmentBlobPKey" : PKey.next(),
+  "attachmentBlob" : mediaPath,
+  "objectStatus": STATE.NEW | STATE.DIRTY
+};
+
+attachmentData.parentId = parentId;
+me.addListItems([attachmentData]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

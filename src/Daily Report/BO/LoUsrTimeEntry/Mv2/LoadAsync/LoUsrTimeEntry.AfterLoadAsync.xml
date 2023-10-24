@@ -1,0 +1,50 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoUsrTimeEntry" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(result);
+var items = me.getAllItems();
+
+for(var i = 0; i < items.length; i++) { 
+  if(items[i].getSignImage()!=="Edited"){
+    items[i].setSignImage("Blank");
+  }
+  if(items[i].getManual() == "1"){
+    items[i].setSignImage("Manual");
+  }
+}
+
+items.sort(compareTimeEntry);
+me.removeAllItems();
+me.addObjectItems(items);
+
+function compareTimeEntry(te1, te2) {
+  var activityType1 = te1.getActivityType();
+  var activityType2 = te2.getActivityType();
+
+  if(Utils.isDefined(activityType1) && Utils.isDefined(activityType2)){
+    if ((activityType1 !== "WorkingTime" && activityType2 !== "WorkingTime") || 
+        (activityType1 === "WorkingTime" && activityType2 === "WorkingTime")){
+      if (te1.getEffectiveUTCTimeFrom() < te2.getEffectiveUTCTimeFrom()){
+        return -1;
+      }
+      if (te1.getEffectiveUTCTimeFrom() > te2.getEffectiveUTCTimeFrom()){
+        return 1;
+      }
+      return 0;
+    }
+    else {
+      if (activityType1 === "WorkingTime"){
+        return -1;
+      }
+      else{
+        return 1;
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

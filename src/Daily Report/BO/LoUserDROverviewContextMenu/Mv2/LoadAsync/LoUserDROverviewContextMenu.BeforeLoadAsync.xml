@@ -1,0 +1,22 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoUserDROverviewContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var phase = Utils.isDefined(context.jsonQuery.phase) ? Utils.getToggleText("DomUsrDocPhase", context.jsonQuery.phase).toLowerCase() : "";
+
+me.addItems([
+  {
+    "id": "0000001",
+    "actionImg": "TrashcanDarkGrey24",
+    "actionId": "Delete",
+    "processEvent": "Delete",
+    "actionVisible" : "1",
+    "actionEnabled" : context.jsonQuery.uiGroup !== "TimeCard" && (phase === "initial" || phase === "correction") ? "1" : "0"
+  }
+]);
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

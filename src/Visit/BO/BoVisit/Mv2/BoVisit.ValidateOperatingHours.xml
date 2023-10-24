@@ -1,0 +1,74 @@
+<BusinessLogic methodName="validateOperatingHours" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="dateFrom" type="String" />
+    <MethodInput name="timeFrom" type="String" />
+    <MethodInput name="operatingHoursBo" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isVisitInOperatingHours = false;
+if(Utils.isDefined(operatingHoursBo)&&operatingHoursBo)
+  {
+    var isTimeSlotPresent = false;
+    dateFrom = Utils.convertAnsiDate2Date(dateFrom);
+    timeFrom = Utils.convertAnsiTime2Time(timeFrom);
+    dateFrom.setHours(timeFrom.getHours());
+    dateFrom.setMinutes(timeFrom.getMinutes());
+    if( ! (Utils.isDefined(dateFrom) && dateFrom))
+      return;
+    var newDateFrom  = Utils.createDateByString(dateFrom.toLocaleString("en-US", {timeZone: operatingHoursBo.getTimeZone()}));
+    var day = newDateFrom.getDay();
+    var dayString = dayOfWeekAsString(day);
+	var timeSlots = operatingHoursBo.getTimeslots();
+    var newTimeFrom = Utils.convertTime2Ansi(newDateFrom);
+    timeSlots.forEach(function(timeSlot){
+      if(timeSlot.dayOfWeek === dayString)
+        {
+          isTimeSlotPresent = true;
+          var timeSlotStartTime = convertSalesforceTimeToAnsiTime(timeSlot.startTime);
+          var timeSlotEndTime = convertSalesforceTimeToAnsiTime(timeSlot.endTime);
+          if(newTimeFrom >= timeSlotStartTime && newTimeFrom <= timeSlotEndTime)
+            {
+              isVisitInOperatingHours = true;
+            }
+        }
+    });
+    if(!isTimeSlotPresent)
+      {
+        isVisitInOperatingHours = true;
+      }
+	}
+else
+  {
+    isVisitInOperatingHours = true;
+    return;
+  }
+
+function dayOfWeekAsString(dayIndex) {
+    return ["Sunday", "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][dayIndex] || '';   
+ }
+
+function convertSalesforceTimeToAnsiTime(salesforceTime)
+{
+  if(salesforceTime === null)
+    return null;
+  if(salesforceTime.length === 7)
+    {
+      salesforceTime = "0" + salesforceTime;
+    }
+  if(salesforceTime.charAt(0) == "1"&& salesforceTime.charAt(1) === "2")
+    {
+          salesforceTime = "00" + salesforceTime.substring(2);
+    }
+  if(salesforceTime.charAt(salesforceTime.length-2) === "p")
+    {
+       var hours = salesforceTime.substring(0,2);
+       hours = parseInt(hours);
+       hours += 12;
+       hours = hours.toString();
+       salesforceTime = hours.charAt(0)+hours.charAt(1)+salesforceTime.substring(2);
+    }
+  return salesforceTime.substring(0,5);
+}]]>
+</Code>
+  <Return name="validationResult" value="isVisitInOperatingHours" />
+</BusinessLogic>

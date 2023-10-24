@@ -1,0 +1,10 @@
+<BusinessLogic methodName="rewardGroupExistsInOrder" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var rewardGroupExists = false;
+if (me.getHurdleEvaluationHelper().getLoRewardGroups().getItems().length > 0) {
+  rewardGroupExists = true;
+}]]>
+</Code>
+  <Return name="rewardGroupExists" value="rewardGroupExists" />
+</BusinessLogic>

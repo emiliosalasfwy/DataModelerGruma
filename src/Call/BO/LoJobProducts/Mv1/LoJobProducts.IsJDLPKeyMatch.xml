@@ -1,0 +1,20 @@
+<BusinessLogic methodName="isJDLPKeyMatch" businessObjectClass="LoJobProducts" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="sMatrixSurveyJDLPKeys" type="String" />
+    <MethodInput name="sProductJDLPKeys" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var result = false;
+var aMatrixSurveyJDLPKeys = sMatrixSurveyJDLPKeys.split(",");
+
+if(!Utils.isEmptyString(sProductJDLPKeys)){
+  for (var idx = 0; idx < aMatrixSurveyJDLPKeys.length; idx++) {
+    if(!Utils.isEmptyString(aMatrixSurveyJDLPKeys[idx]) && sProductJDLPKeys.indexOf(aMatrixSurveyJDLPKeys[idx]) > -1){
+      result = true;
+      break;
+    }
+  }
+}]]>
+</Code>
+  <Return name="isMatch" value="result " />
+</BusinessLogic>

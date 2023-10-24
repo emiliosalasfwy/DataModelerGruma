@@ -1,0 +1,110 @@
+<BusinessLogic methodName="createAttributeMapping" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var i;
+var length;
+
+if(me.getReadOnlyMode() != "1"){
+  var setName = me.getAttributeSet();
+  var attrList;
+
+  switch(setName){
+    case "TourStartEnd":
+      attrList = me.createAttrMappingTourStartEnd();
+      break;
+
+    case "ProductCheckOut":
+      attrList = me.createAttrMappingProductCheckOut();
+      break;
+
+    case "ProductCheckIn":
+      attrList = me.createAttrMappingProductCheckIn();
+      break;
+
+    case "TruckAudit":
+      attrList = me.createAttrMappingTruckAudit();
+      break;
+
+    case "CashCheckOut":
+      attrList = me.createAttrMappingCashCheckOut();
+      break;
+
+    case "CashCheckIn":
+      attrList = me.createAttrMappingCashCheckIn();
+      break;
+
+    case "SalesDeliveryDocument":
+      attrList = me.createAttrMappingSalesDeliveryDocument();
+      break;
+
+    case "OutwardInventoryTransfer":
+      attrList = me.createAttrMappingTruckOutwardTransfer();
+      break;
+
+    case "InwardInventoryTransfer":
+      attrList = me.createAttrMappingTruckInwardTransfer();
+      break;
+
+    case "Replenishment":
+      attrList = me.createAttrMappingReplenishment();
+      break;
+
+    default:
+      attrList = me.createAttrMappingUserExit(setName);
+      break;
+  }
+
+  if(Utils.isDefined(attrList)){
+    var keys = attrList.keys();
+    length = keys.length;
+
+    for(i = 0; i < length; i++){
+      var toggleItem = keys[i];
+      var value = attrList.get(toggleItem);
+      var referencePKey = "";
+
+      if (!Utils.isSfBackend()){
+        referencePKey = newParams.referenceObject.getPKey();
+      }
+
+      var referenceObjectPhase=" ";
+      if(Utils.isDefined(me.getReferenceObject().getPhase)){
+        referenceObjectPhase = me.getReferenceObject().getPhase();
+      }
+      if(Utils.isDefined(me.getReferenceObject().getTmgStatus)){
+        referenceObjectPhase = me.getReferenceObject().getTmgStatus();
+      }
+
+      if (!Utils.isEmptyString(value)){
+        var li = {
+          "pKey": PKey.next(),
+          "attribute": toggleItem,
+          "value": value,
+          "referencePKey": referencePKey,
+          "referenceObjectPhase":referenceObjectPhase
+        };
+        me.getLoSysSignatureAttribute().addListItems([li]);
+      }
+    }
+  }
+}
+
+var itemLo = me.getLoSysSignatureAttribute();
+
+if(Utils.isDefined(itemLo)){
+  var items = itemLo.getAllItems();
+  length = items.length;
+  for(i = 0; i < length; i++){
+    me.set('summaryLabel' + i, items[i].getAttribute());
+    me.set('summaryValue' + i, items[i].getValue());
+  }
+
+  var acl = me.getACL();
+  for(i = length; i < 10; i++){
+    acl.removeRight(AclObjectType.PROPERTY, 'summaryLabel' + i, AclPermission.VISIBLE);
+    acl.removeRight(AclObjectType.PROPERTY, 'summaryValue' + i, AclPermission.VISIBLE);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

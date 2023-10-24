@@ -1,0 +1,225 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="LoTruckLoadOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+
+//Remove all buttons is tour in context is no running tour
+if (Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus').toLowerCase() !== "running") {
+  visible = false;
+} else {
+  var i;
+  var items;
+  var runningTour = " ";
+  var listActiveObjectRelations;
+  var currentOpenTourIsRunningTour = true;
+  var navigationMode = "noMode";
+  var endOfDayPossible = "";
+  var currentTourPKey = "";  //current tour for which navigation is shown ... can be the running tour or another "open" tour
+
+  if (!Utils.isDefined(Framework.getProcessContext().overviewList)){
+    return false;
+  }
+
+  if (Utils.isDefined(Framework.getProcessContext().navigationMode)){
+    navigationMode = Framework.getProcessContext().navigationMode;
+  }
+
+  //Reading process variables in BL is necessary here because it is not possible to handover process variables to button visible binding function
+  if (Utils.isDefined(ApplicationContext.get('currentTourPKey'))){
+    runningTour = ApplicationContext.get('currentTourPKey');
+  }
+
+  //Reading endOfDayPossible variable value returned from DSDDashboardProcess includes the check on open Call/ Sales / Not related doc
+  if (Utils.isDefined(ApplicationContext.get('endOfDayPossible'))){
+    endOfDayPossible = ApplicationContext.get('endOfDayPossible');
+  }
+
+  //Available object relations for running tour
+  if (Utils.isDefined(Framework.getProcessContext().activeObjectRelations)){
+    listActiveObjectRelations = Framework.getProcessContext().activeObjectRelations;
+  }
+
+  //if truck load overview is called out of tour process navigation tourDetail is available
+  if (Utils.isDefined(Framework.getProcessContext().tourDetail)) {
+    var tourPKeyDetailProcess = Framework.getProcessContext().tourDetail.getPKey();
+    if (tourPKeyDetailProcess != runningTour){
+      currentOpenTourIsRunningTour = false;
+    }
+  }
+
+  //no buttons available if currentTour is not the running tour
+  if (Utils.isDefined(Framework.getProcessContext().currentTourPKey)){
+    currentTourPKey = Framework.getProcessContext().currentTourPKey;
+    if(currentTourPKey !== runningTour){
+      return false;
+    }
+  }
+
+
+  //UIMode defines if ui was called from start of day, end of day or from inventory overview
+  switch (navigationMode) {
+
+      //##########################
+      //### Inventory Overview ###
+      //##########################
+    case "Overview":
+      if (mode === "New") {
+        if (!Utils.isEmptyString(runningTour)) {
+          if (!currentOpenTourIsRunningTour) {
+            visible = false;
+          }
+          //There exists at least one Truck Load template related to the running tour
+          if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+            items = listActiveObjectRelations.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if ((items[i].getUsage() === "SdoMeta.TruckAudit" || items[i].getUsage() === "SdoMeta.ProductCheckIn" || items[i].getUsage() === "SdoMeta.ProductCheckOut" || items[i].getUsage() === "SdoMeta.TckIvcTransferOutward")&&
+                  (items[i].getUsedForStartOfDay() === "0") && items[i].getUsedForEndOfDay() === "0") {
+                visible = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if( mode === 'ReviewStock') {
+        if (!Utils.isEmptyString(runningTour)) {
+          if (!currentOpenTourIsRunningTour) {
+            visible = false;
+          }
+          //There exists at least one Truck inventory template related to the running tour
+          if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+            items = listActiveObjectRelations.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if ((items[i].getUsage() ===  "SdoMeta.TruckInventory" )) {
+                visible = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      break;
+
+      //####################
+      //### Start of Day ###
+      //####################
+    case "StartOfDay":
+      if (mode === "ProductCheckOut") {
+        if (!Utils.isEmptyString(runningTour)) {
+          if (!currentOpenTourIsRunningTour) {
+            visible = false;
+            break;
+          }
+
+          //Initial check out document exists --> check out button opens it
+          if (me.getAllItems().length > 0) {
+            items = me.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if (items[i].getDocumentType() === "ProductCheckOut" && items[i].getPhase() === "Initial" && items[i].getUsedForStartOfDay() == "1") {
+                visible = true;
+                break;
+              }
+            }
+          }
+
+          //There exists at least one check-out template related to the running tour
+          if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+            items = listActiveObjectRelations.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if (items[i].getUsage() === "SdoMeta.ProductCheckOut" && items[i].getUsedForStartOfDay() == "1") {
+                visible = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if( mode === 'ReviewStock') {
+        if (!Utils.isEmptyString(runningTour)) {
+          if (!currentOpenTourIsRunningTour) {
+            visible = false;
+          }
+          //There exists at least one Truck inventory template related to the running tour
+          if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+            items = listActiveObjectRelations.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if ((items[i].getUsage() ===  "SdoMeta.TruckInventory" && (items[i].getUsedForStartOfDay() == "1") )) {
+                visible = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      break;
+
+      //##################
+      //### End of Day ###
+      //##################
+    case "EndOfDay":
+      if (!Utils.isEmptyString(runningTour) &&  mode==="ProductCheckIn") {
+        if (!currentOpenTourIsRunningTour) {
+          visible = false;
+          break;
+        }
+
+        //Initial check in document exists --> check out button opens it
+        if (me.getAllItems().length > 0) {
+          items = me.getAllItems();
+          for (i = 0; i < items.length; i++) {
+            if (items[i].getDocumentType() === "ProductCheckIn" && items[i].getPhase() === "Initial" && items[i].getUsedForEndOfDay() == "1") {
+              visible = true;
+              break;
+            }
+          }
+        }
+
+        //There exists at least one check-in template related to the running tour
+        if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+          items = listActiveObjectRelations.getAllItems();
+          for (i = 0; i < items.length; i++) {
+            if (items[i].getUsage() === "SdoMeta.ProductCheckIn" && items[i].getUsedForEndOfDay() == "1") {
+              visible = true;
+              break;
+            }
+          }
+        }
+        //There exists at least one open Call/ Sales / Not related doc
+        if(endOfDayPossible == '0'){
+          visible = false;
+        }
+      }
+
+      if( mode === 'ReviewStock') {
+        if (!Utils.isEmptyString(runningTour)) {
+          if (!currentOpenTourIsRunningTour) {
+            visible = false;
+          }
+          //There exists at least one Truck inventory template related to the running tour
+          if (visible === false && Utils.isDefined(listActiveObjectRelations) && listActiveObjectRelations.getAllItems().length > 0) {
+            items = listActiveObjectRelations.getAllItems();
+            for (i = 0; i < items.length; i++) {
+              if ((items[i].getUsage() ===  "SdoMeta.TruckInventory" && items[i].getUsedForEndOfDay() == "1" )) {
+                visible = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      break;
+
+    default:
+      visible = false;
+      break;
+  }
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

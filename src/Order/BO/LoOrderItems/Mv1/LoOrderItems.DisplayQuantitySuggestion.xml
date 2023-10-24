@@ -1,0 +1,36 @@
+<BusinessLogic methodName="displayQuantitySuggestion" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="unitOfMeasureItem" type="Object" />
+    <MethodInput name="loSuggestedQuantity" type="Object" />
+    <MethodInput name="orderMeta" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var suggestedQuantity = 0;
+if(Utils.isDefined(loSuggestedQuantity)) {
+  if(loSuggestedQuantity.getAllItems().length>0) {
+    var suggestedItem = loSuggestedQuantity.getItemsByParamArray([ {"prdMainPKey" : unitOfMeasureItem.prdMainPKey, "op" : "EQ"}, {"sdoItemMetaPKey" : unitOfMeasureItem.sdoItemMetaPKey, "op" : "EQ"}, {"quantityLogisticUnit" : unitOfMeasureItem.quantityLogisticUnit, "op" : "EQ"} ] );
+    if(suggestedItem.length >0) {
+      suggestedQuantity = suggestedItem[0].getSuggestedQuantity();
+    }
+  }
+}
+else {
+  suggestedQuantity = unitOfMeasureItem.getSuggestedQuantity();
+}
+if(Utils.isDefined(orderMeta.getLoOrderItemMetas().getCurrent())) {
+  if (orderMeta.getLoOrderItemMetas().getCurrent().getQuantitySuggestionPolicy() === "OrderedQuantity" ) {
+    unitOfMeasureItem.oQtyString = "Suggested Qty " + suggestedQuantity;	
+    unitOfMeasureItem.specialPromotionIcon = "SpecialQuantity";
+    unitOfMeasureItem.specialQuantity = suggestedQuantity;
+    unitOfMeasureItem.suggestedQuantity = suggestedQuantity;
+  }
+}
+else if(orderMeta.getLoOrderItemMetas().getMainItemTemplate().getQuantitySuggestionPolicy() === "OrderedQuantity") {
+  unitOfMeasureItem.oQtyString = "Suggested Qty " + suggestedQuantity;	
+  unitOfMeasureItem.specialPromotionIcon = "SpecialQuantity";
+  unitOfMeasureItem.specialQuantity = suggestedQuantity;
+  unitOfMeasureItem.suggestedQuantity = suggestedQuantity;
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,9 @@
+<BusinessLogic methodName="beforeInitialize" businessObjectClass="BoDailyReportCreateNewWizard" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+		
+   ]]></Code>
+</BusinessLogic>

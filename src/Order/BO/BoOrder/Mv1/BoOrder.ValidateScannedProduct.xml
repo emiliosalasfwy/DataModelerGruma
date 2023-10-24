@@ -1,0 +1,36 @@
+<BusinessLogic methodName="validateScannedProduct" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PrdMainPKey" type="DomPKey" />
+    <MethodInput name="FilterByBpaAssortment" type="DomBool" />
+    <MethodInput name="CurrentItemTemplate" type="LiOrderItemMeta" />
+    <MethodInput name="Listing" type="DomString" />
+    <MethodInput name="ListingWithModules" type="DomString" />
+    <MethodInput name="HitClosedListing" type="DomBool" />
+    <MethodInput name="CollectClosedListing" type="DomBool" />
+    <MethodInput name="CurrentUoM" type="DomPrdLogisticUnit" />
+    <MethodInput name="AvailableUoM" type="LoLogisticUnit" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[	var deferreds = [];
+
+    deferreds.push(me.validateScannedItem(PrdMainPKey, FilterByBpaAssortment, CurrentItemTemplate, Listing, ListingWithModules, HitClosedListing, CollectClosedListing));
+	deferreds.push(me.validateScannedUoM(CurrentUoM, AvailableUoM));
+	
+	var promise = when.all(deferreds)
+    .then(function (promises) {
+		var isValid = true;
+        for(var i = 0; i < promises.length; i++){
+			if(promises[i] == "notValid"){
+				isValid = false;
+				break;
+			}
+		}
+		if(isValid){
+			return "valid";
+		}else{
+			return "notValid";
+		}
+      });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

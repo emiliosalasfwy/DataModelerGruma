@@ -1,0 +1,30 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoTripList" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!jsonQuery) {
+  jsonQuery = {};
+}
+me.updateProperties(jsonQuery);
+
+var promise = Facade.getObjectAsync(BO_TRIPLIST, jsonQuery).then(
+  function (selfJson) {
+    me.updateProperties(selfJson);
+    var jsonQuery2 = {};
+    var jsonParams = [];
+    jsonParams.push({"field" : "tplMainPKey", "operator" : "EQ", "value" : me.getPKey()});
+    if(Utils.isSfBackend()) {
+      jsonParams.push({"field" : "responsiblePKey", "operator" : "EQ", "value" : me.getResponsiblePKey()});
+    }
+    jsonQuery2.params = jsonParams;
+    return BoFactory.loadListAsync("LoTripListBpaRel", jsonQuery2);
+  }).then(
+  function (list) {
+    me.setLoTripListBpaRel(list);
+    me.setObjectStatus(STATE.PERSISTED);
+    return me;
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

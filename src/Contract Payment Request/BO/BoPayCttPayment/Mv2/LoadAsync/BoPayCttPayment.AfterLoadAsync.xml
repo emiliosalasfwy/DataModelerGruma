@@ -1,0 +1,55 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoPayCttPayment" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newAmount = 0;
+var loTactics = result.getLoPayTactics().getAllItems();
+
+for (var idxTct = 0; idxTct < loTactics.length; idxTct++) {
+  var liTactic = loTactics[idxTct];
+  if (liTactic.getTacticStatus() == "Approved") {
+    newAmount += liTactic.getActualCosts();
+  }
+}
+
+var oldAmount = result.getPaidAmount();
+if (oldAmount != newAmount) {
+  result.setPaidAmount(newAmount);
+}
+
+//Determine substitution info for EA rights
+var params = [];
+var query = {};
+params.push({
+  field: "bpaMainPKey",
+  value: result.getLuBeneficiary().getPKey(),
+});
+params.push({
+  field: "dateFrom",
+  value: result.getDateReference(),
+});
+params.push({
+  field: "referenceUserPKey",
+  value: result.getResponsiblePKey(),
+});
+params.push({
+  field: "customerPKey",
+  value: result.getBeneficiaryPKey(),
+});
+params.push({
+  field: "referenceDate",
+  value: Utils.createAnsiDateTimeToday(),
+});
+query.params = params;
+
+var promise = BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", query).then(
+  function (managementLookup) {
+    result.setLuCustomerManagementInfo(managementLookup);
+    result.setEARights();
+    return result;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

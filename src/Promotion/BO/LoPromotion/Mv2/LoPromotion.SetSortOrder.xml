@@ -1,0 +1,14 @@
+<BusinessLogic methodName="setSortOrder" businessObjectClass="LoPromotion" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="orderBy" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    if(orderBy==="Date") {
+this.orderBy({"dateFrom": "DESC"});
+}
+    else if(orderBy==="Anchor") {
+this.orderBy({"customerName": "ASC", "dateFrom": "DESC"});
+}
+		
+   ]]></Code>
+</BusinessLogic>

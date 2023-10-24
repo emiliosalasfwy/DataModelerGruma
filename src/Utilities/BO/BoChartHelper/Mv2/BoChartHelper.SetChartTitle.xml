@@ -1,0 +1,30 @@
+<BusinessLogic methodName="setChartTitle" businessObjectClass="BoChartHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="d3Container" type="Object" />
+    <MethodInput name="title" type="String" />
+    <MethodInput name="parentName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var width = d3Container[0][0].offsetWidth;
+var svg = d3.select("#chartTitle_" + parentName);
+
+svg.attr("width", width);
+svg.attr("height", "4em");
+
+var svgHeight = svg[0][0].offsetHeight;
+
+var text = svg.selectAll("text").text(title);
+text.style("text-anchor", "middle").attr("alignment-baseline","middle");
+text.attr("transform", "translate(" + width / 2 + "," + svgHeight / 2 + ")");
+text.style("font-weight", "bold");
+text.style("font-size", "1.4em");
+text.style("fill","#3D424D");
+
+if(Utils.isWindows())
+{
+  text.attr("x", width / 2);
+    text.attr("y","2em");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

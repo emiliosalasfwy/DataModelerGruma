@@ -1,0 +1,20 @@
+<BusinessLogic methodName="validateSyncTimeInterval" businessObjectClass="BoUser" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var usrSettingsBo = me.getBoUserSettings();
+
+if(usrSettingsBo.getEnableSync() && usrSettingsBo.getSyncTimeIntervall() === 0){
+  var newError = {
+    "level" : "error",
+    "objectClass" : "BoUser",
+    "messageID" : "CasBoUserTimeIntervalZero"
+  };
+
+  messageCollector.add(newError);
+}
+me.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,25 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoInventoryFinding" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newParams;
+
+if (Utils.isDefined(context.jsonQuery)) {
+  newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+
+//check if product list is defined
+if(Utils.isDefined(newParams) && Utils.isDefined(newParams.prdMainPKeys)) {
+  newParams.addCond_PrdMainPKeys = 'AND IvcMain.PrdMainPKey IN (' + newParams.prdMainPKeys +')';
+}
+
+context.jsonQuery = newParams;
+
+var promise = when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

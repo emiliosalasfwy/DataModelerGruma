@@ -1,0 +1,6 @@
+<BusinessLogic methodName="cpGetVariantOrderVariables" businessObjectClass="BoOrder" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var obj = {"VariantString1": "", "VariantString2":"", "VariantString3": "", "VariantString4": "", "VariantString5": "", 
+           "VariantDecimal1": 0, "VariantDecimal2": 0, "VariantDecimal3": 0, "VariantDecimal4": 0, "VariantDecimal5": 0};]]></Code>
+  <Return name="VariantAttribute" value="obj" />
+</BusinessLogic>

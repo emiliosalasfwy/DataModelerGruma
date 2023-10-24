@@ -1,0 +1,22 @@
+<BusinessLogic methodName="updateTripList" businessObjectClass="BoTripList" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="description" type="String" />
+    <MethodInput name="validFrom" type="String" />
+    <MethodInput name="validThru" type="String" />
+    <MethodInput name="dayOfWeek" type="DomInteger" />
+    <MethodInput name="agendaOverviewList" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Set updated trip list details
+me.setDescription(description);
+me.setTripListName(description);
+me.setValidFrom(validFrom);
+me.setValidThru(validThru);
+
+//Update trip list customer assignment
+me.getLoTripListBpaRel().delete();
+me.getLoTripListBpaRel().assignTripListCustomers(me.getPKey(), me.getMetaType(), me.getValidFrom(), me.getValidThru(), dayOfWeek, agendaOverviewList);
+me.setObjectStatus(STATE.NEW | STATE.DIRTY);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

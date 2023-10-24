@@ -1,0 +1,33 @@
+<BusinessLogic methodName="onTacticStatusChanged" businessObjectClass="BoPayCttPayment" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var columnName, value, oldValue;
+var paidAmount;
+var amount = this.getPaidAmount();
+
+for (var i = 0; i < handlerParams.modified.length; i++) 
+{	 
+  switch (handlerParams.modified[i]) {
+    case "tacticStatus":
+      var actualCosts = handlerParams.listItem.getActualCosts();
+      var d = Utils.createDateNow();
+      d.setHours(0,0,0,0);
+      this.setDateReference(d);
+      if (handlerParams.listItem.getTacticStatus()== "Approved")
+      {
+        amount +=  actualCosts;
+        handlerParams.listItem.setRejectedAmount(0);
+      }
+      if (handlerParams.listItem.getTacticStatus()== "FullRejection")
+      {
+        amount -=  actualCosts;             
+        handlerParams.listItem.setRejectedAmount(actualCosts);
+      }
+  }       
+}
+this.setPaidAmount(amount);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,40 @@
+<BusinessLogic methodName="validateDueDate" businessObjectClass="BoTour" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (me.getTmgStatus().toLowerCase() === "completed") {
+
+  if (Utils.isDefined(me.getDateFrom()) && Utils.isDefined(me.getDateThru()) && Utils.isDefined(me.getTimeFrom()) && Utils.isDefined(me.getTimeThru())) {
+    if(me.getDateFrom() > me.getDateThru()) {
+      newError =
+        {
+        "level": "error",
+        "objectClass": "BoTour",
+        "messageID": "CasBoTourDate"
+      };
+      messageCollector.add(newError);
+    }
+    else if(me.getDateFrom() === me.getDateThru() && me.getTimeFrom() > me.getTimeThru()) {
+      newError =
+        {
+        "level": "error",
+        "objectClass": "BoTour",
+        "messageID": "CasBoTourTime"
+      };
+      messageCollector.add(newError);
+    }
+  }
+}
+
+if(!Utils.isDefined(me.getDateFrom())) {
+  me.setDateFrom(Utils.getMinDate());
+}
+if(!Utils.isDefined(me.getDateThru())) {
+  me.setDateThru(Utils.getMinDate());
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

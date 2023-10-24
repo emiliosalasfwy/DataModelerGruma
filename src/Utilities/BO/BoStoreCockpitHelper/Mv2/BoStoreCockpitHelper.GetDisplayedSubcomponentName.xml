@@ -1,0 +1,58 @@
+<BusinessLogic methodName="getDisplayedSubcomponentName" businessObjectClass="BoStoreCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loItems" type="Object" />
+    <MethodInput name="type" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var sDisplayedSubcomponentName = type;
+
+if(loItems.getCount() === 0){
+  sDisplayedSubcomponentName = "CardNoDataMessageUiPlugin";
+}
+else if(type == "SurveyExceptions"){
+  var notDistributedItems = 0;
+  var outOfStockItems = 0;
+  var facingMismatchItems = 0;
+  var priceMismatchItems = 0;
+
+  loItems.forEach(function(item){
+    if(item.hide != "1"){
+
+      if(item.value == "NotDistributed"){
+        notDistributedItems++;
+      }
+
+      if(item.value == "OutOfStock"){
+        outOfStockItems++;
+      }
+
+      if(item.targetValue != " " && item.dataWareHouseKey == "Facings" &&
+         ((!Utils.isEmptyString(item.targetValue) && item.value!= item.targetValue) || (!Utils.isEmptyString(item.lastValue) && item.value != item.lastValue))){
+        facingMismatchItems++;
+      }
+
+      if(item.targetValue != " " && item.dataWareHouseKey == "PriceSurvey" &&
+         ((!Utils.isEmptyString(item.targetValue) && item.value != item.targetValue) || (!Utils.isEmptyString(item.lastValue) && item.value != item.lastValue))){
+        priceMismatchItems++;
+      }
+    }
+  });
+
+  if((notDistributedItems + outOfStockItems + facingMismatchItems + priceMismatchItems) === 0){
+    sDisplayedSubcomponentName = "CardNoDataMessageUiPlugin";
+  }
+  else{
+    sDisplayedSubcomponentName = "CardSurveyExceptionsUiPlugin";
+  }
+}
+else if (type == "Pictures") {
+  if (!Utils.isDefined(loItems.getLatestLiAttachment())) {
+    sDisplayedSubcomponentName = "CardNoDataMessageUiPlugin";
+  }
+  else {
+    sDisplayedSubcomponentName = "CardLatestPictureUiPlugin";
+  }
+}]]>
+</Code>
+  <Return name="result" value="sDisplayedSubcomponentName" />
+</BusinessLogic>

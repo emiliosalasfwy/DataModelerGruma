@@ -1,0 +1,83 @@
+<BusinessLogic methodName="createPayments" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+// Check whether payments need to be created
+if (me.getAbsolutePaidAmount() > 0){
+
+  var jsonQuery = {};
+  var jsonParams = [];
+
+  jsonParams.push({
+    "field" : "sdoMetaPKey",
+    "operator" : "EQ",
+    "value" : me.getSdoMetaPKey()
+  });
+  jsonParams.push({
+    "field" : "paymentMethod",
+    "operator" : "EQ",
+    "value" : "Cash"
+  });
+  jsonParams.push({
+    "field" : "debitCredit",
+    "operator" : "EQ",
+    "value" : me.getDebitCredit()
+  });
+
+  jsonQuery.params = jsonParams;
+
+  var luPaymentMetaByPaymentMethod;
+
+  promise = BoFactory.loadObjectByParamsAsync("LuPaymentMetaByPaymentMethod", jsonQuery).then(
+    function (lookup) {
+
+      luPaymentMetaByPaymentMethod = lookup;
+
+      return me.loadPayments();
+    }).then(
+    function () {
+
+      if (!Utils.isEmptyString(luPaymentMetaByPaymentMethod.getPKey())) {
+
+        var liPayment;
+
+        // Check if there is already a payment record - If yes, use it, if no create one
+        if (me.getLoPayments().getAllItems().length === 0) {
+          liPayment = 
+            {
+            "pKey" : PKey.next(),
+            "objectStatus" : STATE.NEW | STATE.DIRTY
+          };
+
+          me.getLoPayments().addListItems([liPayment]);
+        } else {
+          liPayment = me.getLoPayments().getAllItems()[0];
+          liPayment.setObjectStatus(STATE.PERSISTED | STATE.DIRTY);
+        }
+
+        liPayment.setSdoMainPKey(me.getPKey());
+        liPayment.setSdoPaymentMetaPKey(luPaymentMetaByPaymentMethod.getPKey());
+        liPayment.setInitiationDate(Utils.convertFullDate2Ansi(Utils.createDateToday()));
+        liPayment.setAmount(me.getPaidAmount());
+        liPayment.setAmountReceipt(me.getPaidAmount());
+        liPayment.setAbsoluteAmount(me.getAbsolutePaidAmount());
+        liPayment.setCurrency(me.getCurrency());
+        liPayment.setIvcInformationObject(" ");
+        liPayment.setPaymentMethod(luPaymentMetaByPaymentMethod.getPaymentMethod());
+
+        if(me.getDocumentType() == "Expenses"){
+          liPayment.setExpenseType(me.getExpenseType());
+        }
+        else{
+          liPayment.setExpenseType(" ");
+        }
+      }
+    }
+  );
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

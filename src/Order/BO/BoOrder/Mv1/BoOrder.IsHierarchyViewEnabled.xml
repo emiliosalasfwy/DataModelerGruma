@@ -1,0 +1,14 @@
+<BusinessLogic methodName="isHierarchyViewEnabled" businessObjectClass="BoOrder" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+ 
+        var result = false;
+
+        if ((this.getBoOrderMeta().getItemListOption() == "Hierarchy")  && (this.getBoOrderMeta().getMobilityRelevant() == "1")) {
+            if ((this.getPhase() != "Released") && (this.getPhase() != "Closed") && (this.getPhase() != "Canceled") && (this.getPhase() != "Ready") && (this.getPhase() != "Feedback")) {            
+                result = true;
+            }
+        }
+
+    ]]></Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

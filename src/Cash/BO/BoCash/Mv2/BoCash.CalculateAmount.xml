@@ -1,0 +1,36 @@
+<BusinessLogic methodName="calculateAmount" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCheckInPayments" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[if(!Utils.isDefined(loCheckInPayments))
+{
+  return;
+}
+
+var payments = loCheckInPayments.getAllItems();
+var expectedAmount = 0, actualAmount = 0, diffAmount = 0;
+
+if(me.getDocumentType() != "Expenses")
+{
+  for(var index = 0; index < payments.length; index++)
+  {
+    if(payments[index].getLevel() === "main")
+    {      
+      actualAmount += payments[index].getAmount();
+      expectedAmount += payments[index].getCalcAmount(); 
+      payments[index].setDifference(payments[index].getCalcAmount() - payments[index].getAmount());
+    }
+    else
+    {      
+      payments[index].setAmount(0);
+    }
+  }
+  diffAmount = expectedAmount - actualAmount;
+}
+
+me.setExpectedAmount(expectedAmount);
+me.setPaidAmount(actualAmount);
+me.setAbsolutePaidAmount(Math.abs(actualAmount));
+me.setDifferenceAmount(diffAmount);]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

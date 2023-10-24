@@ -1,0 +1,45 @@
+<BusinessLogic methodName="updateLastCallDate" businessObjectClass="LoBpaCallSetting" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="clbMetaPKey" type="DomPKey" />
+    <MethodInput name="lastCallDate" type="Date" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[
+	var lValidCallSettings = this.getItemsByParamArray([{"validFrom": lastCallDate, "op":"LE"}, {"validThru": lastCallDate, "op":"GE"}]);
+
+	if (lValidCallSettings.length > 0)
+	{
+		lValidCallSettings[0].setLastCall(lastCallDate);
+	}
+	else
+	{
+
+		var liNewCallSetting = {
+			"pKey": PKey.next(),
+			"customerPKey": customerPKey,
+			"clbMetaPKey": clbMetaPKey,
+			"lastCall": lastCallDate,
+			"salesOrg": ApplicationContext.get('user').getBoUserSales().getSalesOrg(),
+			"validFrom": lastCallDate,
+			"validThru": Utils.convertAnsiDateTime2AnsiDate(Utils.getMaxDate()),
+            "objectStatus" : STATE.NEW | STATE.DIRTY
+			
+		};
+
+		var lFutureCallSettings = this.getItemsByParamArray([{"validFrom": lastCallDate, "op":"GE"}]);
+		if (lFutureCallSettings.length > 0)
+		{
+			var newValidThru = Utils.convertAnsiDate2Date(lFutureCallSettings[0].getValidFrom());
+			newValidThru.setDate(newValidThru.getDate() - 1);
+			liNewCallSetting.validThru = Utils.convertFullDate2Ansi(newValidThru);
+		}
+		
+
+		this.addListItems([liNewCallSetting]);
+	}
+
+	this.saveAsync();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

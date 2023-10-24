@@ -1,0 +1,22 @@
+<BusinessLogic methodName="loadBreadCrumbLevel2" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="criterionFilterValue" type="DomId" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+jsonParams.push({ "field" : "criterionAttribute", "value" : me.getCriterionAttribute_Level2() });
+jsonParams.push({ "field" : "criterionFilterAttribute", "value" : me.getCriterionAttribute_Level1() });
+jsonParams.push({ "field" : "criterionFilterValue", "value" : criterionFilterValue });
+
+jsonQuery.params = jsonParams;
+
+var promise = BoFactory.loadObjectByParamsAsync("LoBreadCrumbLevel2", jsonQuery)
+.then(function (loBreadCrumbLevel2) {
+  me.setLoBreadCrumbLevel2(loBreadCrumbLevel2);
+});
+         ]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

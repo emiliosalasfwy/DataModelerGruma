@@ -1,0 +1,19 @@
+<BusinessLogic methodName="checkFakeInwardTransferDocument" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var userPKey = ApplicationContext.get('user').getPKey();
+
+//Check on Recipient In - Fake Inward document
+if(me.getDocumentType() == "TruckIvcTransferOutward" && me.getPhase() == "Released" && me.getRecipientPKey() == userPKey && Utils.isEmptyString(me.getInwardTransferDocumentPKey())) {
+  return "1";
+}
+//Check on Sender back In - Fake Inward document
+else if(me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() == "Canceled" && me.getSenderPKey() == userPKey && Utils.isEmptyString(me.getInwardTransferDocumentPKey())) {
+  return "1";
+}
+else {
+  return "0";
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

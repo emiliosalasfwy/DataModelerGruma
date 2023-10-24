@@ -1,0 +1,107 @@
+<BusinessLogic methodName="prepareCategoryQuickFilterList" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="load" type="String" />
+    <MethodInput name="isPromotionFilterSet" type="String" />
+    <MethodInput name="isDiscrepanciesFilterSet" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var surveyItems;
+var ifSelectedInList = false;
+var ifSelectedInCache = false;
+var selectedFilter;
+var loCurrentSurveyProducts = me.getBoJobManager().getLoCurrentSurveyProducts();
+
+if(Utils.isDefined(me.getLoProductQuickFilter())){
+  ifSelectedInList = me.getLoProductQuickFilter().getItemsByParam({"isSelected": true}).length > 0;
+}
+if(Utils.isDefined(me.getGroupQuickFilterCache()) && !Utils.isEmptyString(me.getGroupQuickFilterCache())){
+  ifSelectedInCache = Object.keys(me.getGroupQuickFilterCache()).length > 0;
+}
+
+
+//Creates list for all cases
+var addItemsToLoProductQuickFilter = function (items){
+  var loProductQuickFilter = me.getLoProductQuickFilter();
+  var categoryExists;
+  var item;
+
+  for (var i=0; i<items.length; i++){
+    categoryExists = loProductQuickFilter.getItemsByParam({"text": items[i].getCategory()});
+    if (categoryExists.length === 0){
+      item = {
+        "pKey": PKey.next(),
+        "text": items[i].getCategory(),
+        "isSelected": false,
+        "specialOption": ""
+      };
+      loProductQuickFilter.addListItems([item]);
+    }
+  }
+  loProductQuickFilter.orderBy({"text": "ASC"});
+};
+
+
+//Reapply filter from either LoProductQuickFilter or QuickFilterCache
+var applySelectedFilterToList = function (){
+  var selectedFilterExistsInLo = me.getLoProductQuickFilter().getItemsByParam({"text": selectedFilter});
+
+  if(selectedFilterExistsInLo.length > 0){
+    selectedFilterExistsInLo[0].setIsSelected(true);
+  }
+};
+
+
+if((ifSelectedInList || ifSelectedInCache) && load === "0"){
+  //Create list when one of the quick filters is selected either in LoProductQuickFilter or QuickFilterCache
+  var loProductQuickFilter = me.getLoProductQuickFilter();
+  var filterArray = [];
+
+  if(ifSelectedInList === true){
+    selectedFilter = loProductQuickFilter.getItemsByParam({"isSelected": true})[0].text;
+  } else{
+    selectedFilter = me.getGroupQuickFilterCache();
+  }
+
+  loProductQuickFilter.removeAllItems();
+  if(isPromotionFilterSet == "1"){
+    filterArray.push({"planned": "1", "op": "EQ"});
+  }
+  if(isDiscrepanciesFilterSet == "1"){
+    filterArray.push({"hasDiscrepance": "1", "op": "EQ"});
+  }
+  filterArray.push({"category": selectedFilter, "op": "EQ"});
+
+  loCurrentSurveyProducts.resetFilter("category");
+  promise = loProductQuickFilter.createAsync().then(
+    function (){
+      surveyItems = loCurrentSurveyProducts.getItems();
+      loCurrentSurveyProducts.resetFilter("planned");
+      loCurrentSurveyProducts.resetFilter("hasDiscrepance");
+      loCurrentSurveyProducts.setFilterArray(filterArray);
+      if(surveyItems.length > 0){
+        addItemsToLoProductQuickFilter(surveyItems);
+      }
+      applySelectedFilterToList();
+    });
+} else{
+  //Create new list when no quick filter is applied
+  promise = BoFactory.createObjectAsync("LoProductQuickFilter", {}).then(
+    function (quickFilterList){
+      me.setLoProductQuickFilter(quickFilterList);
+
+      if(load == "1"){
+        //Reset QuickFilterCache on survey load
+        me.setGroupQuickFilterCache(null);
+      } else{
+        var loProductQuickFilter = me.getLoProductQuickFilter();
+        surveyItems = loCurrentSurveyProducts.getItems();
+        if(surveyItems.length > 0){
+          addItemsToLoProductQuickFilter(surveyItems);
+        }
+      }
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

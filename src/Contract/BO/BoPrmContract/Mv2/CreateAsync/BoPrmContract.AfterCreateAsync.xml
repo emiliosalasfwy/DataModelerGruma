@@ -1,0 +1,115 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dateToday = Utils.createDateToday();
+dateToday.setHours(0, 0, 0, 0);
+var currentUser = ApplicationContext.get('user');
+var usrMainPKey = currentUser.getPKey();
+
+result.setPrmId(result.getPKey());
+result.setDateInitiation(dateToday);
+result.setCommitDate(dateToday);
+result.setMetaId(result.getLuPrmMeta().getMetaId());
+result.setWfeWorkflowPKey(result.getLuPrmMeta().getWfeWorkflowPKey());
+result.setSalesOrg(currentUser.getBoUserSales().getSalesOrg());
+
+var promise = BoFactory.loadObjectByParamsAsync("BoWorkflow", result.getQueryBy("pKey", result.getWfeWorkflowPKey())).then(
+  function (boWorkflow) {
+    result.setBoWorkflow(boWorkflow);
+    var initialState = boWorkflow.getInitialState().toStatePKey;
+    var liState = boWorkflow.getLoWfeState().getItemByPKey(initialState);
+    if (Utils.isDefined(liState)) {
+      result.setActualStatePKey(liState.getPKey());
+      result.setNextStatePKey(liState.getPKey());
+      result.setWfeStateText(liState.getText());
+      result.setPhaseType(liState.getStateType());
+      result.setPhase(liState.getText());
+    }
+
+    return BoFactory.createObjectAsync(BO_PRMCTTSLOGAN, {"text" : " ", "prmContractPKey" : result.getPKey()});
+  }).then(
+  function (object) {
+    object.setObjectStatus(STATE.NEW);
+    object.setText(context.jsonQuery.contractName);
+    result.setBoSlogan(object);
+
+    // add empty comment
+    var loComments = result.getLoPrmCttComment();
+    var liNewComment = {
+      "pKey" : PKey.next(),
+      "text" : " ",
+      "usage" : "Comment",
+      "prmContractPKey" : result.getPKey(),
+      "objectStatus" : STATE.NEW
+    };
+    loComments.addListItems([liNewComment]);
+    loComments.setCurrent(liNewComment);
+    loComments.setObjectStatus(STATE.NEW);
+
+    var jsonParams = {};
+    jsonParams.contractMetaPKey = result.getPrmMetaPKey();
+    return Facade.selectSQL("DsLoPrmCttTactics", "TacticPresets", jsonParams);
+  }).then(
+  function (list) {
+    var rawList = list.getResultData();
+
+    for (var idxList = 0; idxList < rawList.length; idxList++) {
+      var presetTactic = rawList[idxList].data.rowData;
+      var newPKey = PKey.next();
+      var liTactic = {
+        "pKey" : newPKey,
+        "active" : "1",
+        "costAmount" : 0,
+        "useStepper" : "0",
+        "dataType" :  "Decimal",
+        "minValue" : "0",
+        "maxValue" : "9999999",
+        "dateFrom" : result.getDateFrom(),
+        "dateThru" : result.getDateThru(),
+        "tacticParentPKey" : result.getPKey(),
+        "tacticMetaName" : presetTactic.tacticMetaName,
+        "prmMetaPKey" : presetTactic.tacticMetaPKey,
+        "metaId" : presetTactic.tacticMetaId,
+        "bpaCustomerPKey" : result.getBpaCustomerPKey(),
+        "managementType" : " ",
+        "tacticId": newPKey,
+        "initiatorPKey": usrMainPKey,
+        "salesOrg": currentUser.getBoUserSales().getSalesOrg(),
+        "objectStatus": STATE.NEW | STATE.DIRTY
+      };
+
+      result.getLoPrmCttTactics().addListItems([liTactic]);
+      result.getLuPrmCttTacticProductCount().setTacticCount(result.getLuPrmCttTacticProductCount().getTacticCount() + 1); // SF/CASDIFF: set and validate does not exist in CGCloud
+    }
+
+    //Determine substitution info for EA rights
+    var params = [];
+    var query = {};
+    params.push({
+      "field" : "referenceUserPKey",
+      "value" : result.getResponsiblePKey()
+    });
+    params.push({
+      "field" : "customerPKey",
+      "value" : result.getBpaCustomerPKey()
+    });
+    params.push({
+      "field" : "referenceDate",
+      "value" : Utils.convertFullDate2Ansi(Utils.createDateToday())
+    });
+    query.params = params;
+
+    return BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", query);
+  }).then(
+  function (managementLookup) {
+    result.setLuCustomerManagementInfo(managementLookup);
+    result.setEARights();
+    result.setObjectStatus(STATE.NEW | STATE.DIRTY);
+    return result;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

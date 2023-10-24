@@ -1,0 +1,39 @@
+<BusinessLogic methodName="selectNote" businessObjectClass="LoOrderNotes" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="type" type="DomSdoVouch" />
+    <MethodInput name="sdoMainPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var notes = me.getItemsByParam({ "type" : type });
+
+if (notes.length > 0){
+  if (me.getCurrent() !== notes[0]){
+    me.setCurrent(notes[0]);
+  }
+} 
+else{
+  //Add new note of this type to the list
+  var itemToAdd = {};
+  itemToAdd.pKey = PKey.next();
+  itemToAdd.type = type;
+  itemToAdd.text = "";
+  itemToAdd.sdoMainPKey = sdoMainPKey;
+
+  if (Utils.isSfBackend()) {
+    itemToAdd.pKey = sdoMainPKey;
+    var pivotID = "invoicenotes";
+    if (type == "Delivery"){
+      pivotID = "deliverynotes";
+    }
+    me.addItemsWithPivotKey([itemToAdd], pivotID);
+  } else {
+    me.addListItems([itemToAdd]);
+  }
+
+  me.setCurrent(itemToAdd);
+  me.setCurrentByPKey(itemToAdd.pKey);
+  me.getCurrent().setObjectStatus(STATE.NEW);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

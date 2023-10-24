@@ -1,0 +1,31 @@
+<BusinessLogic methodName="computeContainerSize" businessObjectClass="BoChartHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="heightRatio" type="Object" />
+    <MethodInput name="widthRatio" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var widget = Utils.getUIContainer(containerName, "widget", false);
+
+var chartWidth;
+var chartHeight;
+
+if(!Utils.isDefined(widget.getWidth()) || widget.getWidth() === 0)
+{
+  var boundingRect = Utils.getUIContainer(containerName, "d3", false).node().getBoundingClientRect();
+  chartWidth = Math.ceil(boundingRect.width * widthRatio);
+  chartHeight = Math.ceil(boundingRect.height * heightRatio);
+}
+else
+{
+  chartWidth = Math.ceil(widget.getWidth() * widthRatio);
+  chartHeight = Math.ceil(widget.getHeight() * heightRatio);
+}
+
+var json = {
+  width: chartWidth,
+  height: chartHeight
+};]]>
+</Code>
+  <Return name="json" value="json" />
+</BusinessLogic>

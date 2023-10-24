@@ -1,0 +1,40 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoTruckLoadItems" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var stateNewDirty = STATE.NEW | STATE.DIRTY;
+var stateNew = STATE.NEW;
+var stateDirty = STATE.DIRTY | STATE.PERSISTED;
+
+for (var i = 0; i < items.length; i++) {
+  var item = items[i];
+
+  if(item.getQuantity() > 0) {
+    if(item.getObjectStatus() == stateNewDirty || item.getObjectStatus() == stateNew) {
+      item.setObjectStatus(stateNewDirty);
+    }
+    else {
+      item.setObjectStatus(stateDirty);
+    }
+  }
+
+  if (item.getSaveZeroQuantity() == '0' && item.getQuantity() === 0 && item.getTargetQuantity() == '0') {
+    if (item.getObjectStatus() == stateNewDirty) {
+      item.setObjectStatus(stateNew);
+    }
+    if (item.getObjectStatus() == stateDirty) {
+      item.setObjectStatus(STATE.DIRTY | STATE.DELETED);
+    }
+  }
+}
+
+var promise= Facade.saveListAsync(me).then(
+  function(){
+    return when.resolve(result);
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

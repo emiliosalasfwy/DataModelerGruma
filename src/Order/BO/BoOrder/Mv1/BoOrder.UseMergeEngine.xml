@@ -1,0 +1,8 @@
+<BusinessLogic methodName="useMergeEngine" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// switch to true to use Merge Engine
+var useMergeEngine = false;]]>
+</Code>
+  <Return name="useMergeEngine" value="useMergeEngine" />
+</BusinessLogic>

@@ -1,0 +1,9 @@
+<BusinessLogic methodName="getHasPayerRole" businessObjectClass="LoBpaRole" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+		var me = this;
+		var bHasPayerRole;
+		
+		bHasPayerRole = me.getHasRoleOfCategory("payer");
+   ]]></Code>
+  <Return name="hasPayerRole" value="bHasPayerRole" />
+</BusinessLogic>

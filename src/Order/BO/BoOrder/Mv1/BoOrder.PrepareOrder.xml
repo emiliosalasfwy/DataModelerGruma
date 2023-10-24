@@ -1,0 +1,231 @@
+<BusinessLogic methodName="prepareOrder" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Set ClbMainPKey
+if (!Utils.isDefined(me.getClbMainPKey())) {
+  me.setClbMainPKey(" ");
+}
+
+//Set default fields
+me.setSalesOrg(
+   ApplicationContext.get("user").getBoUserSales().getSalesOrg()
+);
+me.setOrgPhase(me.getPhase());
+me.setValidateForRelease("0");
+
+//Set date fields of order (delivery date is set later due to asynchronous call)
+me.setInitiationDate(Utils.createAnsiDateTimeToday());
+me.setCommitDate(Utils.createAnsiDateTimeToday());
+me.setDocumentType(me.getBoOrderMeta().getSdoSubType());
+
+//Set value of order
+me.setTotalValue(0);
+me.setGrossTotalValue(0);
+me.setDebitCredit("Debit");
+
+//Set user references
+me.setResponsiblePKey(ApplicationContext.get("user").getPKey());
+me.setInitiatorPKey(ApplicationContext.get("user").getPKey());
+me.setOwnerPKey(ApplicationContext.get("user").getPKey());
+
+//Set IvcRefPKeys
+me.setIvcRefPKeys();
+
+//Set inventory search keys for item meta and payment meta
+me.getBoOrderMeta().setIvcSearchKeysForItemMetas(
+  me.getOrdererPKey(),
+  me.getIvcRef1PKey(),
+  me.getIvcRef2PKey(),
+  me.getIvcRef3PKey(),
+  me.getIvcRef4PKey(),
+  me.getIvcRef5PKey()
+);
+
+me.getBoOrderMeta().setIvcSearchKeysForPaymentMetas(
+  me.getPayerCustomerPKey(),
+  me.getIvcRef1PKey(),
+  me.getIvcRef2PKey(),
+  me.getIvcRef3PKey(),
+  me.getIvcRef4PKey(),
+  me.getIvcRef5PKey()
+);
+
+//Set workflow information
+
+me.setWfeWorkflowPKey(me.getBoOrderMeta().getWfeWorkflowPKey());
+
+var promise = BoFactory.loadObjectByParamsAsync(
+  "LuInitialAndNextState",
+  me.getQueryBy("wfeWorkflowPKey", me.getWfeWorkflowPKey())
+)
+.then(function (luInitialAndNextState) {
+  //Set ActualStatePKey to PKey of initial state
+  me.setActualStatePKey(luInitialAndNextState.getInitialStatePKey());
+
+  var initialStateType = luInitialAndNextState.getInitialStateType();
+
+  if (initialStateType == "initial") {
+    initialStateType = "Initial";
+  }
+
+  me.setPhase(initialStateType);
+
+  //Set NextStatePKey to ActualStatePKey (setting to nextStatePKey would not be correct - save at Web after sync would do state transition)
+  me.setNextStatePKey(luInitialAndNextState.getInitialStatePKey());
+
+  return me.presetDeliveryDate();
+})
+.then(function (deliveryDate) {
+  me.setDeliveryDate(deliveryDate);
+
+  //Set business partner relations
+  return me.presetOrderRoles(me.getOrdererPKey());
+})
+.then(function () {
+  // Set TmgMainPKey before loading LuTour
+  if (
+    me.getBoOrderMeta().getSdoSubType() === "Delivery" ||
+    me.getBoOrderMeta().getSdoSubType() === "OrderEntry"
+  ) {
+    if (
+      Utils.isDefined(
+        ApplicationContext.get("currentTourPKey")
+      )
+    ) {
+      me.setTmgMainPKey(
+        ApplicationContext.get("currentTourPKey")
+      );
+    }
+  }
+  // Load object lookups for owner and responsible
+  var jsonParams = JSON.parse(
+    '[{"objectClass": "LuUser", "pKey": "' +
+    me.getOwnerPKey() +
+    '", "reference": "luOwner"}, {"objectClass": "LuUser", "pKey": "' +
+    me.getResponsiblePKey() +
+    '", "reference": "luResponsible"}, {"objectClass": "LuTourInformation", "pKey": "' +
+    me.getTmgMainPKey() +
+    '", "reference": "luTour"}]'
+  );
+
+  return Facade.loadLookupsAsync(jsonParams);
+})
+.then(function (lookups) {
+  me.setLuOwner(lookups.luOwner);
+  me.setLuResponsible(lookups.luResponsible);
+  me.setLuTour(lookups.luTour);
+
+  if (Utils.isSfBackend()) {
+    if ( me.getBoOrderMeta().getConsiderBpaDocTaType() == "1" ) {
+      if (me.getBoOrderMeta().getSdoSubType() === "OrderEntry") {
+        me.setDocTaType(me.getLuOrderer().getOrderDocTaType());
+      }
+      else if (me.getBoOrderMeta().getSdoSubType() === "Invoice") {
+        me.setDocTaType(me.getLuOrderer().getInvoiceDocTaType());
+      }
+      else if (me.getBoOrderMeta().getSdoSubType() === "Delivery") {
+        me.setDocTaType(me.getLuOrderer().getPayerDocTaType());
+      }
+    } 
+    else {
+      me.setDocTaType(me.getBoOrderMeta().getDocTaType());
+    }
+  } else {
+    if (me.getBoOrderMeta().getSdoSubType() === "Delivery") {
+      if (
+        Utils.isDefined(
+          ApplicationContext.get("currentTourPKey")
+        )
+      ) {
+        me.setTmgMainPKey(
+          ApplicationContext.get("currentTourPKey")
+        );
+      }
+      if (me.getBoOrderMeta().getConsiderBpaDocTaType() == "1") {
+        if (!Utils.isEmptyString(me.getPayerCustomerPKey())) {
+          return BoFactory.loadObjectByParamsAsync(
+            "BoPayerRole",
+            me.getQueryBy("customerPKey", me.getPayerCustomerPKey())
+          );
+        } else {
+          me.setDocTaType("NonValuatedDeliveryNote");
+        }
+      } else {
+        me.setDocTaType(me.getBoOrderMeta().getDocTaType());
+      }
+    } else {
+      me.setDocTaType("ValuatedDeliveryNote");
+    }
+  }
+})
+.then(function (boPayerRole) {
+  if (Utils.isDefined(boPayerRole) && !Utils.isSfBackend()) {
+    me.setDocTaType(boPayerRole.getDocTaType());
+  }
+
+  if (me.getBoOrderMeta().getDocInvoiceNumberGenBehavior() === "Creation") {
+    var sysNumberParams = [];
+    var sysNumberQuery = {};
+
+    sysNumberParams.push({
+      field: "sdoMetaPKey",
+      value: me.getSdoMetaPKey(),
+    });
+    sysNumberParams.push({ field: "docTaType", value: me.getDocTaType() });
+    sysNumberQuery.params = sysNumberParams;
+
+    return BoFactory.loadObjectByParamsAsync(
+      "LuSdoMetaDocTATypeSysNumber",
+      sysNumberQuery
+    );
+  }
+})
+.then(function (luSdoMetaDocTATypeSysNumber) {
+  if (Utils.isDefined(luSdoMetaDocTATypeSysNumber)) {
+    if (
+      !Utils.isEmptyString(luSdoMetaDocTATypeSysNumber.getSysNumberPKey())
+    ) {
+      return SysNumber.getSysNumberAsync(
+        luSdoMetaDocTATypeSysNumber.getSysNumberPKey()
+      );
+    } else {
+      return SysNumber.getSysNumberAsync(
+        me.getBoOrderMeta().getSysNumberPKey()
+      );
+    }
+  }
+})
+.then(function (invoicenumber) {
+  if (Utils.isDefined(invoicenumber)) {
+    me.setInvoiceId(invoicenumber);
+  }
+
+  if (me.getBoOrderMeta().getDocNumberGenBehavior() == "Creation") {
+    return SysNumber.getSysNumberAsync(
+      me.getBoOrderMeta().getSysNumberPKey()
+    );
+  } else {
+    return me.getPKey();
+  }
+})
+.then(function (sysnumber) {
+  //Set id (generated by number generator)
+  me.setOrderId(sysnumber);
+  //Set Pricing date according to commit or delivery date
+  if (
+    me.getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE ||
+    me.getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE
+  ) {
+    if (me.getBoOrderMeta().getCpPricingDate() === "OrderDate") {
+      me.setPricingDate(me.getCommitDate());
+    } else if (me.getBoOrderMeta().getCpPricingDate() === "DeliveryDate") {
+      me.setPricingDate(me.getDeliveryDate());
+    }
+  } else {
+    me.setPricingDate(me.getCommitDate());
+  }
+  return me.determinePaymentMethods();
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

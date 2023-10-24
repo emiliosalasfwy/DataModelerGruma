@@ -1,0 +1,48 @@
+<BusinessLogic methodName="cpGetRelevantOrderAttributes" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderAttributes = [];
+
+var attribute = {};
+attribute.key = "Id";
+attribute.value = this.getId();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "CommitDate";
+attribute.value = this.getCommitDate();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "Currency";
+attribute.value = this.getCurrency();
+orderAttributes.push(attribute);
+
+
+attribute = {};
+attribute.key = "ResponsiblePKey";
+attribute.value = this.getResponsiblePKey();
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "HeaderDiscount";
+attribute.value = 0;
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "PayerCustomerPKey";
+attribute.value = "TruckLoad";
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "BillToCustomerPKey";
+attribute.value = "TruckLoad";
+orderAttributes.push(attribute);
+
+attribute = {};
+attribute.key = "DeliveryRecipientPKey";
+attribute.value = "TruckLoad";
+orderAttributes.push(attribute);]]>
+</Code>
+  <Return name="orderAttributes" value="orderAttributes" />
+</BusinessLogic>

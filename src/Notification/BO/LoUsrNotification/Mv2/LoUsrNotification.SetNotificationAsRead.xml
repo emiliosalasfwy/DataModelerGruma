@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setNotificationAsRead" businessObjectClass="LoUsrNotification" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="notificationPKey" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("BoUsrNotification", me.getQueryBy("pKey", notificationPKey))
+.then(function (objBoUsrNotification) {
+  objBoUsrNotification.setNotificationAsRead();
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

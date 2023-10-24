@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateUniquePerDay" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+jsonParams.push({ "field" : "dateFrom", "operator" : "EQ", "value" : me.getDateFrom() });
+jsonParams.push({ "field" : "usrDocMetaPKey", "operator" : "EQ", "value" : me.getBoUserDocMeta().getPKey() });
+jsonQuery.params=jsonParams;
+
+var promise = BoFactory.loadObjectByParamsAsync("LuUsrDRUniquePerDay", jsonQuery).then(
+  function(luUniquePerDay) {
+    if(me.getBoUserDocMeta().getUniquePerDay() == "1" && luUniquePerDay.getDailyReportCount() === 1 && luUniquePerDay.getPKey() != me.getPKey()) {
+      messageCollector.add({"level": "error",
+                            "objectClass": "BoUserDailyReport",
+                            "messageID": "CasUsrDailyReportUniquePerDay"});
+    }
+  }
+);]]>
+</Code>
+  <Return name="messageCollector" value="promise" />
+</BusinessLogic>

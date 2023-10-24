@@ -1,0 +1,43 @@
+<BusinessLogic methodName="onItemFilterSelected" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="filterCode" type="DomString" />
+    <MethodInput name="categoryId" type="DomString" />
+    <MethodInput name="pKey" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var boOrder = me.getBoOrder();
+var promotion = boOrder.getSelectedPromotionPKey();
+
+
+if ((filterCode == "Hierarchy" || filterCode == "All") && (me.getIsShowCategories() == "1") && (me.getIsSkuLevel() == "0")) {
+  boOrder.getLoItems().setFilter("pKey","");
+}
+
+if (me.getCurrentItemFilterId() != filterCode) {
+  if (me.getIsSkuLevel() == "0") {
+    if ((me.getIsShowCategories() == "1") && (filterCode == "Basket")) {
+      boOrder.getLoItems().resetFilter("pKey");
+      me.setIsShowCategories("0");
+      me.setIsShowCategoriesBasketMode("1");
+    } else if ((filterCode == "Hierarchy") && me.getIsShowCategoriesBasketMode() == "1") {
+      boOrder.getLoItems().setFilter("pKey","");
+      me.setIsShowCategories("1");
+      me.setIsShowCategoriesBasketMode("0");
+    }
+  }
+  me.setCurrentItemFilterId(filterCode);
+}
+
+if(filterCode === "Basket"){
+  me.updateShowInBasket();
+}
+
+var returnValue = boOrder.getLoItems().setItemFilter(filterCode, categoryId, promotion);
+
+if(Utils.isDefined(boOrder.getLoProductQuickFilter()) && boOrder.getBoOrderMeta().getItemListOption() === "FlatList"){
+  boOrder.getLoProductQuickFilter().onTabChange(boOrder);
+}
+if(Utils.isDefined(boOrder.getLoProductCategoryFilter()) && boOrder.getBoOrderMeta().getItemListOption() === "FlatList"){
+  boOrder.getLoProductCategoryFilter().onTabChange(boOrder);
+}]]></Code>
+  <Return name="result" value="returnValue" />
+</BusinessLogic>

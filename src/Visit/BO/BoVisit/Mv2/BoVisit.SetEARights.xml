@@ -1,0 +1,8 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aclBo = me.getACL();
+aclBo.removeRight(AclObjectType.PROPERTY, "status", AclPermission.EDIT);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

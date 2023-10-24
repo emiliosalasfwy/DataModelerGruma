@@ -1,0 +1,33 @@
+<BusinessLogic methodName="loadLoInStoreLocationAsync" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="addStore" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise;
+if(!Utils.isDefined(me.getLoInStoreLocation())) {
+  promise = BoFactory.loadListAsync(LO_INSTORELOCATION, me.getQueryBy("retailStoreId", me.getPKey())).then(
+    function (loInStoreLocation) {
+	  loInStoreLocation.forEach(function(item){item.setImage("ShelfLocation24")});
+      if(addStore === '1'){
+        var storeItem = {"name": Localization.resolve("InStoreLocation_Store"),
+                         "pkey": "STORE",
+                         "isSelected": true,
+						 "image": "StoreLocation24",
+                         "sort": "A_" + Localization.resolve("InStoreLocation_Store")
+                        };
+
+        loInStoreLocation.addListItem(storeItem,true);
+        loInStoreLocation.orderBy({ "sort" : "ASC" });
+      }
+
+      var objectState = me.getObjectStatus();
+      me.setLoInStoreLocation(loInStoreLocation);
+      me.setObjectStatus(objectState);
+
+
+    });
+}
+else{
+  promise = when.resolve();
+}]]></Code>
+  <Return name="BoRetailStore_LoadLoInStoreLocationAsync" value="promise" />
+</BusinessLogic>

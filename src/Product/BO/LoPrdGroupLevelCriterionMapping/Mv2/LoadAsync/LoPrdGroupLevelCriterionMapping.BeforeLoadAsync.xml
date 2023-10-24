@@ -1,0 +1,78 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPrdGroupLevelCriterionMapping" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var item0;
+var item1;
+var item2;
+var item3;
+var item4;
+
+if (Utils.isSfBackend()){
+  item0 = {
+    "groupLevel": "Category",
+    "criterion": "Criterion_1_Product_Code__c"
+  };
+
+  item1 = {
+    "groupLevel": "SubCategory",
+    "criterion": "Criterion_2_Product_Code__c"
+  };
+
+  item2 = {
+    "groupLevel": "Brand",
+    "criterion": "Criterion_3_Product_Code__c"
+  };
+
+  item3 = {
+    "groupLevel": "Flavor",
+    "criterion": "Criterion_4_Product_Code__c"
+  };
+
+  item4 = {
+    "groupLevel": "Package",
+    "criterion": "Criterion_5_Product_Code__c"
+  };
+}
+else {
+  item0 = {
+    "groupLevel": "Category",
+    "criterion": "Criterion1"
+  };
+
+  item1 = {
+    "groupLevel": "SubCategory",
+    "criterion": "Criterion2"
+  };
+
+  item2 = {
+    "groupLevel": "Brand",
+    "criterion": "Criterion3"
+  };
+
+  item3 = {
+    "groupLevel": "Flavor",
+    "criterion": "Criterion4"
+  };
+
+  item4 = {
+    "groupLevel": "Package",
+    "criterion": "Criterion5"
+  };
+}
+
+var listItems = [];
+listItems.push(item0);
+listItems.push(item1);
+listItems.push(item2);
+listItems.push(item3);
+listItems.push(item4);
+
+me.addItems(listItems);
+me.setObjectStatus(STATE.PERSISTED);
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

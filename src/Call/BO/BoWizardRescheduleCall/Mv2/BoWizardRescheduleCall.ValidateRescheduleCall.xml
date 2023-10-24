@@ -1,0 +1,98 @@
+<BusinessLogic methodName="validateRescheduleCall" businessObjectClass="BoWizardRescheduleCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var updateDateThru = function() {
+  var dateThru = Utils.convertAnsiDate2Date(me.getDateFrom());
+  var splitString = me.getTimeFrom().split(":");
+  dateThru.setHours(splitString[0],splitString[1],0,0);
+  dateThru.setMinutes(dateThru.getMinutes() + me.getDuration());
+  //Setting the dateThru to check if call gets extended to the next day
+  dateThru.setHours(0,0,0,0);
+  return dateThru;
+};
+
+var newDateThru;
+if (me.getCalledByWizard() == "1") {
+  if (!Utils.isDefined(me.getDateFrom()) || !Utils.isDefined(me.getDateThru()) || !Utils.isDefined(me.getTimeFrom()) || Utils.isEmptyString(me.getTimeFrom()) || !Utils.isDefined(me.getTimeThru()) || Utils.isEmptyString(me.getTimeThru())) {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "messageID" : "CasClbFillInAllValues"
+    });
+  }
+  else {
+    if (me.getTimeFrom() > me.getTimeThru()) {
+      newDateThru = updateDateThru();
+      if (newDateThru > Utils.convertAnsiDate2Date(me.getDateFrom())) {
+        messageCollector.add({
+          "level" : "error",
+          "objectClass" : "BoCall",
+          "messageID" : "CasClbCallsMayNotSpanSeveralDays"
+        });
+      }
+      else {
+        messageCollector.add({
+          "level" : "error",
+          "objectClass" : "BoCall",
+          "messageID" : "CasClbTimeFromGreaterTimeThru"
+        });
+      }
+
+    }
+    else if (me.getTimeFrom() === me.getTimeThru()) {
+      messageCollector.add({
+        "level" : "error",
+        "objectClass" : "BoCall",
+        "messageID" : "CasClbCannotCreateCallWithZeroCallDuration"
+      });
+    }
+  }
+}
+else {
+  newDateThru = updateDateThru();
+  if (newDateThru > Utils.convertAnsiDate2Date(me.getDateFrom())) {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "messageID" : "CasClbCallsMayNotSpanSeveralDays"
+    });
+  }
+}
+
+if (messageCollector.containsNoErrors() && !Utils.isEmptyString(me.getCustomerPKey())) {
+  var callDateFrom = Utils.convertAnsiDate2Date(me.getDateFrom());
+  var managementRelValidFrom = Utils.convertAnsiDate2Date(me.getManagementRelationValidFrom());
+  var managementRelValidThru = Utils.convertAnsiDate2Date(me.getManagementRelationValidThru());
+
+  // Validate customer management relation while rescheduling a call
+  if (callDateFrom < managementRelValidFrom || callDateFrom > managementRelValidThru) {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardRescheduleCall",
+      "messageID" : "CasClbCannotRescheduleInvalidManagementRelation"
+    });
+  }
+
+  var substitutedFrom = Utils.convertAnsiDate2Date(me.getSubstitutedFrom());
+  var substitutedThru = Utils.convertAnsiDate2Date(me.getSubstitutedThru());
+  var isSubstitutedOutsideTimeFrame = (me.getIsSubstituted() == "1" && (callDateFrom < substitutedFrom || substitutedThru < callDateFrom));
+  if (me.getIsManaged() == "0" && (me.getHasSubstitute() == "0" || isSubstitutedOutsideTimeFrame)) {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardRescheduleCall",
+      "messageID" : "CasClbCannotRescheduleSubstitutedCall"
+    });
+  }
+  if (me.getHasSubstitute() == "1") {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardRescheduleCall",
+      "messageID" : "CasClbCannotRescheduleCallWhileSubstituted"
+    });
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,33 @@
+<BusinessLogic methodName="evaluateOperation" businessObjectClass="BoHelperHurdleExpressionFunctions" businessObjectType="businessobjecthelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="paramToEvaluate" type="Object" />
+    <MethodInput name="operator" type="String" />
+    <MethodInput name="paramBaseToEvaluate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var operationResult = false;
+switch (operator) {
+  case "gt":
+    operationResult = paramToEvaluate > paramBaseToEvaluate;
+    break;
+  case "ge":
+    operationResult = paramToEvaluate >= paramBaseToEvaluate;
+    break;
+  case "PER":  
+    operationResult = paramToEvaluate >= paramBaseToEvaluate;
+    break; 
+  case "eq":
+    operationResult = paramToEvaluate == paramBaseToEvaluate;
+    break; 
+  case "ne":   
+    operationResult = paramToEvaluate != paramBaseToEvaluate;
+    break;
+  case "le":
+    operationResult = paramToEvaluate <= paramBaseToEvaluate;
+    break;
+  case "lt":
+    operationResult = paramToEvaluate < paramBaseToEvaluate;
+}]]>
+</Code>
+  <Return name="operationResult" value="operationResult" />
+</BusinessLogic>

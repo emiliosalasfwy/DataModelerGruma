@@ -1,0 +1,19 @@
+<BusinessLogic methodName="validateRelease" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+var promise = when.resolve();
+
+if(me.getReleaseInProgress() == "1") {
+  // Validate name required and signature required for signature steps
+  var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+  for (var i = 1; i <= stepItems.length; i++) {
+    deferreds.push(me.validateStepAuthentication(messageCollector, stepItems[i-1], i));        
+  }
+  promise = when.all(deferreds);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

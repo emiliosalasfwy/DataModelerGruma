@@ -1,0 +1,41 @@
+<BusinessLogic methodName="getValidStepperValue" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="stepperValue" type="String" />
+    <MethodInput name="minValue" type="String" />
+    <MethodInput name="maxValue" type="String" />
+    <MethodInput name="allowDecimal" type="Bool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var skip = false;
+
+if (Utils.isDefined(stepperValue)) {
+  stepperValue = "" + stepperValue;
+
+  if ((!allowDecimal) && (stepperValue.indexOf(".") > 0)) {
+    stepperValue = minValue;
+    skip = true;
+  }
+
+  if (!skip) {
+    stepperValue = parseFloat(stepperValue.replace(",","."));
+
+    if (Utils.isDefined(minValue)) {
+      minValue = "" + minValue;
+      minValue = parseFloat(minValue.replace(",","."));
+      if (stepperValue < minValue) {
+        stepperValue = minValue;
+      }
+    }
+
+    if (Utils.isDefined(maxValue)) {
+      maxValue = "" + maxValue;
+      maxValue = parseFloat(maxValue.replace(",","."));
+      if (stepperValue > maxValue) {
+        stepperValue = maxValue;
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="stepperValue" value="stepperValue" />
+</BusinessLogic>

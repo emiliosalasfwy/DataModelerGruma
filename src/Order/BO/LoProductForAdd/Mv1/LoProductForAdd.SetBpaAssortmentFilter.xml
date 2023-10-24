@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setBpaAssortmentFilter" businessObjectClass="LoProductForAdd" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="prdProposalItemMetaPosition" type="DomPrdPdaItemPosition" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+    var filterAttribute = "sdoItemMeta" + prdProposalItemMetaPosition.getId();
+    
+    this.setFilter(filterAttribute,"1");
+
+    ]]></Code>
+</BusinessLogic>

@@ -1,0 +1,76 @@
+<BusinessLogic methodName="buildQueryCondition" businessObjectClass="LoProductForAdd" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Unwrap JsonParams
+var params = jsonParams.params;
+
+var useBpaAssortment;
+var filterByBpaAssortment;
+var useSalesDocAssortment;
+var filterBySdoAssortment;
+var addCond_ProductPKeys;
+
+var index = 0;
+for (index in params) {
+
+	switch (params[index].field) {
+	case "useBpaAssortment":
+		useBpaAssortment = params[index].value;
+		break;
+	case "filterByBpaAssortment":
+		filterByBpaAssortment = params[index].value;
+		break;
+	case "useSalesDocAssortment":
+		useSalesDocAssortment = params[index].value;
+		break;
+	case "filterBySdoAssortment":
+		filterBySdoAssortment = params[index].value;
+		break;
+	case "addCond_ProductPKeys":
+		addCond_ProductPKeys = params[index].value;
+		break;
+	}
+}
+
+//Customer selling assortment
+var cndBpa = "";
+var cndFilterByBpaAssortment = "";
+
+if (useBpaAssortment == 1) {
+	cndBpa = "CustomerAssortment = '1'";
+
+	if (filterByBpaAssortment == 1) {
+		//Fiter by Customer selling assortment
+		cndFilterByBpaAssortment = "CustomerAssortment = '1'";
+	}
+}
+
+//Sales document assortment
+var cndSdo = "";
+var cndFilterBySdoAssortment = "";
+
+if (useSalesDocAssortment == 1) {
+	cndSdo = "SdoAssortment = '1'";
+
+	if (filterBySdoAssortment == 1) {
+		cndFilterBySdoAssortment = "SdoAssortment = '1'";
+	}
+}
+
+//Build query condition
+var queryCondition = " 1=1 ";
+
+// Handle FilterBySalesDocumentAssortment
+if (!Utils.isEmptyString(cndFilterByBpaAssortment)) {
+	queryCondition += " AND (" + cndFilterByBpaAssortment + ")";
+}
+
+// Handle FilterByCustomerAssortment
+if (!Utils.isEmptyString(cndFilterBySdoAssortment)) {
+	queryCondition += " AND (" + cndFilterBySdoAssortment + ")";
+}]]>
+</Code>
+  <Return name="queryCondition" value="queryCondition" />
+</BusinessLogic>

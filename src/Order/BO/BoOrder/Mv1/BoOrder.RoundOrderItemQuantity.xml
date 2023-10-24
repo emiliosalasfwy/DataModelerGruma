@@ -1,0 +1,103 @@
+<BusinessLogic methodName="roundOrderItemQuantity" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItemMain" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var itemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(orderItemMain.getSdoItemMetaPKey());
+var isRoundingON = me.getIsRoundingOn();
+var isRoundingToggleChanged = me.getIsRoundingToggleChanged();
+var quantityRounding = me.getBoOrderMeta().getQuantityRounding();
+
+//function to calculate the rounded quantity
+function RoundQuantityforProduct(prdLogisticRoundingItem, myOrderItem, currentRoundingRule) {
+
+  var quantity = myOrderItem.getQuantity();
+  var piecesPerSmallestUnitOrderItem = myOrderItem.getPiecesPerSmallestUnit();
+  var piecesPerSmallestUnitTarget = prdLogisticRoundingItem.getPiecesPerSmallestUnit();
+
+  //Math.floor is used to get rid of decimal values.
+  var quotientUnits = Math.floor((quantity * piecesPerSmallestUnitOrderItem) / piecesPerSmallestUnitTarget);
+  var remainderUnits = (quantity * piecesPerSmallestUnitOrderItem) % piecesPerSmallestUnitTarget;
+  if (remainderUnits === 0) {
+    return myOrderItem;
+  }
+
+  switch (currentRoundingRule) {
+    case "Up":
+      quotientUnits = quotientUnits + 1;
+      quantity = Math.floor((quotientUnits * piecesPerSmallestUnitTarget) / piecesPerSmallestUnitOrderItem);
+      break;
+    case "Down":
+      quantity = Math.floor((quotientUnits * piecesPerSmallestUnitTarget) / piecesPerSmallestUnitOrderItem);
+      break;
+    case "Nearest":
+      var nextNearestQuotient = quotientUnits + 1;
+      var nextOrderQty = Math.floor((nextNearestQuotient * piecesPerSmallestUnitTarget) / piecesPerSmallestUnitOrderItem);
+
+      var prevNearestQuotient = quotientUnits;
+      var prevOrderQty = Math.floor((prevNearestQuotient * piecesPerSmallestUnitTarget) / piecesPerSmallestUnitOrderItem);
+
+      //quantity is near to the previous or next rounded value.
+      if (quantity - prevOrderQty < nextOrderQty - quantity) {
+        quantity = prevOrderQty; //quantity is near to the previous round value.
+      }
+      else {
+        quantity = nextOrderQty; //quantity is near to the next round value.
+      }
+      break;
+    case "UserExit":
+      if (Utils.isDefined(me.roundOrderItemQuantityUserExit)) {
+        me.roundOrderItemQuantityUserExit();
+      }
+      break;
+    case "Never":
+      //no rounding happens
+      break;
+  }
+  myOrderItem.setQuantity(quantity);
+}
+
+
+// explanation for below if condition
+// rounding is default off from begining
+// rounding is set off by user
+// rounding is permanently off
+// orderitemmeta's excludeQuantityRounding is on
+
+if ((isRoundingToggleChanged == "0" && quantityRounding == "RoundingDefaultOff") ||
+    (isRoundingToggleChanged == "1" && isRoundingON == "0") ||
+    (quantityRounding == "Off") ||
+    (itemMeta.getExcludeQuantityRounding() == "1")) {
+
+  promise = when.resolve();
+}
+else {
+
+  //load the lo from prod logistic with quantity rounding info for the perticular product key.
+  promise = BoFactory.loadObjectByParamsAsync("LoProductQuantityRounding", me.getQueryBy("ProductPKey", orderItemMain.getPrdMainPKey()))
+    .then(function (loProductQuantityRounding) {
+    var prdLogisticRoundingItems = loProductQuantityRounding.getItemObjects();
+    var currentRoundingRule = "Never";
+    var indexOfPrdLogisticRounding = -1;
+    var prdLogisticRoundingItem;
+
+    for (var index = 0; index < prdLogisticRoundingItems.length; index++) {
+      if ((prdLogisticRoundingItems[index].getOrderAbility() == 1) &&
+          (prdLogisticRoundingItems[index].getRoundingTarget() == 1) &&
+          (prdLogisticRoundingItems[index].getPiecesPerSmallestUnit() > orderItemMain.getPiecesPerSmallestUnit())) {
+
+        //only if matching prod logistic item is found , rounding logic is applied.
+        RoundQuantityforProduct(prdLogisticRoundingItems[index], orderItemMain, currentRoundingRule);
+        break;
+      }
+
+      if (prdLogisticRoundingItems[index].getUnitType() == orderItemMain.getQuantityLogisticUnit()) {
+        currentRoundingRule = prdLogisticRoundingItems[index].getRoundingRule();
+      }
+    }
+  });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

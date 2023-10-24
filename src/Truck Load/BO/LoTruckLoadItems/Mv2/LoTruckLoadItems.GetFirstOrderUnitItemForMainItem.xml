@@ -1,0 +1,20 @@
+<BusinessLogic methodName="getFirstOrderUnitItemForMainItem" businessObjectClass="LoTruckLoadItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var orderUnitItem = mainItem.getIsOrderUnit() == "1" ? mainItem : undefined;
+
+if(!Utils.isDefined(orderUnitItem)){
+  var items = me.getItemsByParamArray([{
+    "refPKey" : mainItem.getRefPKey(),
+    "isOrderUnit": "1"
+  }]);
+
+  if (items.length > 0){
+    orderUnitItem = items[0];
+  }
+}]]>
+</Code>
+  <Return name="orderUnitItem" value="orderUnitItem" />
+</BusinessLogic>

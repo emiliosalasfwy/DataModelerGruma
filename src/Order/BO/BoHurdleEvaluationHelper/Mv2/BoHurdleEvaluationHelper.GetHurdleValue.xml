@@ -1,0 +1,60 @@
+<BusinessLogic methodName="getHurdleValue" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="hurdle" type="Object" />
+    <MethodInput name="reward" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var hurdleValue;
+if(hurdle.getExpressionFunction() === "sumOfValue" || hurdle.getExpressionFunction() === "sumOfQuantity"){
+  if(Utils.isDefined(reward)) {
+    hurdleValue = reward.getNumericValue();
+  }
+  else {
+    hurdleValue = hurdle.getNumericValue();
+  } 
+}
+else {
+  switch (hurdle.getExpressionResultType()) {
+    case "Numeric":
+      if(Utils.isDefined(reward)) {
+        hurdleValue = reward.getNumericValue();
+      }
+      else {
+        hurdleValue = hurdle.getNumericValue();
+      }
+      break;
+    case "Text":
+      if(Utils.isDefined(reward)) {
+        hurdleValue = reward.getTextValue();
+      }
+      else {
+        hurdleValue = hurdle.getTextValue();
+      }
+      break;
+    case "Boolean":
+      if(Utils.isDefined(reward)) {
+        hurdleValue = reward.getBooleanValue();
+      }
+      else {
+        hurdleValue = hurdle.getBooleanValue();
+      }
+      break;
+    case "Date":
+      if(Utils.isDefined(reward)) {
+        hurdleValue = reward.getDateValue().substr(0,10) + " 00:00:00";
+      } 
+      else {
+        hurdleValue = hurdle.getDateValue().substr(0,10) + " 00:00:00";
+      }
+      break;
+  }
+}
+if(Utils.isDefined(reward)) {
+  reward.setTargetValue(hurdleValue);
+}
+else {
+  hurdle.setTargetValue(hurdleValue);
+}]]>
+</Code>
+  <Return name="hurdleValue" value="hurdleValue" />
+</BusinessLogic>

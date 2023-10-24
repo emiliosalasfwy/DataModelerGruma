@@ -1,0 +1,90 @@
+<BusinessLogic methodName="copyBo" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="oldBo" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var jsonParams_Lookup_listedPromoted = [];
+var jsonQuery_listedPromoted = {};
+var oldPKEY = oldBo.getPKey();
+var additionalCondition = " AND 1=1";
+var newLoOrderItems;
+
+jsonParams_Lookup_listedPromoted.push({ "field": "orderPkey", "value": oldPKEY });
+jsonParams_Lookup_listedPromoted.push({ "field": "additionalCondition", "value": additionalCondition });
+jsonQuery_listedPromoted.params = jsonParams_Lookup_listedPromoted;
+
+var promise = Facade.getListAsync("LoOrderItems", jsonQuery_listedPromoted)
+.then(function (lookupData){
+  newLoOrderItems = lookupData.filter(function (item){
+    return Utils.isEmptyString(item.freeItemCreationStep);
+  });
+  var newLoItems = BoFactory.instantiate("LoOrderItems");
+  me.setLoItems(newLoItems);
+
+  var promotionsLoaded = when.resolve();
+  if (me.getBoOrderMeta().getConsiderSelectablePromotion() == '1')
+  {
+    promotionsLoaded = Facade.getListAsync("LoSelectablePromotionProducts", { currentDate: Utils.createDateToday(), customer: me.getLuOrderer().getPKey() });
+  }
+  return promotionsLoaded;
+})
+.then(function (promotionProducts){
+  var isValidItem = function (item, promotionProducts)
+  {
+    var valid = true;
+    if (Utils.isDefined(promotionProducts) && !Utils.isEmptyString(item.promotionPKey))
+    {
+      valid = promotionProducts.findIndex(function (promotionProduct) { return promotionProduct.promotionPKey == item.promotionPKey && promotionProduct.prdMainPKey == item.prdMainPKey; }) > -1;
+    }	
+    return valid;
+  };
+
+  var priceffect;
+  for(var x = 0; x < newLoOrderItems.length; x++)
+  {
+    if (!isValidItem(newLoOrderItems[x], promotionProducts)){
+      newLoOrderItems.splice(x, 1);
+      x--;
+    }
+    else{
+      priceffect = me.getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(newLoOrderItems[x].sdoItemMetaPKey).getPriceEffect();
+      newLoOrderItems[x].sdoMainPKey = me.pKey;
+      newLoOrderItems[x].objectStatus = STATE.NEW | STATE.DIRTY;
+      newLoOrderItems[x].erpId = " ";
+      newLoOrderItems[x].pKey  = PKey.next();
+      newLoOrderItems[x].priceEffect = priceffect;
+    }
+  }  
+
+  me.getLoItems().addItems(newLoOrderItems);
+  return CP.PricingHandler.getInstance().initOrder(me.getPKey(), me.getSdoMetaPKey(), me.getOrdererPKey(), Utils.createDateToday(),
+                                                   me.getCurrency(), me.getCndCpCalculationSchemaPKey(), me.cpGetRelevantOrderAttributes(),
+                                                   me.getDistribChannel(), me.getDivision(), me.cpGetVariantOrderVariables(), me.getBoOrderMeta().getGeneratePricingLog());
+})
+.then(function (){
+  //changing the header discount automatically trigger resetcalculationresult
+  return me.setHeaderDiscount(oldBo.getHeaderDiscount());
+})
+.then(function (){
+  if (Utils.isDefined(CP) && (me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5")) 
+  {
+    if (me.getBoOrderMeta().getComputePrice() === "5" && me.getDocTaType() !== "NonValuatedDeliveryNote")
+    {
+      return me.cpCalculate();
+    }
+    else
+    {
+      me.setCalculationStatus("3");
+    }
+  }
+  else
+  {
+    return BoFactory.createObjectAsync("BoHelperSimplePricingCalculator", {}).then(function (calculator) { 
+      me.setSimplePricingCalculator(calculator);
+      return me.calculateOrderValue().then(function () { 
+        me.setCalculationStatus("1");
+      });
+    });
+  }
+});]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

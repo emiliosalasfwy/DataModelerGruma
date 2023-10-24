@@ -1,0 +1,19 @@
+<BusinessLogic methodName="setTripListWizardTitle" businessObjectClass="BoWizardTripList" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var title;
+
+if (mode === "CreateTripList" ) {
+  title = Localization.resolve("Create_Trip_List_Title");
+}
+else if (mode === "UpdateTripList" ) {
+  title = Localization.resolve("Update_Trip_List_Title");
+}
+else if (mode === "DeleteTripList" ) {
+  title = Localization.resolve("Delete_Trip_List_Title");
+}]]>
+</Code>
+  <Return name="title" value="title" />
+</BusinessLogic>

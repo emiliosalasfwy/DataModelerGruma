@@ -1,0 +1,241 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoTruckLoad" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setLoModReasonCache(Utils.createDictionary());
+
+var runningTour = " ";
+if (Utils.isDefined(ApplicationContext.get("currentTourPKey"))) {
+  runningTour = ApplicationContext.get("currentTourPKey");
+}
+
+me.setTmgMainPKey(runningTour);
+
+if (
+  Utils.isEmptyString(runningTour) &&
+  Utils.isDefined(context.jsonQuery.tmgMainPKey)
+) {
+  me.setTmgMainPKey(context.jsonQuery.tmgMainPKey);
+}
+
+//Set default fields
+me.setSalesOrg(
+  ApplicationContext.get("user").getBoUserSales().getSalesOrg()
+);
+
+//Set date fields of order (delivery date is set later due to asynchronous call)
+me.setInitiationDate(Utils.createAnsiDateTimeToday());
+me.setCommitDate(Utils.createAnsiDateTimeToday());
+
+//Set user references
+me.setResponsiblePKey(ApplicationContext.get("user").getPKey());
+me.setInitiatorPKey(ApplicationContext.get("user").getPKey());
+me.setOwnerPKey(ApplicationContext.get("user").getPKey());
+me.setSenderPKey(ApplicationContext.get("user").getPKey());
+me.setRecipientPKey("");
+
+//Set IvcRefPKeys
+me.setIvcRefPKeys();
+
+me.setTotalValue(0);
+me.setTotalValueReceipt(0);
+me.setGrossTotalValue(0);
+me.setGrossTotalValueReceipt(0);
+me.setMerchandiseValue(0);
+me.setMerchandiseValueReceipt(0);
+me.setTotalShippedQuantity(0);
+me.setTotalReturnedQuantity(0);
+me.setPaidAmount(0);
+me.setPaidAmountReceipt(0);
+me.setHeaderDiscount(0);
+
+me.setDeliveryDate(Utils.getMinDate());
+me.setCalculationTime(Utils.getMinDate());
+me.setPricingDate(Utils.getMinDate());
+me.setReleaseTime(Utils.getMinDate());
+
+var promise = me
+  .loadBoOrderMeta()
+  .then(function () {
+    //set calculation schema
+    if (
+      (me.getBoOrderMeta().getComputePrice() === "4" ||
+        me.getBoOrderMeta().getComputePrice() === "5") &&
+      !Utils.isEmptyString(me.getBoOrderMeta().getCndCpCalculationSchemaPKey())
+    ) {
+      me.setCndCpCalculationSchemaPKey(
+        me.getBoOrderMeta().getCndCpCalculationSchemaPKey()
+      );
+    }
+
+    //Set inventory search keys for item meta
+    me.getBoOrderMeta().setIvcSearchKeysForItemMetas(
+      me.getOrdererPKey(),
+      me.getIvcRef1PKey(),
+      me.getIvcRef2PKey(),
+      me.getIvcRef3PKey(),
+      me.getIvcRef4PKey(),
+      me.getIvcRef5PKey()
+    );
+
+    //Set Document Type while creating a new document
+    me.setDocumentType(me.getBoOrderMeta().getSdoSubType());
+
+    //Set workflow information
+    me.setWfeWorkflowPKey(me.getBoOrderMeta().getWfeWorkflowPKey());
+
+    //set item Template
+    var orderItemMeta = me
+      .getBoOrderMeta()
+      .getLoOrderItemMetas()
+      .getMainItemTemplate();
+    if (Utils.isDefined(orderItemMeta)) {
+      me.setAddProduct_ItemMeta(orderItemMeta);
+    }
+
+    return BoFactory.loadObjectByParamsAsync(
+      "BoWorkflow",
+      me.getQueryBy("pKey", me.getWfeWorkflowPKey())
+    );
+  })
+  .then(function (boWorkflow) {
+    me.setBoWorkflow(boWorkflow);
+    var wfeInitialStateJson = boWorkflow.getInitialState();
+    if (Utils.isDefined(wfeInitialStateJson)) {
+      me.setPhase("Initial");
+      me.setActualStatePKey(wfeInitialStateJson.toStatePKey);
+      me.setNextStatePKey(me.getActualStatePKey());
+    }
+
+    //################################################
+    //### Create Recent State for workflow history ###
+    //################################################
+    return BoFactory.createListAsync(LO_ORDERRECENTSTATE, {});
+  })
+  .then(function (loTruckLoadWfeRecentState) {
+    me.setLoWfeRecentState(loTruckLoadWfeRecentState);
+
+    return BoFactory.loadObjectByParamsAsync(
+      "LuInitialAndNextState",
+      me.getQueryBy("wfeWorkflowPKey", me.getWfeWorkflowPKey())
+    );
+  })
+  .then(function (luInitialAndNextState) {
+    //Set ActualStatePKey to PKey of initial state
+    me.setActualStatePKey(luInitialAndNextState.getInitialStatePKey());
+
+    var initialStateType = luInitialAndNextState.getInitialStateType();
+
+    if (initialStateType == "initial") {
+      initialStateType = "Initial";
+    }
+
+    me.setPhase(initialStateType);
+
+    //Set NextStatePKey to ActualStatePKey (setting to nextStatePKey would not be correct - save at Web after sync would do state transition)
+    me.setNextStatePKey(luInitialAndNextState.getInitialStatePKey());
+
+    if (me.getBoOrderMeta().getDocInvoiceNumberGenBehavior() === "Creation") {
+      var sysNumberParams = [];
+      var sysNumberQuery = {};
+
+      sysNumberParams.push({
+        field: "sdoMetaPKey",
+        value: me.getSdoMetaPKey(),
+      });
+      sysNumberParams.push({
+        field: "docTaType",
+        value: me.getDocTaType(),
+      });
+      sysNumberQuery.params = sysNumberParams;
+
+      return BoFactory.loadObjectByParamsAsync(
+        "LuSdoMetaDocTATypeSysNumber",
+        sysNumberQuery
+      );
+    }
+  })
+  .then(function (luSdoMetaDocTATypeSysNumber) {
+    if (Utils.isDefined(luSdoMetaDocTATypeSysNumber)) {
+      if (
+        !Utils.isEmptyString(luSdoMetaDocTATypeSysNumber.getSysNumberPKey())
+      ) {
+        return SysNumber.getSysNumberAsync(
+          luSdoMetaDocTATypeSysNumber.getSysNumberPKey()
+        );
+      } else {
+        return SysNumber.getSysNumberAsync(
+          me.getBoOrderMeta().getSysNumberPKey()
+        );
+      }
+    }
+  })
+  .then(function (invoicenumber) {
+    if (!Utils.isSfBackend()) {
+      if (Utils.isDefined(invoicenumber)) {
+        me.setInvoiceId(invoicenumber);
+      }
+    }
+
+    if (me.getBoOrderMeta().getDocNumberGenBehavior() == "Creation") {
+      return SysNumber.getSysNumberAsync(
+        me.getBoOrderMeta().getSysNumberPKey()
+      );
+    } else {
+      return me.getPKey();
+    }
+  })
+  .then(function (sysnumber) {
+    //Set id (generated by number generator)
+    me.setId(sysnumber);
+
+    return BoFactory.loadObjectByParamsAsync(
+      LU_USER,
+      me.getQueryBy("pKey", me.getResponsiblePKey())
+    );
+  })
+  .then(function (luResponsible) {
+    me.setLuResponsible(luResponsible);
+
+    return BoFactory.loadObjectByParamsAsync(
+      LU_USER,
+      me.getQueryBy("pKey", me.getOwnerPKey())
+    );
+  })
+  .then(function (luOwner) {
+    me.setLuOwner(luOwner);
+
+    return BoFactory.loadObjectByParamsAsync(
+      LU_USER,
+      me.getQueryBy("pKey", me.getSenderPKey())
+    );
+  })
+  .then(function (luSender) {
+    me.setLuSender(luSender);
+
+    return BoFactory.loadObjectByParamsAsync(
+      LU_ETPWAREHOUSE,
+      me.getQueryBy("pKey", me.getEtpWarehousePKey())
+    );
+  })
+  .then(function (luWarehouse) {
+    me.setLuEtpWarehouse(luWarehouse);
+
+    return BoFactory.loadObjectByParamsAsync(
+      LU_TOURINFORMATION,
+      me.getQueryBy("pKey", me.getTmgMainPKey())
+    );
+  })
+  .then(function (luTourInformation) {
+    me.setLuTourInformation(luTourInformation);
+
+    //Set State
+    me.setObjectStatus(STATE.NEW | STATE.DIRTY);
+
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

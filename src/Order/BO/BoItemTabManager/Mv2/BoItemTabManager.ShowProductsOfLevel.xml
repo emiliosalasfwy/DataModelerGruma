@@ -1,0 +1,68 @@
+<BusinessLogic methodName="showProductsOfLevel" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="levelId" type="DomId" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+me.setCurrentFilterId(levelId);
+me.setIsSkuLevel("1");
+
+// If level has not already been loaded, load items incremental via item list of order business object
+if (me.isLevelLoaded(levelId) == "0") {
+
+  var jsonQuery = me.getBoOrder().getJsonQueryForLoItems();
+  if (Utils.isCasBackend() || !jsonQuery.useMergeEngine){
+    jsonQuery.params = me.getBoOrder().getLoItems().buildQueryCondition(jsonQuery, levelId);
+  }
+  promise = me.getBoOrder().getLoItems().loadAsyncIncremental(jsonQuery, levelId).then(
+    function() {
+      // Mark level as loaded
+      me.getLoadedLevels().add(levelId, levelId);
+      me.getBoOrder().getLoItems().resetFilter("pKey");
+
+      // In case of switching between tabs, the navigation back to the level should not reset the current item filter of the previous visit
+      if (me.getResetCurrentItemFilterOnShowProducts() == "1") {
+        me.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "2", "LT");
+
+        // Set default filter
+        me.getBoOrder().getLoItemFilter().setCurrent(me.getDefaultItemFilter());
+        me.setCurrentItemFilterId(me.getDefaultItemFilter().getFilterCode());
+      } 
+      else {
+        me.setResetCurrentItemFilterOnShowProducts("1");
+      }
+
+      // Do not set category filter if basket was selected
+      if (me.getCurrentItemFilterId() != "Basket") {
+        me.getBoOrder().getLoItems().setFilter("groupId", me.getCurrentFilterId(), "EQ");
+      }
+
+      me.getBoOrder().setItemFilterCountsByCategory();
+
+      me.getBoOrder().getLoItems().createDisplayInformation(me.getBoOrder().getBoOrderMeta());
+    });
+} 
+else {
+  me.getBoOrder().getLoItems().resetFilter("pKey");
+  // In case of switching between tabs, the navigation back to the level should not reset the current item filter of the previous visit
+  if (me.getResetCurrentItemFilterOnShowProducts() == "1") {
+    me.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "2", "LT");
+    // Set default filter
+    me.getBoOrder().getLoItemFilter().setCurrent(me.getDefaultItemFilter());
+    me.setCurrentItemFilterId(me.getDefaultItemFilter().getFilterCode());
+  } 
+  else {
+    me.setResetCurrentItemFilterOnShowProducts("1");
+  }
+  // Do not set category filter if basket was selected
+  if (me.getCurrentItemFilterId() != "Basket") {
+    me.getBoOrder().getLoItems().setFilter("groupId", me.getCurrentFilterId(), "EQ");
+  }
+
+  me.getBoOrder().setItemFilterCountsByCategory();
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

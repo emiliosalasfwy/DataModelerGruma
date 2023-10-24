@@ -1,0 +1,16 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoIssueOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var priorityLabel = Localization.resolve("IssueOverviewCallUI_PrioLabel");
+for (var i = 0; i < items.length; i++) {
+  items[i].priorityUIText = priorityLabel + " " +  Utils.getToggleText("DomABC",  items[i].priority);
+}
+me.orderBy({ "initiationDate" : "DESC" , "businessModified" : "DESC" }); 
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

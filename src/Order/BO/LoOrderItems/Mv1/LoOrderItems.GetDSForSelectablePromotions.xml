@@ -1,0 +1,291 @@
+<BusinessLogic methodName="getDSForSelectablePromotions" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+    <MethodInput name="commitDate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var datasourceDefiniton = {
+  "boName" : "LoMeSelectablePromotions",
+  "dsParams" : {
+    "params" : [{
+      "field" : "customerPKey",
+      "value" : jsonParams.customerPKey
+    }, {
+      "field" : "commitDate",
+      "value" : commitDate
+    }, {
+      "field" : "sdoMainPKey",
+      "value" : jsonParams.sdoMainPKey
+    }, {
+      "field" : "considerSelectablePromotion",
+      "value" : jsonParams.considerSelectablePromotion
+    }, {
+      "field" : "specialOrderHandling",
+      "value" : jsonParams.specialOrderHandling
+    }, {
+      "field" : "mainItemTemplate",
+      "value" : jsonParams.mainItemTemplate.getPKey()
+    }, {
+      "field" : "useMergeEngine",
+      "value" : jsonParams.useMergeEngine
+    }]
+  },
+  "matchingColumn" : "prdMainPKey",
+  "dataSourceColumns" : [{
+    "name" : "promoted",
+    "alias" : "promoted",
+    "default" : "0"
+  },{
+    "name" : "pKey",
+    "alias" : "pKey",
+    "default" : " "
+  }, {
+    "name" : "sdoMainPKey",
+    "alias" : "sdoMainPKey",
+    "default" : jsonParams.sdoMainPKey
+  }, {
+    "name" : "sdoItemMetaPKey",
+    "alias" : "sdoItemMetaPKey",
+    "default" : jsonParams.mainItemTemplate.getPKey()          
+  }, {
+    "name" : "sdoParentItemPKey",
+    "alias" : "sdoParentItemPKey",
+    "default" : " "
+  }, {
+    "name" : "quantity",
+    "alias" : "quantity",
+    "default" : 0
+  }, {
+    "name" : "discount",
+    "alias" : "discount",
+    "default" : 0
+  }, {
+    "name" : "quantityLogisticUnit",
+    "alias" : "quantityLogisticUnit",
+    "default" : "copy#defaultQuantityLogisticUnit"
+  }, {
+    "name" : "type",
+    "alias" : "type",
+    "default" : jsonParams.mainItemTemplate.getText()
+  }, {
+    "name" : "erpId",
+    "alias" : "erpId",
+    "default" : " "
+  }, {
+    "name" : "shortType",
+    "alias" : "shortType",
+    "default" : jsonParams.mainItemTemplate.getShortText()
+  }, {
+    "name" : "priceEffect",
+    "alias" : "priceEffect",
+    "default" : jsonParams.mainItemTemplate.getPriceEffect()
+  }, {
+    "name" : "price",
+    "alias" : "price",
+    "default" : 0
+  }, {
+    "name" : "priceReceipt",
+    "alias" : "priceReceipt",
+    "default" : 0
+  }, {
+    "name" : "value",
+    "alias" : "value",
+    "default" : 0
+  }, {
+    "name" : "valueReceipt",
+    "alias" : "valueReceipt",
+    "default" : 0
+  }, {
+    "name" : "basePrice",
+    "alias" : "basePrice",
+    "default" : 0
+  }, {
+    "name" : "basePriceReceipt",
+    "alias" : "basePriceReceipt",
+    "default" : 0
+  }, {
+    "name" : "grossValue",
+    "alias" : "grossValue",
+    "default" : 0
+  }, {
+    "name" : "grossValueReceipt",
+    "alias" : "grossValueReceipt",
+    "default" : 0
+  }, {
+    "name" : "specialPrice",
+    "alias" : "specialPrice",
+    "default" : 0
+  }, {
+    "name" : "specialPriceReceipt",
+    "alias" : "specialPriceReceipt",
+    "default" : 0
+  }, {
+    "name" : "piecesPerSmallestUnit",
+    "alias" : "piecesPerSmallestUnit",
+    "default" : "copy#defaultPiecesPerSmallestUnit"
+  }, {
+    "name" : "saveZeroQuantity",
+    "alias" : "saveZeroQuantity",
+    "default" : jsonParams.mainItemTemplate.getSaveZeroQuantity()
+  }, {
+    "name" : "suggestedQuantity",
+    "alias" : "suggestedQuantity",
+    "default" : 0
+  }, {
+    "name" : "freeItemCreationStep",
+    "alias" : "freeItemCreationStep",
+    "default" : " "
+  }, {
+    "name" : "calculationGroup",
+    "alias" : "calculationGroup",
+    "default" : jsonParams.mainItemTemplate.getCalculationGroup()
+  }, {
+    "name" : "movementDirection",
+    "alias" : "movementDirection",
+    "default" : jsonParams.mainItemTemplate.getMovementDirection()          
+  }, {
+    "name" : "promotionPKey",
+    "alias" : "promotionPKey",
+    "default" : " "
+  }, {
+    "name" : "productClassifications",
+    "alias" : "productClassifications",
+    "default" : " "
+  }, {
+    "name" : "specialPromoted",
+    "alias" : "specialPromoted",
+    "default" : "0"
+  }, {
+    "name" : "specialQuantity",
+    "alias" : "specialQuantity",
+    "default" : 0
+  }, {
+    "name" : "rewardPKey",
+    "alias" : "rewardPKey",
+    "default" : " "
+  }, {
+    "name" : "groupName",
+    "alias" : "groupName",
+    "default" : " "
+  }, {
+    "name" : "groupSort",
+    "alias" : "groupSort",
+    "default" : " "
+  }, {
+    "name" : "groupIdSort",
+    "alias" : "groupIdSort",
+    "default" : " "
+  }, {
+    "name" : "prdMainPKey",
+    "alias" : "prdMainPKey",
+    "default" : " "    
+  }, {
+    "name" : "pricingInfo1",
+    "alias" : "pricingInfo1",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo2",
+    "alias" : "pricingInfo2",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo3",
+    "alias" : "pricingInfo3",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo4",
+    "alias" : "pricingInfo4",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo5",
+    "alias" : "pricingInfo5",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo6",
+    "alias" : "pricingInfo6",
+    "default" : 0
+   }, {
+    "name" : "pricingInfo7",
+    "alias" : "pricingInfo7",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo8",
+    "alias" : "pricingInfo8",
+    "default" : 0
+   }, {
+    "name" : "pricingInfo9",
+    "alias" : "pricingInfo9",
+    "default" : 0
+  }, {
+    "name" : "pricingInfo10",
+    "alias" : "pricingInfo10",
+    "default" : 0
+  }, {
+    "name" : "promotedPrice",
+    "alias" : "promotedPrice",
+    "default" : 0
+  }, {
+    "name" : "tacticProductPKey",
+    "alias" : "tacticProductPKey",
+    "default" : " "
+  }, {
+    "name" : "text1",
+    "alias" : "text1",
+    "default" : " "
+  }, {
+    "name" : "defaultValue",
+    "alias" : "defaultValue",
+    "default" : 0
+  }, {
+    "name" : "maxValue",
+    "alias" : "maxValue",
+    "default" : 0
+  }],
+
+  "mergeProperty" : "FILTER",
+  "lookupDataSource" : "false",
+  "persistedItems" : "true"
+};
+
+
+// Select listed, promoted, history, out of stock information from persisted items if order is released
+if ((jsonParams.phase == BLConstants.Order.PHASE_RELEASED) || (jsonParams.phase == BLConstants.Order.PHASE_CANCELED) || (jsonParams.phase == BLConstants.Order.PHASE_READY) || (jsonParams.syncStatus === BLConstants.Order.NOT_SYNCABLE)) {
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "listed",
+    "alias" : "listed"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "history",
+    "alias" : "history"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "outOfStock",
+    "alias" : "outOfStock"
+  });
+}
+
+if (Utils.isSfBackend()) {
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "refPKey",
+    "alias" : "refPKey"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "sort",
+    "alias" : "sort"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "isOrderUnit",
+    "alias" : "isOrderUnit"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "pricingInformation",
+    "alias" : "pricingInformation"
+  });
+  datasourceDefiniton.dataSourceColumns.push({
+    "name" : "parentType",
+    "alias" : "parentType",
+    "default" : " "
+  });
+}]]>
+</Code>
+  <Return name="datasourceDefiniton" value="datasourceDefiniton" />
+</BusinessLogic>

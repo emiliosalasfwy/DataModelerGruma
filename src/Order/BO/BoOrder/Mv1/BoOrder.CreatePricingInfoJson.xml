@@ -1,0 +1,157 @@
+<BusinessLogic methodName="createPricingInfoJson" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Create JSON using complex pricing results and store it in Order/OrderItem (Pricing_Information__c)
+var promise = when.resolve();
+var isPricingRelevantOrder = me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5";
+var isInitialOrder = me.getPhase() === "Initial";
+var isCalculatedOrder = me.getCalculationStatus() == "1";
+
+if(isPricingRelevantOrder && isInitialOrder && isCalculatedOrder && me.getDocTaType() !== "NonValuatedDeliveryNote"){
+  var generatePricingInfo = me.getBoOrderMeta().getGeneratePricingInformation() === "Yes";
+  var generateOptimisedPricingInfo = me.getBoOrderMeta().getGeneratePricingInformation() === "YesOV";
+
+  //generate pricing information: version 1 or version 2 (optimised)
+  if(generatePricingInfo || generateOptimisedPricingInfo){
+    var orderItemInfo = [];
+    var pricingInfoJson;
+    var currentSdoCondition;
+    var i;
+    //suspend list events
+    me.getLoItems().suspendListRefresh();
+
+    var orderInfo = [];
+    var orderItemPricingInfoDict = Utils.createDictionary();
+    var sdoConditionsJson = [];
+    if (Utils.isDefined(me.getSdoConditionsJson()) && !Utils.isEmptyString(me.getSdoConditionsJson())){
+      sdoConditionsJson = JSON.parse(me.getSdoConditionsJson());
+    }
+
+    if(generatePricingInfo){
+      var orderItemIdDict = Utils.createDictionary();
+      me.getLoItems().getAllItems().forEach(function(orderItem) {
+        orderItemIdDict.add(orderItem.getPKey(), orderItem);
+      });
+
+      for(i = 0; i < sdoConditionsJson.length; i++){
+        pricingInfoJson = {};
+        currentSdoCondition = sdoConditionsJson[i];
+
+        pricingInfoJson.pKey = PKey.next();
+        pricingInfoJson.sdoMainPKey = me.getPKey();
+        pricingInfoJson.sdoItemPKey = currentSdoCondition.SdoItemPKey;
+        pricingInfoJson.text1 = currentSdoCondition.Text1;
+        pricingInfoJson.prdMainPKey = currentSdoCondition.PrdMainPKey;
+        pricingInfoJson.currency = currentSdoCondition.Currency;
+        pricingInfoJson.currencyConversionRate = currentSdoCondition.CurrencyConversionRate;
+        pricingInfoJson.cndCpCalculationPosition = currentSdoCondition.CndCpCalculationPosition;
+        pricingInfoJson.cndCpSearchStrategyKTRelPos = currentSdoCondition.CndCpSearchStrategyKTRelPos;
+        pricingInfoJson.conditionBaseValue = currentSdoCondition.ConditionBaseValue;
+        pricingInfoJson.conditionUnit = currentSdoCondition.ConditionUnit;
+        pricingInfoJson.unitFactor = currentSdoCondition.UnitFactor;
+        pricingInfoJson.convertedConditionValue = currentSdoCondition.ConvertedConditionValue;
+        pricingInfoJson.conditionResult = currentSdoCondition.ConditionResult;
+        pricingInfoJson.cndCpMetaPKey = currentSdoCondition.CndCpMetaPkey;
+
+        if(Utils.isEmptyString(currentSdoCondition.ConditionValue)){
+          currentSdoCondition.ConditionValue = currentSdoCondition.ConvertedConditionValue;
+        }
+        pricingInfoJson.conditionValue = currentSdoCondition.ConditionValue;
+
+        if(currentSdoCondition.PrintRelevant){
+          pricingInfoJson.cpIsPrintRelevant = "1";
+        }else{
+          pricingInfoJson.cpIsPrintRelevant = "0";
+        }
+
+        if(Utils.isEmptyString(currentSdoCondition.SdoItemPKey)){
+          orderInfo.push(pricingInfoJson);
+        }
+        else{
+          //Set ErpID temporary to pkey, needed because printout correlates via ErpID
+          //ErpIDs of SdoConditions are updated later in function setItemErpIDs
+          var listItem = orderItemIdDict.get(currentSdoCondition.SdoItemPKey);
+          if (Utils.isDefined(listItem)){
+            if(Utils.isEmptyString(listItem.getErpId())){
+              listItem.setErpId(listItem.getPKey());
+            }
+            pricingInfoJson.sdoItemErpId = listItem.getErpId();
+          }
+
+          //Prepare order item pricing info dictionary so that later the array can be stringified and set to the order item
+          orderItemInfo = [];
+          if(!orderItemPricingInfoDict.containsKey(currentSdoCondition.SdoItemPKey)){
+            orderItemInfo.push(pricingInfoJson);
+            orderItemPricingInfoDict.add(currentSdoCondition.SdoItemPKey, orderItemInfo);
+          }
+          else{
+            orderItemInfo = orderItemPricingInfoDict.get(currentSdoCondition.SdoItemPKey);
+            orderItemInfo.push(pricingInfoJson);
+            orderItemPricingInfoDict.data[currentSdoCondition.SdoItemPKey] = orderItemInfo;
+          }
+        }
+      }
+    } else if(generateOptimisedPricingInfo){
+
+      for(i = 0; i < sdoConditionsJson.length; i++){
+        pricingInfoJson = {};
+        currentSdoCondition = sdoConditionsJson[i];
+
+        pricingInfoJson.v = "2";
+        pricingInfoJson.clcPos = currentSdoCondition.CndCpCalculationPosition;
+        pricingInfoJson.searchPos = currentSdoCondition.CndCpSearchStrategyKTRelPos;
+        pricingInfoJson.nBase = currentSdoCondition.ConditionBaseValue;
+        pricingInfoJson.unit = currentSdoCondition.ConditionUnit;
+        pricingInfoJson.factor = currentSdoCondition.UnitFactor;
+        pricingInfoJson.cnvValue = currentSdoCondition.ConvertedConditionValue;
+        pricingInfoJson.result = currentSdoCondition.ConditionResult;
+        pricingInfoJson.met = currentSdoCondition.CndCpMetaPkey;
+
+        if(Utils.isEmptyString(currentSdoCondition.ConditionValue)){
+          currentSdoCondition.ConditionValue = currentSdoCondition.ConvertedConditionValue;
+        }
+        pricingInfoJson.value = currentSdoCondition.ConditionValue;
+
+        if(currentSdoCondition.PrintRelevant){
+          pricingInfoJson.print = "1";
+        }else{
+          pricingInfoJson.print = "0";
+        }
+
+        if(Utils.isEmptyString(currentSdoCondition.SdoItemPKey)){
+          orderInfo.push(pricingInfoJson);
+        }
+        else{
+          //Prepare order item pricing info dictionary so that later the array can be stringified and set to the order item
+          orderItemInfo = [];
+          if(!orderItemPricingInfoDict.containsKey(currentSdoCondition.SdoItemPKey)){
+            orderItemInfo.push(pricingInfoJson);
+            orderItemPricingInfoDict.add(currentSdoCondition.SdoItemPKey, orderItemInfo);
+          }
+          else{
+            orderItemInfo = orderItemPricingInfoDict.get(currentSdoCondition.SdoItemPKey);
+            orderItemInfo.push(pricingInfoJson);
+            orderItemPricingInfoDict.data[currentSdoCondition.SdoItemPKey] = orderItemInfo;
+          }
+        }
+      }
+    }
+
+    //update order pricing information
+    me.setPricingInformation(JSON.stringify(orderInfo));
+    //update item pricing information
+    me.getLoItems().getAllItems().forEach(function(orderItem){
+      if(orderItemPricingInfoDict.containsKey(orderItem.getPKey())){
+        orderItem.setPricingInformation(JSON.stringify(orderItemPricingInfoDict.get(orderItem.getPKey())));
+      }else{
+        //Write a valid JSON to order item if no conditions found
+        orderItem.setPricingInformation("[]");
+      }
+    });
+    //resume list events
+    promise = me.getLoItems().resumeListRefreshAsync(false,true);
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

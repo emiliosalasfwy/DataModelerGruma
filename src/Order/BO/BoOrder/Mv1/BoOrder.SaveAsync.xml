@@ -1,0 +1,134 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var promise = when.resolve();
+
+if (me.isEditable()) {
+
+  var deliveryDateSetterResult;
+  //Setting null value to default date
+  if (!Utils.isDefined(me.getDeliveryDate()) || Utils.isEmptyString(me.getDeliveryDate())) {
+    deliveryDateSetterResult = me.setDeliveryDate(Utils.getMinDate()); //the asynchronous eventhandler makes this setter asynchronous
+  }
+
+  promise = when(deliveryDateSetterResult)
+    .then(function (){
+    if (Utils.isSfBackend()) {
+      return BoFactory.createObjectAsync("BoSfHelper", {})
+        .then(function (helper){
+        var invoiceNote ="";
+        var deliveryNote = "";
+
+        if (Utils.isDefined(me.getLoNotes())) {
+          var invoiceNotes = [];
+          var deliveryNotes = [];
+
+          me.getLoNotes().forEach(function(currentNote){
+            if(currentNote.type == "Invoice"){
+              invoiceNotes.push(currentNote);
+            }
+            else if(currentNote.type == "Delivery"){
+              deliveryNotes.push(currentNote);
+            }
+          });
+
+          if (invoiceNotes.length > 0) {
+            invoiceNote = invoiceNotes[0].text;
+          } 
+          if (deliveryNotes.length > 0) {
+            deliveryNote = deliveryNotes[0].text;
+          }
+        }
+
+        var additionalMappings = [
+          { name: "invoiceNotes", dsColumn: "Invoice_Note__c", value: invoiceNote },
+          { name: "deliveryNotes", dsColumn: "Delivery_Note__c", value: deliveryNote }];
+
+        return helper.saveTrackedObject(me, additionalMappings);
+      });
+    } 
+    else {
+      return Facade.saveObjectAsync(me).then(
+        function () { return true; });
+    }
+  })
+    .then(function() {
+
+    var deferreds = [];
+
+    if (Utils.isDefined(me.getLoItems())) {
+      deferreds.push(me.getLoItems().saveAsync());
+    }
+
+    if (!Utils.isSfBackend()){
+      if (Utils.isDefined(me.getLoNotes())) {
+        deferreds.push(me.getLoNotes().saveAsync());
+      }
+    }
+
+    //In CGCloud SplittingParentSdoMainPKey is a derived attribute and will always be an empty string.
+    if (Utils.isDefined(me.getLoInventories()) && (!Utils.isDefined(me.getSplittingParentSdoMainPKey()) || Utils.isEmptyString(me.getSplittingParentSdoMainPKey()))) {
+      deferreds.push(me.getLoInventories().saveAsync());
+    }
+
+    if (Utils.isDefined(me.getLoInventoryTransactions())) {
+      deferreds.push(me.getLoInventoryTransactions().saveAsync());
+    }
+
+    if (Utils.isDefined(me.getLoRecentState())) {
+      deferreds.push(me.getLoRecentState().saveAsync());
+    }
+
+    if (Utils.isDefined(me.getLoOrderAttachment())) {
+      deferreds.push(me.getLoOrderAttachment().saveAsync());
+    }
+
+    //No need to save the list in CGCloud case because there exist no DB table for it
+    //The information is saved as JSON in order/orderItem field
+    if(!Utils.isSfBackend()){
+      if (Utils.isDefined(me.getLoSdoConditions())) {
+        deferreds.push(me.getLoSdoConditions().saveAsync());
+      }
+    }
+
+    if (Utils.isDefined(me.getLoPayments())) {
+      deferreds.push(me.getLoPayments().saveAsync());
+    }
+
+    if (Utils.isDefined(me.getLoSysSignatureAttribute())) {
+      deferreds.push(me.getLoSysSignatureAttribute().saveAsync());
+    }
+
+    if (Utils.isDefined(me.getLoSysSignatureBlob())) {
+      deferreds.push(me.getLoSysSignatureBlob().saveAsync());
+    }
+
+    if(!Utils.isSfBackend()){
+      if (Utils.isDefined(me.getLoGeoLocation())) {
+        deferreds.push(Facade.saveListAsync(me.getLoGeoLocation()));
+      }
+    }
+
+    return when.all(deferreds)
+      .then(
+      function ()
+      {
+        me.traverse(
+          function(node)
+          {
+            node.setObjectStatus(STATE.PERSISTED);
+            if(node.isList)
+            {
+              node.getAllItems().forEach(
+                function(item)
+                {
+                  item.setObjectStatus(STATE.PERSISTED);
+                });
+            }
+          },
+          function(a, b, c){}
+        );
+      });
+  });
+}]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

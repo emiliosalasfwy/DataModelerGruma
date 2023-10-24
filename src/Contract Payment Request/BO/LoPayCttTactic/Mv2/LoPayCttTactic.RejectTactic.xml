@@ -1,0 +1,8 @@
+<BusinessLogic methodName="rejectTactic" businessObjectClass="LoPayCttTactic" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//This function has been deprecated
+me.getCurrent().setTacticApproved('False');]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

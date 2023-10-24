@@ -1,0 +1,28 @@
+<BusinessLogic methodName="setAssetFilter" businessObjectClass="LoCallAssetOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+//Reset previously applied filters
+me.resetFilter("present");
+me.resetFilter("blindMode");
+
+if (mode === "sighted") {
+  me.setFilter("present", "1", "EQ");
+} else if (mode === "unSighted") {
+  me.setFilterArray([ {"present" : "0", "op" : "EQ"}, {"blindMode" : "1", "op" : "NE"} ] );
+} else {
+  me.resetFilter("present");
+}
+
+var items = me.getItemObjects();
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+} else {
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

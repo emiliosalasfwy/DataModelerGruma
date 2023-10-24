@@ -1,0 +1,22 @@
+<BusinessLogic methodName="beforeDoValidateAsync" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (me.getClbStatus() === "Completed" && me.getOriginalClbStatus() !== "Completed") {
+  promise = me.getBoJobManager().prepareSavePresettingJobs()
+    .then(
+    function () {
+      return me.updateCustomerCallSetting().then(
+        function () {
+          return context;
+        });
+    });
+} else {
+  promise = when.resolve(context);
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

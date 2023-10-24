@@ -1,0 +1,71 @@
+<BusinessLogic methodName="getNotificationsForCard" businessObjectClass="LoUsrNotification" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+jsonQuery.params = jsonParams;
+
+//DsLoUsrNotification_sf has not been moved to schemaVersion 2.0 yet because of open FWK Defect: 649615
+//DsLoUsrNotification has been moved to schemaVersion 2.0 hence parameterizing additional queries for R14
+
+if (Utils.isSfBackend()){
+  jsonQuery.cond = " AND Task.Status = 'Not Started'";
+}
+else{
+  jsonQuery.cond = " AND UsrNotification.IsRead = #isRead# ";
+  jsonQuery.params.push({"field" : "isRead", "value" : '0'});
+}
+me.removeAllItems();
+
+var promise = Facade.getListAsync("LoUsrNotification",jsonQuery).then(
+  function(notifications) {
+
+    var numberVisibleCalls;
+    if(!Utils.isDefined(numberOfListItems)){
+      if(Utils.isPhone()){
+        numberVisibleCalls = 3;
+      }
+      else{
+        numberVisibleCalls = 5;
+      }
+    }
+    else{
+      numberVisibleCalls = numberOfListItems;
+    }
+
+    me.addItems(notifications, jsonQuery.params);
+    me.orderBy({"dueDate":"DESC", "priority": "ASC"});
+    notifications = me.getAllItems();
+    me.cardItemCount = notifications.length;
+    me.removeAllItems();
+    notifications = notifications.splice(0, numberVisibleCalls);
+
+    for(var i = 0; i < notifications.length; i++){
+      if(!Utils.isPhone()){
+        if(notifications[i].subject.length > 45){
+          notifications[i].subject= notifications[i].subject.substr(0, 45);
+          notifications[i].subject+= "...";
+        }
+      }
+      else{
+        if(notifications[i].subject.length > 40){
+          notifications[i].subject= notifications[i].subject.substr(0, 40);
+          notifications[i].subject+= "...";
+        }
+      }
+
+      if(Utils.isSfBackend()){
+        notifications[i].dueDateText = Localization.localize(Utils.convertFullDate2Ansi(Utils.createDateByString(notifications[i].dueDate)), "date");
+      }
+      else{
+        notifications[i].dueDateText = Localization.localize(notifications[i].dueDate, "date");
+      }
+    }
+    me.addItems(notifications,jsonQuery.params);
+    return me;
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

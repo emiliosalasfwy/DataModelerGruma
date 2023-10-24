@@ -1,0 +1,55 @@
+<BusinessLogic methodName="processInventoryActions" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var validationErrors = [];
+var loTruckLoadItems = this.getLoItems();
+var truckLoadItems = loTruckLoadItems.getAllItems();
+var itemMetas = this.getBoOrderMeta().getItemMetaJsonDictionary();
+
+// Create loInventories and loInventoryTransactions
+me.setLoInventories(BoFactory.instantiateLightweightList("LoInventory"));
+me.setLoInventoryTransactions(BoFactory.instantiateLightweightList("LoInventoryTransaction"));
+
+var loInventories = me.getLoInventories();
+var loInventoryTransactions = me.getLoInventoryTransactions();
+var orderMeta = me.getBoOrderMeta();
+
+var invActions = function (itemDetailObject) {
+  return loInventories.createInventoryForTruckLoadItem(itemDetailObject).then(
+    function (returnObj) {
+      return loInventoryTransactions.createTransactionForTruckLoadItem(returnObj).then(
+        function (validationError) {
+          if (Utils.isDefined(validationError)) {
+            validationErrors.push(validationError);
+          }
+        });
+    });
+};
+
+var deferreds = [];
+for (var i = 0; i < truckLoadItems.length; i++) {
+  var item = truckLoadItems[i];
+  var itemMeta = itemMetas.get(item.getSdoItemMetaPKey());
+  if (item.getQuantity() > 0 || this.getBoOrderMeta().getSdoSubType() === "TruckAudit" ||
+      this.getBoOrderMeta().getSdoSubType() === "TruckIvcTransferOutward" || this.getBoOrderMeta().getSdoSubType() === "TruckIvcTransferInward") {
+
+    //create Inventory
+    var ivcMetasByItemMeta = orderMeta.getIvcMetasByItemMeta(item.getSdoItemMetaPKey());
+    var itemDetailObject = {
+      "item": item, "ivcMetasByItemMeta": ivcMetasByItemMeta, "itemMeta": itemMeta,
+      "tmgMainPKey": me.getTmgMainPKey(), "usrMainPKey": ApplicationContext.get('user').getPKey(),
+      "prdMainPKey": item.getPrdMainPKey(), "documentType": me.getDocumentType()
+    };
+
+    deferreds.push(invActions(itemDetailObject));
+  }
+}
+
+var promise = when.all(deferreds).then(
+  function () {
+    return validationErrors;
+  }
+);]]>
+</Code>
+  <Return name="validationErrors" value="promise" />
+</BusinessLogic>

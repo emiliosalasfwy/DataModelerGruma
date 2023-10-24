@@ -1,0 +1,9 @@
+<BusinessLogic methodName="getHasOrderRole" businessObjectClass="LoBpaRole" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+		var me = this;
+		var bHasOrderRole;
+		
+		bHasOrderRole = me.getHasRoleOfCategory("order");
+   ]]></Code>
+  <Return name="hasOrderRole" value="bHasOrderRole" />
+</BusinessLogic>

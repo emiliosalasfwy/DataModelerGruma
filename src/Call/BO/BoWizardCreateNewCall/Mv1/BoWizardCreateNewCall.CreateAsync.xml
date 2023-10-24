@@ -1,0 +1,99 @@
+<BusinessLogic methodName="createAsync" businessObjectClass="BoWizardCreateNewCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+if (!jsonQuery) {
+  jsonQuery = {
+    'params' : []
+  };
+}
+var pKey = PKey.next();
+me.setPKey(pKey);
+me.updateProperties(jsonQuery);
+var newParams;
+if (Utils.isDefined(jsonQuery)) {
+  newParams = jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+var dateFromIsDefined = Utils.isDefined(me.getDateFrom());
+if (!Utils.isSfBackend() && dateFromIsDefined) {
+  var dFrom = me.getDateFrom().substr(0,10) + " 00:00:00";
+  me.setDateFrom(dFrom);
+}
+
+var dateFromIsMinDate = me.getDateFrom() == Utils.getMinDate();
+
+if (!dateFromIsDefined || dateFromIsMinDate) {
+  // set date to today
+  me.setDateFrom(Utils.createAnsiDateToday());
+}
+else {
+  //fix datefrom and cut of the time part since framework deliver datefrom with time 00:00:00
+  //if the convertAnsiDateTime2AnsiDate function from Framework is usable it needs to be added here
+  me.setDateFrom(me.getDateFrom().substring(0, 10));
+}
+//Double conversion is needed  here as no Utils Function is available to replace
+//returns TimeStamp("00:00")
+if (!Utils.isDefined(me.getTimeFrom()) || Utils.isEmptyString(me.getTimeFrom()) || (me.getTimeFrom() == Utils.convertTime2Ansi(Utils.createDateToday())) ) {
+  // set time to now
+  me.setTimeFrom(Utils.createAnsiTimeNow());
+}
+
+if (Utils.isEmptyString(me.getCallMetaPKey())) {
+  me.setCallMetaPKey(ApplicationContext.get('user').getBoUserSales().getClbMetaPKey());
+}
+if (Utils.isEmptyString(me.getCustomerPKey())) {
+  me.setCustomerPKey(ApplicationContext.get('user').getBoUserSales().getBpaCustomerPKey());
+}
+
+// Determine substitution Info
+var managementInfoParams = [];
+var managementInfoQuery = {};
+
+managementInfoParams.push({
+  "field" : "customerPKey",
+  "value" : me.getCustomerPKey()
+});
+managementInfoParams.push({
+  "field" : "referenceDate",
+  "value" : me.getDateFrom()
+});
+managementInfoParams.push({
+  "field" : "referenceUserPKey",
+  "value" : Utils.isDefined(newParams) ? newParams.responsiblePKey : " ",
+});
+
+managementInfoQuery.params = managementInfoParams;
+
+promise = BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", managementInfoQuery)
+  .then(function (customerManagementInfoLookup) {
+  if (customerManagementInfoLookup) {
+    if (customerManagementInfoLookup.getIsManaged() === "0" && customerManagementInfoLookup.getIsSubstituted() === "0") {
+      me.setCustomerPKey(" ");
+    } else {
+      me.setHasSubstitute(customerManagementInfoLookup.getHasSubstitute());
+      me.setSubstitutedUsrPKey(customerManagementInfoLookup.getSubstitutedUsrMainPKey());
+      me.setIsManagedCustomer(customerManagementInfoLookup.getIsManaged());
+      me.setIsSubstituted(customerManagementInfoLookup.getIsSubstituted());
+      me.setSubValidFrom(customerManagementInfoLookup.getSubstitutedFrom());
+      me.setSubValidThru(customerManagementInfoLookup.getSubstitutedThru());
+      me.setManagementRelationValidFrom(customerManagementInfoLookup.getManagementRelationValidFrom());
+      me.setManagementRelationValidThru(customerManagementInfoLookup.getManagementRelationValidThru());
+    }
+  }
+  var jsonParams = me.prepareLookupsLoadParams(me);
+  return Facade.loadLookupsAsync(jsonParams);
+}).then(
+  function (lookups) {
+    me.assignLookups(lookups);
+    me.setEARights();
+    me.setObjectStatus(STATE.NEW);
+    return me;
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

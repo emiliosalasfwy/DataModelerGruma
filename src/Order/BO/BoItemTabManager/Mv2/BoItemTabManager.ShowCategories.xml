@@ -1,0 +1,16 @@
+<BusinessLogic methodName="showCategories" businessObjectClass="BoItemTabManager" accessibility="PUBLIC" final="false" asynchronous="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+                        
+      this.setIsShowCategories("1");
+      
+      this.getBoOrder().getLoItems().setFilter("pKey", " ");
+      this.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "0", "GT");
+
+      var hierarchyFilterItems = this.getBoOrder().getLoItemFilter().getItemsByParam({"filterCode" : "Hierarchy"});
+          
+      if (hierarchyFilterItems.length > 0) {
+          this.getBoOrder().getLoItemFilter().setCurrent(hierarchyFilterItems[0]);
+      }
+
+    ]]></Code>
+</BusinessLogic>

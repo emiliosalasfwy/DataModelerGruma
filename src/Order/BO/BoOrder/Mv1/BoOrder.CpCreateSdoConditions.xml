@@ -1,0 +1,36 @@
+<BusinessLogic methodName="cpCreateSdoConditions" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Obsolete / unused : This function has been deprecated, we are creating Sdo Conditions in BoOrder.preparePrint method now.
+var promise = when.resolve();
+
+//create SdoConditionRecords in case of ComplexPricing
+if ((this.getBoOrderMeta().getComputePrice() == "4" || this.getBoOrderMeta().getComputePrice() == "5"))
+{
+  if (me.getPhase() !== 'Released' && me.getPhase() !== 'Canceled')
+  {
+    var listLoadPromise;
+    //load the list if it is not present yet
+    if (!Utils.isDefined(me.getLoSdoConditions()))
+    {      
+      listLoadPromise = BoFactory.loadObjectByParamsAsync(LO_SDOCONDITIONS, me.getQueryBy("sdoMainPKey", me.getPKey()))
+        .then(
+        function (loSdoConditions)
+        {
+          me.setLoSdoConditions(loSdoConditions);
+        }
+      );
+    }
+
+    promise = when(listLoadPromise)
+      .then(
+      function()
+      {
+        return me.cpCreateSdoConditionRecords(false);
+      }
+    );
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

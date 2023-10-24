@@ -1,0 +1,32 @@
+<BusinessLogic methodName="cpDetermineCalculationSchema" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var calculationSchemaParams = [];
+var calculationSchemaQuery = {};
+var promise = when.resolve();
+
+if (Utils.isDefined(me.getBoOrderMeta())) {
+  calculationSchemaParams.push({ "field": "OrdererPKey", "value": me.getOrdererPKey() });
+  calculationSchemaParams.push({ "field": "CpPricingType", "value": me.getBoOrderMeta().getCpPricingType() });
+  calculationSchemaQuery.params = calculationSchemaParams;
+
+  promise = BoFactory.loadObjectByParamsAsync("LuCalcSchemaPricingType", calculationSchemaQuery).then(
+    function (object) {
+      var calculationSchemaKeySetterPromise = when.resolve();
+      if (Utils.isDefined(object)) {
+        if (!Utils.isDefined(object.getCndCpCalculationSchemaPKey()) || Utils.isEmptyString(object.getCndCpCalculationSchemaPKey())) {
+          me.setCndCpCalculationSchemaPKey(' ');
+          var buttonValues = {};
+          buttonValues[Localization.resolve("OK")] = "ok";
+          calculationSchemaKeySetterPromise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), Localization.resolve("NoCalculationSchemaFound"), buttonValues);
+        }
+        else {
+          me.setCndCpCalculationSchemaPKey(object.getCndCpCalculationSchemaPKey());
+        }
+      }
+      return calculationSchemaKeySetterPromise;
+    });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,31 @@
+<BusinessLogic methodName="invoiceSplittingRule_DelRetPrdType" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="LiOrderItem" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var prdType = mainItem.getPrdType();
+var movDir = mainItem.getMovementDirection();
+
+if(movDir === "Out" && prdType !== "Empty")
+{
+  mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_FullGoodsDelivery"));
+}
+else if(movDir === "Out" && prdType === "Empty")
+{
+  mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_EmptiesDelivery"));
+}
+else if(movDir === "In" && prdType !== "Empty")
+{
+  mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_FullGoodsReturn"));
+}
+else if(movDir === "In" && prdType === "Empty")
+{
+  mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_EmptiesReturn"));
+}
+else
+{
+  mainItem.setSplittingGroup(Localization.resolve("Order_SplittingGroup_Misc"));
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

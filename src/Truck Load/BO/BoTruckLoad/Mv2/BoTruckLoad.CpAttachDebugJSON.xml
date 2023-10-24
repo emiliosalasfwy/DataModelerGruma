@@ -1,0 +1,68 @@
+<BusinessLogic methodName="cpAttachDebugJSON" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="DebugJSON" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(me);
+
+if (Utils.isDefined(DebugJSON)) {
+  var fileType = "json";
+  var compressed = false;
+  if (Utils.isSfBackend()) {
+    compressed = true;
+    fileType = "zip";
+  }
+
+  var curDate = Utils.createDateNow();
+  var dateExtension =
+      "_" +
+      (curDate.getUTCMonth() + 1) +
+      "_" +
+      curDate.getUTCDate() +
+      "_" +
+      curDate.getUTCFullYear();
+  var loadLoAttachmentsPromise = when.resolve();
+
+  if (!Utils.isDefined(me.getLoOrderAttachment())) {
+    loadLoAttachmentsPromise = BoFactory.loadObjectByParamsAsync(
+      LO_ORDERATTACHMENT,
+      me.getQueryBy("sdoMainPKey", me.getPKey())
+    ).then(function (loAttachments) {
+      me.setLoOrderAttachment(loAttachments);
+    });
+  }
+
+  promise = loadLoAttachmentsPromise.then(function() {
+    return Facade.saveJSONFileAsync(DebugJSON, compressed).then(function(mediaPath) {
+      var items = me.getLoOrderAttachment().getItemsByParam({
+        usage: "Pricing",
+      });
+
+      if (items.length > 0) {
+        items[0].setType(fileType);
+        items[0].setMediapath(mediaPath);
+        items[0].setCreationDate(Utils.createAnsiDateTimeNow());
+        items[0].setFileName("Pricing_" + me.getPKey() + dateExtension + "." + fileType);
+      }
+      else {
+        var liNewAttachment = {
+          pKey: PKey.next(),
+          sdoMainPKey: me.getPKey(),
+          attachmentBlobPKey: PKey.next(),
+          attachmentTextPKey: PKey.next(),
+          usage: "Pricing",
+          attachmentText: "Pricing",
+          type: fileType,
+          fileName: "Pricing_" + me.getPKey() + dateExtension + "." + fileType,
+          mediapath: mediaPath,
+          creationDate: Utils.convertDate2Ansi(curDate),
+          objectStatus: STATE.NEW | STATE.DIRTY,
+        };
+        me.getLoOrderAttachment().addListItems([liNewAttachment]);
+      }
+    });
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,12 @@
+<BusinessLogic methodName="resetInventoryTransaction" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loInventoryTransactionitems = me.getLoInventoryTransactions().getAllItems();
+var item;
+for (var i = 0; i < loInventoryTransactionitems.length; i++) {
+  item = loInventoryTransactionitems[i];
+  item.setObjectStatus(STATE.PERSISTED);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

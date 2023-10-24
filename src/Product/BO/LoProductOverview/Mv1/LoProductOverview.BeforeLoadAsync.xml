@@ -1,0 +1,15 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoProductOverview" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    var promise=when.resolve(context);
+
+	context.jsonQuery.params.push({
+		"field" : "asoName",
+		"value" : "AsoProductOverview"
+	});
+		
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

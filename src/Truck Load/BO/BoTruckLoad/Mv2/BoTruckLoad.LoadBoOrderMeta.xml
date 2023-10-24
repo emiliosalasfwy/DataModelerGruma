@@ -1,0 +1,11 @@
+<BusinessLogic methodName="loadBoOrderMeta" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync(BO_ORDERMETA, me.getQueryBy("pKey", me.getSdoMetaPKey())).then(
+  function (boOrderMeta) {
+    me.setBoOrderMeta(boOrderMeta);
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

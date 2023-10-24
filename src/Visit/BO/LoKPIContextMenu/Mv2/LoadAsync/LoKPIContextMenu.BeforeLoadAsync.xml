@@ -1,0 +1,41 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoKPIContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var contextMenuItemList = [];
+
+var enabledForCurrentKPI = '1';
+
+if(Utils.isDefined(context.jsonQuery[0]) && Utils.isDefined(context.jsonQuery[0].pKey) && context.jsonQuery[0].pKey.toLowerCase().startsWith("local_")){
+   enabledForCurrentKPI = '0';
+}
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "MenuCapturePicture",
+  "actionId" : "AddImage",
+  "processEvent" : "AddImage",
+  "actionVisible" : "1",
+  "actionEnabled" : enabledForCurrentKPI
+};
+
+var menuEntry1 = {
+  "id" : "0000002",
+  "actionImg" : "MenuSelectPicture",
+  "actionId" : "ReviewImages",
+  "processEvent" : "ReviewImages",
+  "actionVisible" : "1",
+  "actionEnabled" : enabledForCurrentKPI
+};
+
+
+contextMenuItemList.push(menuEntry0);
+contextMenuItemList.push(menuEntry1);
+me.addItems(contextMenuItemList);
+
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

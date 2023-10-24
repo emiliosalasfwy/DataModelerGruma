@@ -1,0 +1,162 @@
+<BusinessLogic methodName="selectItemByPKey" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="Object" />
+    <MethodInput name="itemPKeys" type="DomPKey" />
+    <MethodInput name="startIndex" type="Object" />
+    <MethodInput name="refPKey" type="DomPKey" />
+    <MethodInput name="considerQtySuggestion" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var acl = me.getACL();
+var curItem;
+var allItems = me.getBoOrder().getLoItems();
+var unitOfMeasuresList = me.getLoUnitOfMeasure();
+
+unitOfMeasuresList.removeAllItems();
+unitOfMeasuresList.addWeakReferencedItems(allItems.getRange(startIndex,itemPKeys.length));
+
+var orderUnitItems = unitOfMeasuresList.getOrderUnitItems();
+if (Utils.isDefined(allItems) && Utils.isDefined(allItems.getCurrent())) {
+  curItem = allItems.getCurrent();
+}
+else {
+  curItem = orderUnitItems.length > 0 ? orderUnitItems[0] : unitOfMeasuresList.getFirstItem();
+}
+
+// Set the current item
+me.setCurrentSelectedOrderItem(curItem);
+
+// Set the current nested item in the UoM List to the first one
+unitOfMeasuresList.setCurrent(orderUnitItems.length > 0 ? orderUnitItems[0] : unitOfMeasuresList.getFirstItem(), true);
+
+// Determine unit for stock information
+if (orderUnitItems.length > 0) {
+  me.setStockUnit(orderUnitItems[0].getQuantityLogisticUnit());    
+  me.setStockUnitText(orderUnitItems[0].getQuantityLogisticUnit()); 
+}
+else {
+  if (unitOfMeasuresList.length > 0) {
+    me.setStockUnit(unitOfMeasuresList.getFirstItem().getQuantityLogisticUnit());
+    me.setStockUnitText(unitOfMeasuresList.getFirstItem().getQuantityLogisticUnit());
+  }
+}
+
+if(Utils.isDefined(curItem)) {
+  //Set Inventory balance of item
+  promise = me.getBoOrder().setInventoryBalanceOfItem(curItem.getPKey())
+    .then( function () {
+    // Load promotion information if necessary
+    if (Utils.isDefined(me.getBoOrder()) && Utils.isDefined(allItems) && Utils.isDefined(curItem) && curItem.getPromoted() == "1" && me.getBoOrder().getBoOrderMeta().getConsiderPromotion() == "1") {
+      var jsonQuery = {};
+      var jsonParams = [];
+
+      jsonParams.push(
+        {
+          "field" : "customerPKey",
+          "value" : me.getBoOrder().getOrdererPKey()
+        }
+      );
+      jsonParams.push(
+        {
+          "field" : "commitDate",
+          "value" : me.getBoOrder().getCommitDate()
+        }
+      );
+      jsonParams.push(
+        {
+          "field" : "productPKey",
+          "value" : curItem.getPrdMainPKey()
+        }
+      );
+
+      jsonQuery.params = jsonParams;
+      return BoFactory.loadObjectByParamsAsync("LoPromotionsForProduct", jsonQuery);
+    } 
+    else {
+      return undefined;
+    }
+  }).then( function (loPromotionsforProduct) {
+    if (!Utils.isDefined(me.getLoPromotionsForCurrentProduct())) {
+      return undefined;   
+    } 
+
+    // If promotion information has been loaded, assign and set visible. Otherwise set invisible
+    if (Utils.isDefined(loPromotionsforProduct)) {
+
+      me.setLoPromotionsForCurrentProduct(loPromotionsforProduct);
+
+      me.getLoPromotionsForCurrentProduct().setVisible("true");
+    } 
+    else {
+      me.getLoPromotionsForCurrentProduct().setVisible("false");
+    }
+    acl = me.getLoUnitOfMeasure().getACL();
+    acl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+
+    if (me.getBoOrder().getDocumentType() === "Delivery") {
+      if (Utils.isDefined(considerQtySuggestion) && considerQtySuggestion.getId() == "No") {
+        acl.removeRight(AclObjectType.PROPERTY, "targetQuantity", AclPermission.VISIBLE);
+        BindingUtils.refreshEARights();
+      }
+    }
+
+    if (Utils.isDefined(curItem)) {
+      var sdoItemMeta = me.getBoOrder().getBoOrderMeta().getLoOrderItemMetas().getItemByPKey(curItem.getSdoItemMetaPKey());
+
+      if (Utils.isDefined(sdoItemMeta)) {
+        if (Utils.isCasBackend() && me.getBoOrder().getBoOrderMeta().getConsiderItemModReason() == "1" && sdoItemMeta.getModReasonRequired() !== "NotReq") {
+          acl.addRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+        }
+      }
+    }
+
+  }).then(function() {
+    if (me.getBoOrder().getBoOrderMeta().getConsiderSelectablePromotion() == '1' && !Utils.isEmptyString(curItem.getPromotionPKey())) {
+      return Facade.getObjectAsync("LuSelectablePromotion", {pKey: curItem.getPromotionPKey()});
+    }
+  }).then(function(selectablePromotion) {
+    if (Utils.isDefined(selectablePromotion) && Utils.isDefined(selectablePromotion.PKey) && Utils.isEmptyString(me.getBoOrder().getSelectedPromotionPKey())) {
+      me.setSloganOfSelectablePromotion(selectablePromotion.slogan);
+      acl = me.getACL();
+      acl.addRight(AclObjectType.PROPERTY, "sloganOfSelectablePromotion", AclPermission.VISIBLE);
+    }
+    else {
+      me.setSloganOfSelectablePromotion(" ");
+      acl = me.getACL();
+      acl.removeRight(AclObjectType.PROPERTY, "sloganOfSelectablePromotion", AclPermission.VISIBLE);
+    }
+    if (Utils.isDefined(me.getBoOrder().getCallInContext_clbMainPKey()) && !Utils.isEmptyString(me.getBoOrder().getCallInContext_clbMainPKey())) {
+      if (Utils.isDefined(me.getBoCallCache())) {
+        return me.getBoCallCache();
+      } 
+      else {
+        return Facade.getObjectAsync("BoCall", me.getQueryBy("pKey", me.getBoOrder().getCallInContext_clbMainPKey()));
+      }
+    } 
+    else {
+      return undefined;
+    }
+  }).then( function (boCall) {
+    if (Utils.isDefined(boCall)) {
+      me.setBoCallCache(boCall);
+    }
+
+    if (Utils.isDefined(boCall) && me.getBoOrder().getBoOrderMeta().getSdoSubType() === "Delivery") {
+      var bCallIsReadOnly = boCall.clbStatus === "Completed" || boCall.clbStatus === "Canceled";
+      if (bCallIsReadOnly) {
+        me.getBoOrder().getLoItems().getACL().removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.EDIT);
+      }
+    }
+    BindingUtils.refreshEARights();
+    return me.getReasonCodesForItemMeta();
+  }).then( function () {
+    return me;
+  });
+} 
+else {
+  promise = when.resolve(me);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

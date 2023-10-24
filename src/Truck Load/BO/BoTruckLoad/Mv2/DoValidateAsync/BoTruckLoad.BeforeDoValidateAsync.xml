@@ -1,0 +1,13 @@
+<BusinessLogic methodName="beforeDoValidateAsync" businessObjectClass="BoTruckLoad" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="{BOType}">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    this.setValidateForQuantity("0");
+    this.setValidateForUniqueness("0");
+    this.setValidateForBlindMode("0");
+    var promise=when.resolve(context);
+		
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

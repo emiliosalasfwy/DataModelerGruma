@@ -1,0 +1,16 @@
+<BusinessLogic methodName="determinePosId" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var posId = " ";
+var LoPOS = me.getLoPOS();
+if(Utils.isDefined(LoPOS))
+{
+  if(Utils.isDefined(LoPOS.getCurrent()))
+  {
+    posId = LoPOS.getCurrent().getPosId();  
+  }
+}
+]]>
+</Code>
+  <Return name="posId" value="posId" />
+</BusinessLogic>

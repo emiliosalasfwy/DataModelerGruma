@@ -1,0 +1,5 @@
+<ListObject name="LoMeSdoAssortment" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoMeSdoAssortment" />
+  <Item objectClass="LiMeSdoAssortment" />
+  <Methods></Methods>
+</ListObject>

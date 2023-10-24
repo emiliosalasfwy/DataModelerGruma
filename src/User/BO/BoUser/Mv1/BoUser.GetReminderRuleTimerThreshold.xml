@@ -1,0 +1,18 @@
+<BusinessLogic methodName="getReminderRuleTimerThreshold" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timerUserExitId" type="DomId" />
+    <MethodInput name="currentTimerThreshold" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(timerUserExitId) && !Utils.isEmptyString(timerUserExitId)) {
+
+  switch (timerUserExitId) {
+
+    case "38BCOT2015":
+      currentTimerThreshold = 300;
+      break;
+  }
+}]]>
+</Code>
+  <Return name="timerThreshold" value="currentTimerThreshold" />
+</BusinessLogic>

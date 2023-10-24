@@ -1,0 +1,48 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoCallAssetOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(context);
+var items = me.getAllItems();
+var stateNewDirty = STATE.NEW | STATE.DIRTY;
+
+for(var i = 0; i < items.length; i++){
+  var scanmethod = items[i].getMethod();
+
+  if(items[i].getPresence() === "3"){
+    if(items[i].getMethod(" ") || items[i].getMethod() === null){
+      scanmethod ="S";
+    }
+  }
+  else if(items[i].getPresence() === "2"){
+    if(items[i].getMethod(" ") || items[i].getMethod() === null){
+      scanmethod ="S";
+    }
+  }
+
+  if (items[i].getObjectStatus() === stateNewDirty){
+    items[i].setPKey(PKey.next());
+  }
+
+  if (items[i].salesOrg === " "){
+    items[i].salesOrg = ApplicationContext.get('user').getSalesOrg();
+  }
+
+  items[i].setMethod(scanmethod);
+}
+
+Facade.saveListAsync(me);
+
+//Reset object status for all to prevent multiple saves
+me.traverse(function(node){
+  node.setObjectStatus(STATE.PERSISTED);
+  if(node.isList){
+    node.getAllItems().forEach(function (item){
+      item.setObjectStatus(STATE.PERSISTED);
+    });
+  }
+},function (a, b, c){});]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

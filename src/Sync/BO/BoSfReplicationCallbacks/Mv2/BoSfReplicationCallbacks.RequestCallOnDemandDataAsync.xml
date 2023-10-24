@@ -1,0 +1,18 @@
+<BusinessLogic methodName="requestCallOnDemandDataAsync" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="callPKey" type="DomPKey" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if (Utils.isSfBackend() && Utils.isDefined(customerPKey) && !Utils.isEmptyString(customerPKey)){
+  var request = new BatchNftRequest();
+  promise = me.addCallNftsToRequest(request, customerPKey)
+    .then(function(request){
+    return Facade.requestBatchNftDataAndContinue(request);
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

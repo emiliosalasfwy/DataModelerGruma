@@ -1,0 +1,125 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoSysReleaseProcess" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newParams;
+if (Utils.isDefined(context.jsonQuery)) {
+  newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+var promise = Facade.getObjectAsync(BO_SYSRELEASEPROCESS, context.jsonQuery).then(
+  function(selfJson) {
+    context.selfJson = selfJson;
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+    return BoFactory.loadListAsync(LO_SYSRELEASEPROCESSSTEP, me.getQueryBy("sysReleaseProcessPKey", me.getPKey()));
+  }).then(
+  function(loSysReleaseProcessStepJson) {
+    if (Utils.isDefined(loSysReleaseProcessStepJson)) {
+      me.setLoSysReleaseProcessStep(loSysReleaseProcessStepJson);
+    }
+    else {
+      me.setLoSysReleaseProcessStep(null);
+    }
+
+    var signatureBlobParams = [];
+    var signatureBlobQuery = {};
+
+    signatureBlobParams.push({"field": "referencePKey", "value": newParams.referenceObject.getPKey()});
+
+    if(Utils.isDefined(newParams.phaseFilter) && !Utils.isEmptyString(newParams.phaseFilter)) {
+
+      if (Utils.isSfBackend()) {
+        var additionalCondition = " AND ReferenceObjectPhase = #phaseFilter# " ;
+        signatureBlobParams.push({"field" : "phaseFilter", "value" : newParams.phaseFilter});
+        signatureBlobParams.push({"field": "additionalCondition", "value": additionalCondition});
+      }
+      else {
+        signatureBlobParams.push({"field": "additionalCondition", "value": "AND ReferenceObjectPhase='" + newParams.phaseFilter + "'" });
+      }
+    }
+    signatureBlobQuery.params = signatureBlobParams;
+    return BoFactory.loadListAsync(LO_SYSSIGNATUREBLOB, signatureBlobQuery);
+  }).then(
+  function(loSysSignatureBlobJson) {
+    if (Utils.isDefined(loSysSignatureBlobJson)) {
+      me.setLoSysSignatureBlob(loSysSignatureBlobJson);
+    }
+    else {
+      me.setLoSysSignatureBlob(null);
+    }
+
+    //check mode
+    if (Utils.isDefined(newParams.readOnlyMode) && !Utils.isEmptyString(newParams.readOnlyMode)) {
+      me.setReadOnlyMode(newParams.readOnlyMode);
+    }
+    else {
+      me.setReadOnlyMode("0");
+    }
+
+    if(me.getReadOnlyMode() === "0") {
+      //Create empty blobs
+      me.createSignatureBlobs();
+    }
+    else {
+      // Map loaded blobs to signatureMediaPath properties
+      me.mapLoadedSignatureBlobs();
+    }
+
+    var signatureAttributeParams = [];
+    var signatureAttributeQuery = {};
+    var referencePKey = "";
+
+    if (!Utils.isSfBackend()) {
+      referencePKey = newParams.referenceObject.getPKey();
+    }
+    else {
+      if (Utils.isDefined(me.getLoSysSignatureBlob())) {
+        var signatureBlobItems = me.getLoSysSignatureBlob().getAllItems();
+        if(signatureBlobItems.length > 0) {
+          referencePKey = signatureBlobItems[0].getSignaturePKey();
+        }
+      }
+    }
+
+    signatureAttributeParams.push({"field": "referencePKey", "value": referencePKey});
+
+    //Reference object phase is part of signature object in CGCloud.
+    if (!Utils.isSfBackend()) {
+      if(Utils.isDefined(newParams.phaseFilter) && !Utils.isEmptyString(newParams.phaseFilter)) {
+        signatureAttributeParams.push({"field": "additionalCondition", "value": "AND ReferenceObjectPhase='" + newParams.phaseFilter + "'"});
+      }
+    }
+
+    signatureAttributeQuery.params = signatureAttributeParams;
+    return BoFactory.loadListAsync(LO_SYSSIGNATUREATTRIBUTE, signatureAttributeQuery);
+  }).then(
+  function(loSysSignatureAttributeJson) {
+    if (Utils.isDefined(loSysSignatureAttributeJson)) {
+      me.setLoSysSignatureAttribute(loSysSignatureAttributeJson);
+    }
+    else {
+      me.setLoSysSignatureAttribute(null);
+    }
+    me.setObjectStatus(STATE.PERSISTED);
+    //Set reference object
+    if (Utils.isDefined(newParams.referenceObject)) {
+      me.setReferenceObject(newParams.referenceObject);
+    }
+    //Set EA-Rights
+    me.setEARights();
+    me.setReleaseInProgress("0");
+    return me;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

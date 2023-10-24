@@ -1,0 +1,24 @@
+<BusinessLogic methodName="rollbackStateTransition" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if(me.getTmgStatus() === "Running") {
+  me.setTmgStatus("Open");
+  me.setReleaseButton(true);
+  me.setCompleteButton(false);
+  me.setReleaseInfoButton(false);
+  me.setCompleteInfoButton(false);
+  ApplicationContext.set('currentTourStatus', 'Open');
+}
+else if(me.getTmgStatus() === "Completed") {
+  me.setTmgStatus("Running");
+  ApplicationContext.set('currentTourStatus', 'Running');
+  ApplicationContext.set('currentTourPKey',me.getPKey());
+  me.setReleaseButton(false);
+  me.setCompleteButton(true);
+  me.setReleaseInfoButton(true);
+  me.setCompleteInfoButton(false);
+}
+me.setEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

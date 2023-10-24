@@ -1,0 +1,124 @@
+<BusinessLogic methodName="addProduct" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productPKey" type="DomString" />
+    <MethodInput name="productId" type="DomString" />
+    <MethodInput name="posId" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+// determine if product exists already
+var loProducts = me.getLoCurrentSurveyProducts();
+var existingProducts = loProducts.getItemsByParam({
+  "prdMainPKey" : productPKey,
+  "posId" : posId
+});
+var liProduct;
+if (existingProducts.length > 0) {
+  liProduct = existingProducts[0];
+}
+
+var loCurrentPOS = this.getLoPOS().getItemsByParam({"posId" : posId});
+var liCurrentPOS;
+
+if (loCurrentPOS.length > 0) {
+  liCurrentPOS = loCurrentPOS[0];
+}
+
+var jDLQuery = {};
+
+jDLQuery.params = [
+  {"field" : "clbMainPKey","operator" : "EQ","value" : me.getClbMainPKey()},
+  {"field" : "clbMetaPKey","operator" : "EQ","value" : me.getClbMetaPKey()},
+  {"field" : "bpaMainPKey","operator" : "EQ","value" : me.getBpaMainPKey()},
+  {"field" : "validFrom","operator" : "EQ","value" : me.getReferenceDate()},
+  {"field" : "validThru","operator" : "EQ","value" : me.getReferenceDate()},
+  {"field" : "responsiblePKey","operator" : "EQ","value" : me.getResponsiblePKey()},
+  {"field" : "historicalProducts","operator" : "EQ","value" : me.getHistoricalProductConfig()},
+  {"field" : "posPKey","operator" : "EQ","value" : Utils.isDefined(liCurrentPOS) ? liCurrentPOS.getBpaMainPKey() : ''},
+];
+
+if (!Utils.isDefined(liProduct)) {
+  //add product
+  var jsonQuery = {};
+  var jsonParams = [];
+  jsonParams.push({"field" : "pKey","operator" : "EQ","value" : productPKey});
+  jsonQuery.params = jsonParams;
+
+  promise = Facade.getObjectAsync("LuProduct", jsonQuery).then(
+    function (lookup) {
+      liProduct = {
+        "pKey" : PKey.next(),
+        "prdMainPKey" : productPKey,
+        "text1" : lookup.text1,
+        "shortText" : lookup.shortText,
+        "prdGroupText" : lookup.groupShortText,
+        "prdGroupId" : lookup.groupId,
+        "eAN" : lookup.eAN,
+        "prdId" : productId,
+        "posId" : posId,
+        "listedPlanned" : " ",
+        "foreignProduct" : lookup.foreignProduct,
+        "category" : lookup.category,
+        "surveysInitialized" : "0",
+        "manualProduct" : "1",
+      };
+      loProducts.addListItems([liProduct]);
+
+      if (me.getHistoricalProductConfig() !== "No") {
+        me.updateHistoricalProductsAsync("add", productPKey, posId);
+      }
+
+      return BoFactory.loadObjectByParamsAsync("LuJobDefinitionList", jDLQuery);
+    }).then(
+    function (jobDefinitionListLookup) {
+      if (Utils.isDefined(jobDefinitionListLookup) && Utils.isDefined(jobDefinitionListLookup.getJDLPKeys())) {
+        liProduct.jDLPKeys = jobDefinitionListLookup.getJDLPKeys();
+      }
+      liProduct.setIsProductAddedManually("1");
+      liProduct.setIsSurveyInitializedByManualPrdAdd("0");
+      loProducts.setCurrentByPKey(liProduct.getPKey());
+    }
+  );
+}
+else {
+  var isSelectedPrdManuallyAdded = liProduct.getPrdMainPKey() === loProducts.getCurrent().getPrdMainPKey();
+
+  if (isSelectedPrdManuallyAdded && liProduct.getIsProductAddedManually() === "0") {
+    //User is trying to add the current product in focus manually again, so reload JDLPkeys and call GetSurveys & filterSurveysByProduct explicitly
+    promise = BoFactory.loadObjectByParamsAsync("LuJobDefinitionList", jDLQuery).then(
+      function (jobDefinitionListLookup) {
+        if (Utils.isDefined(jobDefinitionListLookup) && Utils.isDefined(jobDefinitionListLookup.getJDLPKeys())) {
+          liProduct.jDLPKeys = jobDefinitionListLookup.getJDLPKeys();
+        }
+        liProduct.setIsProductAddedManually("1");
+        liProduct.setIsSurveyInitializedByManualPrdAdd("0");
+        loProducts.setCurrentByPKey(liProduct.getPKey());
+        return me.getSurveys(posId, productPKey, liProduct.getPKey());
+      }).then(
+      function() {
+        me.filterSurveysByProduct(productPKey, posId);
+      }
+    );
+  }
+  else if (!isSelectedPrdManuallyAdded && liProduct.getIsProductAddedManually() === "0") {
+    //User is trying to add an already available product  manually again, so jus reload JDLPkeys and setCurrentByPKey takes care of calling GetSurveys & filterSurveysByProduct.
+    promise = BoFactory.loadObjectByParamsAsync("LuJobDefinitionList", jDLQuery).then(
+      function (jobDefinitionListLookup) {
+        if (Utils.isDefined(jobDefinitionListLookup) && Utils.isDefined(jobDefinitionListLookup.getJDLPKeys())) {
+          liProduct.jDLPKeys = jobDefinitionListLookup.getJDLPKeys();
+        }
+        liProduct.setIsProductAddedManually("1");
+        liProduct.setIsSurveyInitializedByManualPrdAdd("0");
+        loProducts.setCurrentByPKey(liProduct.getPKey());
+      }
+    );
+  }
+  else {
+    loProducts.setCurrentByPKey(liProduct.getPKey());
+    promise = when.resolve();
+  }
+}]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

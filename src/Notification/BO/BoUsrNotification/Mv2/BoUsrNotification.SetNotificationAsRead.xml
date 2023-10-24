@@ -1,0 +1,8 @@
+<BusinessLogic methodName="setNotificationAsRead" businessObjectClass="BoUsrNotification" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+             var me = this;		
+   			 if(Utils.isEmptyString(me.getIsUpdated())){
+             me.setIsRead("1"); 
+			}
+   ]]></Code>
+</BusinessLogic>

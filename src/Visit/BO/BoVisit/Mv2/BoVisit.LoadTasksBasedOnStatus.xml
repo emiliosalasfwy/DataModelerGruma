@@ -1,0 +1,23 @@
+<BusinessLogic methodName="loadTasksBasedOnStatus" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="Status" type="String" />
+    <MethodInput name="Items" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var names = "";
+var comma = ",";
+
+Items.forEach(function(Item){
+	if(Item.status == Status){
+      if(names === ""){
+        names = names.concat(Item.name);
+      }else {
+        names = names.concat(comma).concat(Item.name);
+      }
+    }  
+});
+
+]]>
+</Code>
+  <Return name="taskNames" value="names" />
+</BusinessLogic>

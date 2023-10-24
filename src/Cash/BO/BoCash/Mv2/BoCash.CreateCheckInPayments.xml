@@ -1,0 +1,65 @@
+<BusinessLogic methodName="createCheckInPayments" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(me.getDocumentType() == "CashCheckIn" && me.getPhase() != "Released")
+{
+  promise = me.loadPayments().then(
+    function() {
+      var sdoPayments = me.getLoPayments();  
+
+      var checkInPaymentItems = me.getLoCheckInPayment().getItemsByParam( { "level" : "main" } );
+      var length = checkInPaymentItems.length;
+
+      for(var i = 0; i < length; i++)
+      {
+        var item = checkInPaymentItems[i];
+
+        //look for existing sdoPayment
+        var liPayment = sdoPayments.getItemByPKey(item.getPKey());
+
+        if(!Utils.isDefined(liPayment))
+        {
+          //create new one
+          liPayment = 
+            {
+            "pKey" : PKey.next(),
+            "sdoMainPKey" : me.getPKey(),
+            "sdoPaymentMetaPKey" : item.getSdoPaymentMetaPKey(),
+            "initiationDate" : item.getInitiationDate(),
+            "currency" : item.getCurrency(),
+            "ivcInformationObject" : " ",
+            "paymentMethod" : item.getPaymentMethod(),          
+            "objectStatus" : STATE.NEW
+          };
+
+          me.getLoPayments().addListItems([liPayment]);       
+        }
+        else
+        {        
+          liPayment.setObjectStatus(liPayment.self.STATE_DIRTY);
+        }
+
+        liPayment.setAmount(-1 * item.getAmount());
+        liPayment.setAmountReceipt(-1 * item.getAmount());
+        liPayment.setAbsoluteAmount(Math.abs(item.getAmount()));
+        liPayment.setModReason(item.getModReason());
+        liPayment.setCalcAmount(item.getCalcAmount());
+        liPayment.setExpenseType(" ");
+      }
+    }
+  );
+}
+else
+{
+  if(me.getDocumentType() == "CashCheckIn")
+  {
+    me.setLoPayments(undefined);
+  }
+
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

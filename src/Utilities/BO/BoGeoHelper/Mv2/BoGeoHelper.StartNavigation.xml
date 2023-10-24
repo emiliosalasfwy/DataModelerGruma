@@ -1,0 +1,43 @@
+<BusinessLogic methodName="startNavigation" businessObjectClass="BoGeoHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="latitude" type="Object" />
+    <MethodInput name="longitude" type="Object" />
+    <MethodInput name="street" type="Object" />
+    <MethodInput name="housenumber" type="Object" />
+    <MethodInput name="zipCode" type="Object" />
+    <MethodInput name="city" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var concatUrlComponent = function (url, urlComponent)
+{
+  var concatenatedUrl = url;
+  if (Utils.isDefined(urlComponent) && !Utils.isEmptyString(urlComponent))
+  {
+    var separator = url[url.length - 1] === '=' ? '' : '+';
+    concatenatedUrl = url + separator + encodeURIComponent(urlComponent);
+  }
+  return concatenatedUrl;
+};
+
+var url = 'http://maps.google.com/maps?mode=d&daddr=';
+// in order to use the apple maps and navigation app instead of google maps change the url to
+//  'http://maps.apple.com?dirflg=d&saddr=Current+Location&daddr='
+// in order to start the installed navigation app instead of google maps in the browser on windows mobile us efollowing url:
+//  'ms-drive-to:?destination.latitude=' + latitude + '&destination.longitude=' + longitude + '&destination.name=' + street;   
+
+if (Utils.isDefined(longitude) && !Utils.isEmptyString(longitude) && longitude !== 0 && Utils.isDefined(latitude) && !Utils.isEmptyString(latitude) && latitude !== 0)
+{
+  url = concatUrlComponent(url, latitude);
+  url = concatUrlComponent(url, longitude);
+}
+else
+{
+  url = concatUrlComponent(url, street);
+  url = concatUrlComponent(url, housenumber);
+  url = concatUrlComponent(url, zipCode);
+  url = concatUrlComponent(url, city);
+}
+var promise = Facade.startThirdPartyAsync(url,{});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

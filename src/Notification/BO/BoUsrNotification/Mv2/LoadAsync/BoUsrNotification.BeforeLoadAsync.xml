@@ -1,0 +1,19 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoUsrNotification" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+ 	if(!Utils.isSfBackend()){
+      if(context.jsonQuery.params[0].field == "referencePKey"){
+      	context.jsonQuery.params.push({"field" : "cond", "value" : 'UsrNotification.referencePKey = #referencePKey#'});
+      }
+      else{
+      	context.jsonQuery.params.push({"field" : "cond", "value" : 'UsrNotification.PKey = #pKey#'});
+      }
+     }
+    var promise=when.resolve(context);
+		
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

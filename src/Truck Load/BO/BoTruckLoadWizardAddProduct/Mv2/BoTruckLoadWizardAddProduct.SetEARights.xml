@@ -1,0 +1,27 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="documentType" type="String" />
+    <MethodInput name="boOrderMeta" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[this.setSubType(" ");
+
+if(documentType!=="ProductCheckIn"){
+  this.getACL().removeRight(AclObjectType.PROPERTY, "sdoItemMetaPKey", AclPermission.VISIBLE);
+  boOrderMeta.getACL().removeRight(AclObjectType.OBJECT, "loOrderItemMetas", AclPermission.VISIBLE);
+}else{
+  this.setSubType("ProductCheckIn");
+}
+
+if(Utils.isDefined(this.getLuProduct())){
+  if (Utils.isEmptyString(this.getLuProduct().getPKey())) {
+    this.getACL().removeRight(AclObjectType.PROPERTY, "uoM", AclPermission.VISIBLE);
+  } else {
+    this.getACL().addRight(AclObjectType.PROPERTY, "uoM", AclPermission.VISIBLE);
+  }
+}
+BindingUtils.refreshEARights();
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoWizardCreateNewCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getCallMetaPKey()) || Utils.isEmptyString(me.getTimeFrom()) || Utils.isEmptyString(me.getDateFrom()) ||
+    (me.getCallMetaLookup().getCompanyRequired() === "Mandatory" && Utils.isEmptyString(me.getCustomerPKey()))) {
+  var newError = {"level": "error",
+                  "objectClass": "BoWizardCreateNewCall",
+                  "messageID": "CasClbFillInAllValues"};
+  messageCollector.add(newError);
+}
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

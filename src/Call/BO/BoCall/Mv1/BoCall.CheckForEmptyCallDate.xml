@@ -1,0 +1,24 @@
+<BusinessLogic methodName="checkForEmptyCallDate" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isEmptyString(this.getDateFrom()) || Utils.isEmptyString(this.getDateThru()) || Utils.isEmptyString(this.getTimeFrom()) || Utils.isEmptyString(this.getTimeThru()))
+{
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_validateCallDate"), buttonValues)
+    .then(
+    function(result)
+    {
+      return "invalid";    
+    }
+  );
+}
+else
+{
+  promise = when.resolve("valid");
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

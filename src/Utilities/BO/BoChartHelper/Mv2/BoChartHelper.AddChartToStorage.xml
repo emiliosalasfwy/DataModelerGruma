@@ -1,0 +1,11 @@
+<BusinessLogic methodName="addChartToStorage" businessObjectClass="BoChartHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="chart" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dict = me.getChartDict();
+dict.add(containerName, chart);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,35 @@
+<BusinessLogic methodName="validateOrderItem" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (me.getValidateForRelease() == "1") {
+  // Get all item templates and store meta information in a dictionary
+  var itemMetas = me.getBoOrderMeta().getItemMetaJsonDictionary();
+  var mainItems = me.getLoItems().getAllItems();
+
+  // Loop over mainItems and validate according to current template
+  for (var j = 0; j < mainItems.length; j++) {
+    var item = mainItems[j];
+    var sdoItemMetaPKey = item.getSdoItemMetaPKey();
+    var itemMeta = itemMetas.get(sdoItemMetaPKey);
+    var quantity = item.getQuantity();
+
+    // Check max quantity if configured
+    if (Utils.isDefined(itemMeta) && (itemMeta.checkMaxQuantity != "0") && (quantity > 0)) {
+      if (quantity > itemMeta.maxQuantity) {
+        var newError = {
+          "level" : 'error',
+          "objectClass" : "BoOrder",
+          "messageID" : "CasSdoQuantityExceedsMaxQuantitySummary",
+          "messageParams" : {"summary" : item.getText1() + "/" + item.getQuantityLogisticUnit() + " (" + quantity + "/" + itemMeta.maxQuantity + ")"}
+        };
+        messageCollector.add(newError);
+        me.setSetPhaseInBeforeSave("0");
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

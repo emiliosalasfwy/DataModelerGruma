@@ -1,0 +1,26 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoUsrNotification" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;	
+
+//SF/CASDiff: General Difference
+if(Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  var newReadValue = me.getIsRead() == "1" ? "Completed" : "Not Started";
+
+  if(newReadValue != me.getIsReadForSF())
+  {
+    me.setIsReadForSF(newReadValue);
+  }
+}
+
+//Save BoUserNotification
+var promise = Facade.saveObjectAsync(me).then(
+function () {
+  return me;
+});]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

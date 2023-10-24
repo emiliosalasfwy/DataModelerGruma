@@ -1,0 +1,5 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoBpaRole" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var promise = Facade.saveListAsync(this);]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

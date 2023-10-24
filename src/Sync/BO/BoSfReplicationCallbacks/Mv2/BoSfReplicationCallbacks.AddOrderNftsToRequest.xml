@@ -1,0 +1,34 @@
+<BusinessLogic methodName="addOrderNftsToRequest" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="request" type="Object" />
+    <MethodInput name="customerIds" type="Object" />
+    <MethodInput name="orderId" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (typeof(customerIds) == 'string'){
+  customerIds = [customerIds];
+}
+customerIds = Utils.uniq(me.removeLocalIDs(customerIds));
+
+request.addRequest('NFT_Assortment', customerIds);
+request.addRequest('NFT_Historic_Product', customerIds);
+request.addRequest('NFT_Customer_Inventory', customerIds);
+request.addRequest('NFT_Listing_Classification', customerIds);
+
+var promises = [];
+promises.push(me.addPromotionNftsToRequest(request, customerIds));
+
+if(Utils.isDefined(orderId)){
+  promises.push(Facade.selectSQL("DsBoSfReplicationCallbacks", "PromotionsReferencedByOrderItems", { "orderPKey": orderId })
+                .then(function (promotionIds){
+    if (promotionIds.length > 0){
+      promotionIds = me.getPropertyValuesFromArray(promotionIds, "PromotionId");
+      request.addRequest('NFT_Promotion_Header', promotionIds);
+    }
+  }));
+}
+
+var promise = when.all(promises).then(function () { return request; });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,30 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoVisitAssessmentTask" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var relatedList = me.getLoPrimaryRetailVisitKPI();
+
+if(Utils.isDefined(me.getLoRetailVisitKPI()))me.getLoRetailVisitKPI().addItemChangedEventListener(me.onKPIItemChanged,me,"loRetailVisitKPI");
+
+
+var promise = BoFactory.createListAsync(LO_PRODUCTCATEGORYQUICKFILTER, {})
+.then(function(loProductCategoryQuickFilter){
+
+  var liProductCategoryQuickFilter = {
+    "pKey": PKey.next(),
+    "text": Localization.resolve('ClearFilter'),
+    "isSelected": false,
+    "specialOption": "CLEAR",
+  };
+
+  loProductCategoryQuickFilter.addListItems([liProductCategoryQuickFilter]);
+
+  me.setLoProductCategoryQuickFilter(loProductCategoryQuickFilter);
+
+  return me;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

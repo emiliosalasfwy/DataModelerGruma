@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateReasonCode" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (me.getValidateForCancelTour() == "1") {
+  if(Utils.isEmptyString(me.getCancelReason())) {
+    var newError = {"level": "error",
+                    "objectClass": "BoTour",
+                    "messageID": "CasBoCancelReasonCode"};
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

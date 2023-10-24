@@ -1,0 +1,18 @@
+<BusinessLogic methodName="login" businessObjectClass="BoUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var jsonQuerySysSetting = {};
+jsonQuerySysSetting.iD = "ClbGoogleMapProviderLicense";
+
+var promise = BoFactory.loadObjectByParamsAsync("LuSysSettingById", jsonQuerySysSetting).then(
+  function(luSysSettingById){
+    var value = luSysSettingById.getValue();
+    ApplicationContext.setOnGroup("mapSettings", "client", value);
+    if(!Utils.isEmptyString(value)) {
+      ApplicationContext.setOnGroup("mapSettings", "key", value);        
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

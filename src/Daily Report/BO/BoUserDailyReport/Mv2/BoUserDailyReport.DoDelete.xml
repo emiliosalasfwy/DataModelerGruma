@@ -1,0 +1,20 @@
+<BusinessLogic methodName="doDelete" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[
+if(Utils.isDefined(this.getLoUsrDRActivity())){
+  this.getLoUsrDRActivity().delete();
+}
+
+//UsrDRAnnotation is not supported.
+if (!Utils.isSfBackend()){
+  if(Utils.isDefined(this.getBoUserDRAnnotation())){
+    this.getBoUserDRAnnotation().delete();
+  }
+}
+
+this.delete();
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

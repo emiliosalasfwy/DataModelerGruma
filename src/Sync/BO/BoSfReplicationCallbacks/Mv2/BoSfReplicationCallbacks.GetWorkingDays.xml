@@ -1,0 +1,21 @@
+<BusinessLogic methodName="getWorkingDays" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.selectSQL("DsBoSfReplicationCallbacks", "ActiveWorkDays", {})
+.then(function (workingDays) {
+
+  if(!Utils.isDefined(workingDays) || workingDays.length <= 0){
+    throw new Error('No Sales_Organization_User__c record found for user!');
+  }else{
+    var currentDay = Utils.createDateNow().getDay();
+    var workingDayRange = { 
+      "previousDay" : me.getNextOrPreviousWorkday(workingDays,false,currentDay),
+      "nextDay" : me.getNextOrPreviousWorkday(workingDays,true,currentDay)      
+    };
+    return when.resolve(workingDayRange);
+
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

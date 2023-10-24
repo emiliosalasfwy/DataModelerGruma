@@ -1,0 +1,53 @@
+<BusinessLogic methodName="getEAReadOnly" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemMetas" type="LoOrderItemMetas" />
+    <MethodInput name="changedItem" type="LiOrderItem" />
+    <MethodInput name="orderMeta" type="BoOrderMeta" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var orderItems = me.getAllItems();
+    var orderItem;
+    var acl;
+    var rights = AclPermission.ALL;
+    var itemMeta;
+
+    var singleMode = false;
+    
+    if (Utils.isDefined(changedItem)) {
+        singleMode = true;
+    }
+
+	var oItemMetas = [];
+    
+    for(var i=0; i < orderItems.length; i++) {
+      if (singleMode === true) {
+        orderItem = changedItem;
+      } else {
+        orderItem = orderItems[i];    
+      } //End If (singleMode==true)  
+  
+     acl = orderItem.getACL();
+      var sdoItemMetaPkey = orderItem.getSdoItemMetaPKey();
+      
+     itemMeta = oItemMetas[sdoItemMetaPkey] || (oItemMetas[sdoItemMetaPkey] = itemMetas.getItemsByParam({ "pKey": sdoItemMetaPkey }));
+ 
+
+     if (Utils.isDefined(itemMeta[0])) {
+         if ((itemMeta[0].getConsiderDeliveryState() == "1") && (orderItem.getDeliveryState()=="NotAvailable")) {
+            acl.removeRight(AclObjectType.OBJECT, "LiOrderItem", AclPermission.EDIT);     
+         }
+     }
+      
+    // Set items that are invalidated by merge engine to editable = false
+    if (orderItem.getMergeEngine_invalidated() == "1") {
+         acl.removeRight(AclObjectType.OBJECT, "LiOrderItem", AclPermission.EDIT);     
+     }
+
+    if (singleMode === true) {
+          break;
+    }
+  
+  }; //End For each item in orderItems]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

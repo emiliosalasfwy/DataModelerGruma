@@ -1,0 +1,21 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoPayCttTactic" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loTactics = me.getAllItems();
+
+for(var i = 0; i < loTactics.length; i++) {
+ var liTactic = loTactics[i];
+  if(liTactic.getActualCosts() == liTactic.getRejectedAmount()) {
+    liTactic.setTacticStatus("FullRejection");
+  }
+  else {
+    liTactic.setTacticStatus("Approved");
+  }
+}
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

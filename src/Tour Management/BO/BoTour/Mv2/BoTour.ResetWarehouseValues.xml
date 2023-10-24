@@ -1,0 +1,32 @@
+<BusinessLogic methodName="resetWarehouseValues" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//On selecting Start Warehouse, set Support User, Truck Id and Trailer Id to empty
+me.setCoDriverUsrMainPKey(" ");
+
+var promise = BoFactory.loadObjectByParamsAsync("LuUser", me.getQueryBy("pKey", me.getCoDriverUsrMainPKey())).then(
+  function (LuCoDriver){
+    me.setLuCoDriver(LuCoDriver);
+    me.setEtpVehicleTruckPKey(" ");
+
+    return BoFactory.loadObjectByParamsAsync("LuEtpVehicle", me.getQueryBy("pKey", me.getEtpVehicleTruckPKey()));
+  }).then(
+  function (LuTruck){
+    me.setLuTruck(LuTruck);
+    me.setEtpVehicleTrailer1PKey(" ");
+
+    return BoFactory.loadObjectByParamsAsync("LuEtpVehicle", me.getQueryBy("pKey", me.getEtpVehicleTrailer1PKey()));
+  }).then(
+  function (LuTrailer1){
+    me.setLuTrailer1(LuTrailer1);
+    me.setEtpVehicleTrailer2PKey(" ");
+
+    return BoFactory.loadObjectByParamsAsync("LuEtpVehicle", me.getQueryBy("pKey", me.getEtpVehicleTrailer2PKey()));
+  }).then(
+  function (LuTrailer2){
+    me.setLuTrailer2(LuTrailer2);
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

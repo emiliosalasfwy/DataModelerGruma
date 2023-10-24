@@ -1,0 +1,19 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoContactPartner" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+// make email field(s) readonly if necessary
+// -> customer email
+if(me.getEmailEditable() === '0') {
+  acl.removeRight(AclObjectType.PROPERTY, "email1", AclPermission.EDIT);
+}
+
+//SF houseNumber is not available and must be written in the same field as the street
+if (Utils.isSfBackend()) {
+  var aclLoContactPartnerAddress = me.getLoContactPartnerAddress().getCurrent().getACL();
+  aclLoContactPartnerAddress.removeRight(AclObjectType.PROPERTY, "houseNumber", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,71 @@
+<BusinessLogic methodName="getNextResponsibleCollection" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="nextStatePKey" type="DomPKey" />
+    <MethodInput name="responsiblePKey" type="DomPKey" />
+    <MethodInput name="ownerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isDefined(nextStatePKey)) {
+  var liNextWfeState = me.getLoWfeState().getItemByPKey(nextStatePKey);
+
+  // 1. Step - Check whether owner has requested role
+  promise = me.getNextResp_OwnerHasRole(liNextWfeState, ownerPKey).then(
+    function (nextResponsiblePKeyCollection) {
+
+      if (Utils.isDefined(nextResponsiblePKeyCollection)) {
+        return nextResponsiblePKeyCollection;
+      } else {
+
+        // 2. Step - Check whether responsible has requested role
+        return me.getNextResp_ResponsibleHasRole(liNextWfeState, responsiblePKey).then(
+          function (nextResponsiblePKeyCollection) {
+
+            if (Utils.isDefined(nextResponsiblePKeyCollection)) {
+              return nextResponsiblePKeyCollection;
+            } else {
+
+              // 3. Step - Take default supervisor of user if state requires role "Supervisor"
+              return me.getNextResp_Supervisor(liNextWfeState, responsiblePKey).then(
+                function (nextResponsiblePKeyCollection) {
+
+                  if (Utils.isDefined(nextResponsiblePKeyCollection)) {
+                    return nextResponsiblePKeyCollection;
+                  } else {
+
+                    // 4. Step - Determine responsible via org unit hierarchy
+                    return me.getNextResp_EtpOrgUnit(liNextWfeState, responsiblePKey).then(
+                      function (nextResponsiblePKeyCollection) {
+
+                        if (Utils.isDefined(nextResponsiblePKeyCollection)) {
+                          return nextResponsiblePKeyCollection;
+                        } else {
+
+                          // 5. Step - Take workflow dispatcher
+                          return me.getNextResp_WfeDispatcher().then(
+                            function (nextResponsiblePKeyCollection) {
+                              if (Utils.isDefined(nextResponsiblePKeyCollection)) {
+                                return nextResponsiblePKeyCollection;
+                              }
+                            }
+                          );
+                        }
+                      }
+                    );
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+
+} else {
+  promise = when.resolve([]);
+}]]>
+</Code>
+  <Return name="nextResponsiblePKeyCollection" value="promise" />
+</BusinessLogic>

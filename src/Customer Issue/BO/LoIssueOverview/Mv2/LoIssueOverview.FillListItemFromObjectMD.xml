@@ -1,0 +1,59 @@
+<BusinessLogic methodName="fillListItemFromObjectMD" businessObjectClass="LoIssueOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="listItem" type="LiIssueOverview" />
+    <MethodInput name="detailBO" type="BoIssue" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Preset attributes
+listItem.setPKey(detailBO.getPKey());
+listItem.setIssuePhase(detailBO.getIssuePhase());
+listItem.setInitiationDate(detailBO.getInitiationDate());
+listItem.setBusinessModified(Utils.createAnsiDateTimeNow());
+listItem.setDueDate(detailBO.getDueDate());
+listItem.setPriority(detailBO.getPriority());
+listItem.setResponsiblePKey(detailBO.getResponsiblePKey());
+listItem.setResponsibleName(detailBO.getLuResponsible().getName());
+listItem.setOwnerPKey(detailBO.getOwnerPKey());
+listItem.setOwnerName(detailBO.getLuOwner().getName());
+listItem.setText(detailBO.getText());
+listItem.setCustomerName(detailBO.getLuCustomer().getName());
+listItem.setOwnerBpaMainPKey(detailBO.getOwnerBpaMainPKey());
+listItem.setInitiatorPKey(detailBO.getInitiatorPKey());
+listItem.setSvcMetaPKey(detailBO.getSvcRequestMetaPKey());
+listItem.setIsPrivate(detailBO.getBoSvcRequestMeta().getIsPrivate());
+listItem.setWfeWorkflowPKey(detailBO.getWfeWorkflowPKey());
+listItem.setActualStatePKey(detailBO.getActualStatePKey());
+listItem.setIsActive(detailBO.getBoSvcRequestMeta().getActive());
+
+var managementInfo = detailBO.getLuCustomerManagementInfo();
+
+if (
+  managementInfo.getIsManaged() === "0" &&
+  managementInfo.getIsSubstituted() == "1"
+) {
+  listItem.setResponsibleIcon("UserSubstitute24");
+  listItem.setSubstituteUsrPKey(managementInfo.getReferenceUsrMainPKey());
+
+  if (managementInfo.getSubstitutedInLeadFollowUpTime() == "1") {
+    listItem.setSubstitutionStatus("Inactive_Substitute");
+  } else {
+    listItem.setSubstitutionStatus("Active_Substitute");
+  }
+} else if (
+  managementInfo.getIsManaged() === "0" &&
+  managementInfo.getHasSubstitute() == "1"
+) {
+  listItem.setResponsibleIcon("UserSubstituted24");
+  listItem.setSubstituteUsrPKey(managementInfo.getHasSubstituteUsrMainPKey());
+
+  if (managementInfo.getHasSubstituteInLeadFollowUpTime() == "1") {
+    listItem.setSubstitutionStatus("Active_Substituted");
+  } else {
+    listItem.setSubstitutionStatus("Inactive_Substituted");
+  }
+} else {
+  listItem.setResponsibleIcon("UserArrowDarkGrey16");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

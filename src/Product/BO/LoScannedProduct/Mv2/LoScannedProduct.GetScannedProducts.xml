@@ -1,0 +1,53 @@
+<BusinessLogic methodName="getScannedProducts" businessObjectClass="LoScannedProduct" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="eAN" type="String" />
+    <MethodInput name="uoMScanBehavior" type="String" />
+    <MethodInput name="uoMScanDefaultUnit" type="String" />
+    <MethodInput name="processType" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+
+jsonQuery.params = jsonParams;
+jsonQuery.eAN = eAN;
+jsonQuery.additionalCondition = "";
+
+if (uoMScanBehavior === "Current"){
+  if (Utils.isSfBackend()) {
+    jsonQuery.additionalCondition = " AND Unit_of_Measure__c.Unit_Type__c = #uoMScanDefaultUnit# ";
+  }
+  else {
+    jsonQuery.additionalCondition = " AND PrdLogistic.UnitType = #uoMScanDefaultUnit# ";
+  }
+  jsonParams.push({"field" : "uoMScanDefaultUnit", "value" : uoMScanDefaultUnit});
+}
+else if (uoMScanBehavior === "Standard"){
+  if (Utils.isSfBackend()) {
+    jsonQuery.additionalCondition = " AND Unit_of_Measure__c.Is_Order_Unit__c = #isOrderUnit# ";    
+  }
+  else {
+    jsonQuery.additionalCondition = " AND PrdLogistic.IsOrderUnit = #isOrderUnit# ";
+  }
+  jsonParams.push({"field" : "isOrderUnit", "value" : '1'});
+}
+
+// filter by order ability in case of 'Order' & 'TruckLoad' process types,
+// no filter for other ('Survey') process types
+if (processType === 'Order' || processType === 'TruckLoad') {
+  jsonQuery.additionalCondition += " AND Unit_of_Measure__c.Order_Ability__c = 1 ";
+}
+else if (processType === 'Survey') {
+  jsonQuery.additionalCondition += " AND Product_Template__c.name = 'Product' ";
+}
+
+me.removeAllItems();
+
+var promise = Facade.getListAsync("LoScannedProduct", jsonQuery).then(
+  function(products) {
+    me.addItems(products);
+    return me;
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

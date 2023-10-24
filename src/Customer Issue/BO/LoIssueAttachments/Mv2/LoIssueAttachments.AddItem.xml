@@ -1,0 +1,47 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoIssueAttachments" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mediaPath" type="String" />
+    <MethodInput name="svcIssuePkey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var pKeyAttachment = PKey.next();
+//Not possible to achieve desired result by replacing it with Utils Function
+//returns datetime without space ("20201124145732" )
+var fileName =
+  "img" +
+  Utils.createDateNow()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/-/g, "")
+    .replace(/:/g, "")
+    .replace(/T/g, "");
+var creationDate = Utils.createAnsiDateTimeToday();
+
+var type = Utils.getFileExtensionFromMediaPath(mediaPath);
+
+var liNewAttachment = {
+  pKey: pKeyAttachment,
+  svcIssuePKey: svcIssuePkey,
+  creationDate: creationDate,
+  fileName: fileName + "." + type,
+  fileType: type,
+
+  attachmentTextPKey: PKey.next(),
+  attachmentText: fileName,
+
+  attachmentBlobPKey: PKey.next(),
+  attachmentBlob: mediaPath,
+  objectStatus: STATE.NEW | STATE.DIRTY,
+};
+
+me.addListItems([liNewAttachment]);
+me.orderBy({
+  creationDate: "DESC",
+  fileName: "DESC",
+});
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liNewAttachment.getPKey());]]>
+</Code>
+  <Return name="attachmentData" value="liNewAttachment" />
+</BusinessLogic>

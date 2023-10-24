@@ -1,0 +1,20 @@
+<BusinessLogic methodName="getInfoForCard" businessObjectClass="LoAgendaOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var count = me.cardItemCount;
+var numberVisibleCalls = 5;
+
+if(Utils.isPhone()){
+  numberVisibleCalls = 3;
+}
+if(count <= numberVisibleCalls){
+  numberVisibleCalls = count;
+}
+
+var info = " ";
+if(numberVisibleCalls != "0"){
+info = numberVisibleCalls.toString() + " / " + count;
+}]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

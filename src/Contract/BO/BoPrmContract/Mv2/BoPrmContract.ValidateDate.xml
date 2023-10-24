@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateDate" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(me.getDateFrom()>me.getDateThru()){
+  messageCollector.add({
+    "level": "error",
+    "objectClass": "BoPrmContract",
+    "messageID": "CasPrmCttDateFromGTDateThru",
+    "messageParams": { "slogan": me.getBoSlogan().getText() }
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

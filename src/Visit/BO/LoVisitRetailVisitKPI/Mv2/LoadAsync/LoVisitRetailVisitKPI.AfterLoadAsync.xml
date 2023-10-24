@@ -1,0 +1,58 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoVisitRetailVisitKPI" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(result);
+
+var items = me.getAllItems();
+var loObjectStatus = me.getObjectStatus();
+var childRecordsToAdd = [];
+
+
+//splitting up dateTime fiels into 2 KPI records
+items.forEach(function(item){
+  
+   var objectStatus = item.getObjectStatus();
+  
+  //DateTimeHandling
+  if(Utils.isDefined(item.getActualDateTime())) {
+    item.setActualDate(Utils.convertAnsiDateTime2AnsiDate(item.getActualDateTime()));
+    item.setActualTime(item.getActualDateTime().substring(11,16));
+  }
+  
+  if(item.getAidDataType() === "DateTime"){
+
+    var kpiQuestion = item.getQuestion();
+    var childRecordPKey = PKey.next();
+    
+    item.setQuestion(kpiQuestion + Localization.resolve("VisitKPI_DateTimeSplit_DatePart_Postfix"));
+    item.setTargetValue(item.getTargetDate());
+    item.setActualValue(item.getActualDate());
+    item.setDataType("NullableDate");
+    item.setLinkedRecordId(childRecordPKey);
+    
+
+
+    var childTimeRecord = item.getData();
+    childTimeRecord.pKey = childRecordPKey;
+    childTimeRecord.question = kpiQuestion + Localization.resolve("VisitKPI_DateTimeSplit_TimePart_Postfix"); 
+    if(Utils.isDefined(item.getTargetTime()))childTimeRecord.targetValue = Localization.localize(item.getTargetTime().substring(0,8),"time");
+    if(Utils.isDefined(item.getActualTime()))childTimeRecord.actualValue = Localization.localize(item.getActualTime().substring(0,8),"time");
+    childTimeRecord.dataType = 'NullableString';
+    childTimeRecord.linkedRecordId = item.getPKey();
+    childTimeRecord.objectStatus = objectStatus;
+    childRecordsToAdd.push(childTimeRecord);
+
+  }
+  
+  item.setObjectStatus(objectStatus);
+});
+
+me.addItems(childRecordsToAdd);
+me.setObjectStatus(loObjectStatus);
+me.orderBy({ "sortAttribute" : "ASC", "displayOrder" : "ASC", "question" : "ASC"});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

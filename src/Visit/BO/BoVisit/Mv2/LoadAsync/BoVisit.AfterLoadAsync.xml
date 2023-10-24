@@ -1,0 +1,57 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoVisit" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setPlannedStartDate(Utils.convertAnsiDateTime2AnsiDate(me.getPlannedStartDateTime()));
+me.setPlannedStartTime(me.getPlannedStartDateTime().substring(11,16));
+me.setPlannedEndDate(Utils.convertAnsiDateTime2AnsiDate(me.getPlannedEndDateTime()));
+me.setPlannedEndTime(me.getPlannedEndDateTime().substring(11,16));
+me.setActualStartDate(Utils.convertAnsiDateTime2AnsiDate(me.getActualStartDateTime()));
+me.setActualStartTime(me.getActualStartDateTime().substring(11,16));
+me.setActualEndDate(Utils.convertAnsiDateTime2AnsiDate(me.getActualEndDateTime()));
+me.setActualEndTime(me.getActualEndDateTime().substring(11,16));
+var dateFrom;
+var timeFrom;
+var objectStatus = me.getObjectStatus();
+if(Utils.isEmptyString(me.getPlannedEndTime()) || me.getPlannedEndDate()==="1700-01-01") {
+  increaseEndTimeBy60Mins();
+  
+  dateFrom = Utils.convertAnsiDate2Date(me.getPlannedStartDate());
+  timeFrom = Utils.convertAnsiTime2Time(me.getPlannedStartTime());
+  if(timeFrom.getHours() >= '23') {
+    dateFrom = Utils.addDays2AnsiDate(Utils.convertDate2Ansi(dateFrom), 1);
+    me.setPlannedEndDate(dateFrom);
+  } else {
+    me.setPlannedEndDate(me.getPlannedStartDate());
+  }
+  
+  me.setObjectStatus(objectStatus);
+  me.setEARights();
+} else {
+  var timeDifference = me.getCallDuration(me.getPlannedStartDate(), me.getPlannedStartTime(), me.getPlannedEndDate(), me.getPlannedEndTime());
+  me.setDuration(timeDifference);
+}
+if(Utils.isEmptyString(me.getActualStartTime()) || me.getActualStartDate()==="1700-01-01"){
+	me.setActualStartTimeUI("");
+} else {
+	me.setActualStartTimeUI(me.getActualStartTime());
+}
+if(Utils.isEmptyString(me.getActualEndTime()) || me.getActualEndDate()==="1700-01-01"){
+	me.setActualEndTimeUI("");
+} else {
+	me.setActualEndTimeUI(me.getActualEndTime());
+}
+
+function increaseEndTimeBy60Mins() {
+  newTimeThru = Utils.convertAnsiTime2Time(me.getPlannedStartTime());
+  newTimeThru.setMinutes(newTimeThru.getMinutes() + 60);
+  me.setPlannedEndTime(Utils.convertTime2Ansi(newTimeThru));
+  me.setDuration('60');
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

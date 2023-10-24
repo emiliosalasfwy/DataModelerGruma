@@ -1,0 +1,29 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoCreateNewTimeEntry" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[/**var me = this;
+var acl = me.getACL();
+
+
+if(me.getShowDetails() === "0"){
+ //hide offsets
+ acl.removeRight(AclObjectType.PROPERTY,"timeFromGeoOffset", AclPermission.VISIBLE);
+ acl.removeRight(AclObjectType.PROPERTY,"timeThruGeoOffset", AclPermission.VISIBLE);
+ acl.removeRight(AclObjectType.PROPERTY,"timeFromDSTOffset", AclPermission.VISIBLE);
+ acl.removeRight(AclObjectType.PROPERTY,"timeThruDSTOffset", AclPermission.VISIBLE);
+ me.setShowDetails("1"); 
+}else{
+  //show offsets
+  acl.addRight(AclObjectType.PROPERTY,"timeFromGeoOffset", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY,"timeThruGeoOffset", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY,"timeFromDSTOffset", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY,"timeThruDSTOffset", AclPermission.VISIBLE);
+  me.setShowDetails("0"); 
+}
+
+
+BindingUtils.refreshEARights();
+*/]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

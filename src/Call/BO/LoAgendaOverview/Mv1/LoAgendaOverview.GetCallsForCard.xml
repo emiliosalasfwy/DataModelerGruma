@@ -1,0 +1,43 @@
+<BusinessLogic methodName="getCallsForCard" businessObjectClass="LoAgendaOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="setDateFunction" type="String" />
+    <MethodInput name="filterCalls" type="String" />
+    <MethodInput name="currentDate" type="Date" />
+    <MethodInput name="currentResponsiblePKey" type="String" />
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="Visits_DataLoaded" type="DomBool" />
+    <MethodInput name="CardVisits_refreshRelatedData" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(!Utils.isDefined(currentDate)){
+  currentDate = Utils.createAnsiDateTimeToday();
+}
+var numberVisibleCalls;
+if(!Utils.isDefined(numberOfListItems)){
+  numberVisibleCalls = 5;
+  if(Utils.isPhone()){
+    numberVisibleCalls = 3;
+  }
+} else{
+  numberVisibleCalls = numberOfListItems;
+}
+
+var filterDate;
+if (Utils.isSfBackend()) {
+  filterDate = currentDate;
+} else {
+  filterDate = Utils.createAnsiDateTimeNow(currentDate);
+}
+
+me.setFilter("dateFrom", filterDate, "EQ");
+var items = me.getItemObjects();
+promise = me.getCallsByDate(setDateFunction, filterCalls,  currentDate, currentDate, currentResponsiblePKey, numberVisibleCalls).then(
+  function (calls) {
+    me.resetFilter("dateFrom");
+  });
+]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

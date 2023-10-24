@@ -1,0 +1,28 @@
+<BusinessLogic methodName="filterByProduct" businessObjectClass="LoVisitRetailVisitKPI" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productId" type="String" />
+    <MethodInput name="boAssessmentTask" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(productId)){
+
+  me.resetAllFilters();
+
+  var filterArray = [];
+  filterArray.push( {"productId" : productId, "op" : "EQ"});
+
+  if(Utils.isDefined(boAssessmentTask)){
+    if(Utils.isDefined(boAssessmentTask.getCategoryFilter()) && !Utils.isEmptyString(boAssessmentTask.getCategoryFilter())){
+      filterArray.push({"productCategoryName": boAssessmentTask.getCategoryFilter() , "op": "EQ"});
+    } 
+
+    if(Utils.isDefined(boAssessmentTask.getLocationFilter()) && !Utils.isEmptyString(boAssessmentTask.getLocationFilter())){
+      filterArray.push({"inStoreLocationName": boAssessmentTask.getLocationFilter() , "op": "EQ"});
+    } 
+
+  }
+  me.setFilterArray(filterArray);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

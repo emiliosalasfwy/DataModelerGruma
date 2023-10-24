@@ -1,0 +1,47 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoItemSettings" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var curItemMetPKey = "";
+
+for (var index in context.jsonQuery.params) {              
+  switch (context.jsonQuery.params[index].field) {
+    case "currentScanIncrementQuantity":
+      me.setCurrentScanIncrementQuantity(context.jsonQuery.params[index].value);
+      break;
+    case "scanBehavior":
+      me.setUoMScanBehavior(context.jsonQuery.params[index].value);
+      break;
+    case "defaultUnit":
+      me.setUoMScanDefaultUnit(context.jsonQuery.params[index].value);
+      break;
+    case "barcodeScanBehavior":
+      me.setBarcodeScanBehavior(context.jsonQuery.params[index].value);
+      me.setEARight(context.jsonQuery.params[index].value);
+      break;
+    case "currentItemMeta":
+      curItemMetPKey = context.jsonQuery.params[index].value;
+      break;
+  }
+}    
+if(Utils.isDefined(curItemMetPKey)){
+  promise = BoFactory.loadObjectByParamsAsync("LuOrderItemMeta", me.getQueryBy("pKey", curItemMetPKey))
+    .then(function(luItemMeta){
+    if(Utils.isDefined(luItemMeta)){
+      me.setLuOrderItemMeta(luItemMeta);
+      if(me.getCurrentScanIncrementQuantity() === null){
+        me.setCurrentScanIncrementQuantity(luItemMeta.getScanIncrementQuantity());						
+      }				
+    }
+    me.onUoMScanBehaviorChanged();
+    return me;
+  });
+} else {
+  me.onUoMScanBehaviorChanged();
+  promise = when.resolve(me);
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

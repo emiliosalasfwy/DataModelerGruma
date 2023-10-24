@@ -1,0 +1,55 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="BoPos" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[/***********************************************************************************************
+*  1 CGCloud table / 2 onPrem tables                                                              *
+*                                                                                              *
+*  CGCloud:    -no PosRelation table exists. Relation information is directly stored in POS__c.   *
+*  onPrem:  -POS table and a separate table for the relation between customers on POS.         *
+************************************************************************************************/
+var deferreds = [];
+var promise;
+
+if(Utils.isSfBackend()) {
+  var allItems = me.getLoPOSCustomerRelation().getAllItems();
+  var additionalMappings = [{name: "name", dsColumn: "Description_" + ApplicationContext.get('user').sfLanguagePostfix + "__c", value: me.getName()}];
+  // In CGCloud the LoPOSCustomerRelation can only have one item because the Account key is directly stores in POS__c. There is no Rel Table available
+  // Because Facade.saveTrackedObject is already used it is possible to directly store the LoPOSCustomerRelation-Item with this Request
+  if(allItems.length > 0) {
+    additionalMappings.push({name: "customerPKey", dsColumn: "Account__c", value: allItems[0].customerPKey});
+    additionalMappings.push({name: "salesOrg", dsColumn: "Sales_Org__c", value: allItems[0].salesOrg});
+    additionalMappings.push({name: "validFrom", dsColumn: "Valid_From__c", value: Utils.unixepochToTicks(Utils.convertForDB(allItems[0].validFrom, "DomDate"))});
+    additionalMappings.push({name: "validThru", dsColumn: "Valid_Thru__c", value: Utils.unixepochToTicks(Utils.convertForDB(allItems[0].validThru, "DomDate"))});
+  }
+  deferreds.push(BoFactory.createObjectAsync("BoSfHelper", {}).then(
+    function (helper) {
+      return helper.saveTrackedObject(me, additionalMappings);
+    }));
+}
+else {
+  deferreds.push(Facade.saveObjectAsync(me));
+  var itemsForSave = [me.getBoBpaSales(), me.getLoPOSCustomerRelation(), me.getLoCustomerAddress()];
+  itemsForSave.forEach(function (item) {
+    if(Utils.isDefined(item)) {
+      deferreds.push(item.saveAsync());
+    }
+  });
+}
+
+promise = when.all(deferreds).then(
+  function() {
+    if (Utils.isSfBackend()) {
+      //Reset object status for all to prevent multiple saves
+      me.traverse(function(node) {
+        node.setObjectStatus(STATE.PERSISTED);
+        if(node.isList) {
+          node.getAllItems().forEach(function (item) {
+            item.setObjectStatus(STATE.PERSISTED);
+          });
+        }
+      },function(a, b, c){});
+    }
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

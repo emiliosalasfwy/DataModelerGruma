@@ -1,0 +1,17 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[for (var index in jsonQuery.params) {
+  switch (jsonQuery.params[index].field) {
+    case "clbMainPKey":
+      me.setClbMainPKey( jsonQuery.params[index].value);
+      break;
+  }
+}
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

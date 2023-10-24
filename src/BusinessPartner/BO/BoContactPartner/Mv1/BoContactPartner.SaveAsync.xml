@@ -1,0 +1,58 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="BoContactPartner" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[/**************************************************************************************
+*  1 CGCloud tables / 2 onPrem tables                                                          *
+*                                                                                              *
+*  CGCloud: -Contact Partner and Contract Partner Address is saved in same Entity "Contract"   *
+************************************************************************************************/
+
+var promises = [];
+var contactSavedPromise;
+
+me.setName(me.getLastName() + ", " + me.getFirstName());
+
+//Save BoContactPartner
+// SF/CASDIF: General Dif
+if (Utils.isSfBackend()) {
+  contactSavedPromise = BoFactory.createObjectAsync("BoSfHelper", {})
+    .then(function (helper) {
+    return helper.saveTrackedObject(me, []);
+  });
+}
+else {
+  contactSavedPromise = Facade.saveObjectAsync(me);
+}
+
+var promise = contactSavedPromise.then(
+  function() {
+    // SF/CASDIF: General Dif
+    if (Utils.isSfBackend()) {
+      if (Utils.isDefined(me.getLoContactPartnerAddress())) {
+        var items = me.getLoContactPartnerAddress().getAllItems();
+
+        if (items.length > 0) {
+          //since both BoContactPartner and LoContactPartnerAddress will write into "Contact", we set the same PKey; and via "saveTrackedObject" and "saveAsync" both set of changes will be put into one TA
+          //FW will recognize this when trying to commit and merge the two changesets into one single upsert to the Contact record
+          items[0].setPKey(me.getPKey());
+        }
+      }
+    }
+
+    //Save LoBpaAddress if defined
+    if (Utils.isDefined(me.getLoContactPartnerAddress())) {
+      promises.push(me.getLoContactPartnerAddress().saveAsync());
+    }
+
+    if (Utils.isCasBackend()) {
+      if (Utils.isDefined(me.getBoBpaSales())) {
+        promises.push(me.getBoBpaSales().saveAsync());
+      }
+      //Save ContactPartnerCustomer Relation
+      promises.push(me.getLoContactPartnerCustomerRelation().saveAsync());
+    }
+    return when.all(promises);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

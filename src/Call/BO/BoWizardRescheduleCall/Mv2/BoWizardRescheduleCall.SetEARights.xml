@@ -1,0 +1,12 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardRescheduleCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var allday = me.getACL();
+if (me.getCallBo().getAllDay() == "1"){
+  allday.removeRight(AclObjectType.PROPERTY, "timeFrom", AclPermission.VISIBLE);                            
+  allday.removeRight(AclObjectType.PROPERTY, "timeThru", AclPermission.VISIBLE);
+  allday.removeRight(AclObjectType.PROPERTY, "duration", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,16 @@
+<BusinessLogic methodName="createAsync" businessObjectClass="BoUnitConversion" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.updateProperties(jsonQuery);
+
+var promise = BoFactory.loadListAsync(LO_UNITFACTORFORPRODUCT, me.getQueryBy("productPKey", me.getProductPKey()))
+  .then(function (loUnitFactor) {
+
+  me.setLoUnitFactorForProduct(loUnitFactor);
+  me.setObjectStatus(STATE.NEW);
+});]]>
+</Code>
+  <Return name="boUnitConversion" value="promise" />
+</BusinessLogic>

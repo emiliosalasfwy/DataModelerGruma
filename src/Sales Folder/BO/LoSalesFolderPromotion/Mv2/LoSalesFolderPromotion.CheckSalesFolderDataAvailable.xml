@@ -1,0 +1,24 @@
+<BusinessLogic methodName="checkSalesFolderDataAvailable" businessObjectClass="LoSalesFolderPromotion" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="promotionList" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (Utils.isSfBackend() && promotionList.getAllItems().length > 0){
+  promise = when.resolve("1");
+} else if(me.getAllItems().length === 0) {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("LoSalesFolderPromotion_NoDataAvailable"), buttonValues).then(
+    function (input) {
+      return "0";						
+    }
+  );
+} else {
+  promise = when.resolve("1");
+}]]>
+</Code>
+  <Return name="dataAvailable" value="promise" />
+</BusinessLogic>

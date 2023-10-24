@@ -1,0 +1,72 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var aclBo = me.getACL();
+
+if (jsonQuery) {
+  var jsonQueryNew = jsonQuery;
+}
+
+//disable the responsible field
+var aclLuUser = me.getLuUser().getACL();
+aclLuUser.removeRight(AclObjectType.PROPERTY, "name", AclPermission.EDIT);
+
+var isCallReadOnly = me.isReadOnly();
+
+// Do not show the call end date and time if the call is not complete
+if (me.getClbStatus() != "Completed") {
+  aclBo.removeRight(AclObjectType.PROPERTY, "stopTimeEffectiveUI", AclPermission.VISIBLE);
+}
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourStatus') !== "Running") {
+  isCallReadOnly = true;
+}
+
+if (isCallReadOnly) {
+  aclBo.removeRight(AclObjectType.OBJECT, "BoCall", AclPermission.EDIT);
+}
+
+//if no substitude is active - Hide information
+var isSubstitutionActive = !Utils.isEmptyString(me.getBpaMainPKey()) && me.getSubstitution() == "1";
+
+if (!isSubstitutionActive) {
+  aclBo.removeRight(AclObjectType.PROPERTY, "substitution", AclPermission.VISIBLE);
+
+  var aclLuCustomerManagementInfo = me.getLuCustomerManagementInfo().getACL();
+  aclLuCustomerManagementInfo.removeRight(AclObjectType.PROPERTY, "substitutedUsrName", AclPermission.VISIBLE);
+}
+
+if (me.getLuCallMeta().getMobilityRelevant() == "0") {
+  aclBo.removeRight(AclObjectType.OBJECT, "BoCall", AclPermission.EDIT);
+}
+
+if (me.getLuCallMeta().getCompanyRequired() == "Not required") {
+  var aclLuCustomer = me.getLuCustomer().getACL();
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "street", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "houseNumber", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "zipCode", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "city", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "state", AclPermission.VISIBLE);
+  aclLuCustomer.removeRight(AclObjectType.PROPERTY, "mainAddress", AclPermission.VISIBLE);
+}
+
+// Check If the CaptureProceedingTime is configured to be Yes.
+
+if (me.getLuCallMeta().getCaptureProceedingTime() == "0") {
+  aclBo.removeRight(AclObjectType.PROPERTY, "startTimeEffective", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "stopTimeEffective", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "startTimeEffectiveUI", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "stopTimeEffectiveUI", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "durationEffective", AclPermission.VISIBLE);
+}
+
+// Hide TourId for Non Customer Related Calls and when the tour is not in context
+if (Utils.isSfBackend() && me.getLuCallMeta().getMobilityUserGuidance() == "NonCustomer" || Utils.isEmptyString(ApplicationContext.get('currentTourPKey'))) {
+  aclBo.removeRight(AclObjectType.PROPERTY, "tmgMainId", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

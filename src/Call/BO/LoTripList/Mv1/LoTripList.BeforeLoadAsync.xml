@@ -1,0 +1,14 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTripList" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    var promise=when.resolve(context);
+
+	if(Utils.isSfBackend()){
+       context.jsonQuery.params[0].value = Utils.convertForDBParam(context.jsonQuery.referenceDateFrom, 'DomDate');
+      context.jsonQuery.params[1].value = Utils.convertForDBParam(context.jsonQuery.referenceDateThru, 'DomDate');
+		}
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

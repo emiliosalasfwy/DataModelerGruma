@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getInfoForActivitiesCard" businessObjectClass="LoActivities" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="activitiesCount" type="Integer" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var info;
+if (me.getCount() > 0) {
+  info = me.getCount() + " / " + activitiesCount;
+}
+else {
+  info = " ";
+}]]>
+</Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

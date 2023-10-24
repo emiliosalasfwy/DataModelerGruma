@@ -1,0 +1,23 @@
+<BusinessLogic methodName="getInfoForSellInsCard" businessObjectClass="LoSalesFolderCallCustomer" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var count = me.cardItemCount;
+var numberOfVisibleSellIns = 5;
+
+if(Utils.isPhone()) {
+ numberOfVisibleSellIns = 3;
+}
+
+if(count <= numberOfVisibleSellIns){
+  numberOfVisibleSellIns = count;
+}
+
+var info = " ";
+if(numberOfVisibleSellIns != "0"){
+ info = numberOfVisibleSellIns.toString() + " / " + count;
+}
+
+]]></Code>
+  <Return name="info" value="info" />
+</BusinessLogic>

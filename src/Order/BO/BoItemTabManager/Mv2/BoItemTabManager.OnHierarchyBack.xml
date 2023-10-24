@@ -1,0 +1,11 @@
+<BusinessLogic methodName="onHierarchyBack" businessObjectClass="BoItemTabManager" accessibility="PUBLIC" final="false" asynchronous="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="level" type="DomInteger" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+       var navigateToLastLevelActive = this.updateLastDisplayedHierarchyLevel(level, "RESET");
+     
+    ]]></Code>
+  <Return name="result" value="navigateToLastLevelActive" />
+</BusinessLogic>

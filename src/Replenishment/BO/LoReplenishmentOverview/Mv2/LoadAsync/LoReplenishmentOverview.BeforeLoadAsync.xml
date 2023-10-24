@@ -1,0 +1,16 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoReplenishmentOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Order the list based on sort1 and releaseTime
+me.orderBy({
+  "sortOrder" : "ASC",     
+  "sortReleaseTime" : "DESC",
+  "id" : "DESC"      
+});
+
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

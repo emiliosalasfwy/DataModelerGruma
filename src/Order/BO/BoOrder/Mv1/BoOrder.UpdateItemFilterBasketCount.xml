@@ -1,0 +1,43 @@
+<BusinessLogic methodName="updateItemFilterBasketCount" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="oldQuantity" type="DomDecimal" />
+    <MethodInput name="newQuantity" type="DomDecimal" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loItemFilter = me.getLoItemFilter();
+var params = { "filterCode": "Basket" };
+var items = loItemFilter.getItemsByParam(params);
+
+if (items.length > 0) {
+  var data = items[0].getCount();
+  var dataItems = data.split("/");
+  var count = parseInt(dataItems[0], 10);
+  var orderItems;
+  var otherItemsWithQuantity;
+
+  if (!Utils.isDefined(oldQuantity)) {
+    oldQuantity = 0;
+  }
+
+  if ((oldQuantity === 0) && (newQuantity > 0)) {
+    orderItems = me.getLoItems();
+    otherItemsWithQuantity = orderItems.getItemsByParamArray([{pKey: mainItem.getPKey(), op: "EQ"}, { quantity: 0, op: "GT"}]);
+
+    if(otherItemsWithQuantity.length === 1) {
+      items[0].setCount((count + 1) + "/" + me.getTotalValue().toFixed(2));
+    }
+  }
+
+  if ((oldQuantity > 0) && (newQuantity === 0)) {
+    orderItems = me.getLoItems();
+    otherItemsWithQuantity = orderItems.getItemsByParamArray([{pKey: mainItem.getPKey(), op: "EQ"}, { quantity: 0, op: "EQ"}]);
+
+    if(otherItemsWithQuantity.length === 1) {
+      items[0].setCount((count - 1) + "/" + me.getTotalValue().toFixed(2));
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

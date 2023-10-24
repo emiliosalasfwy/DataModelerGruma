@@ -1,0 +1,101 @@
+<BusinessLogic methodName="reschedule" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="newDateFrom" type="String" />
+    <MethodInput name="newTimeFrom" type="String" />
+    <MethodInput name="newDateThru" type="String" />
+    <MethodInput name="newTimeThru" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// date and time input format is ansi. eg: "2021-07-01" "23:00"
+// for reschedule via context menu if both end date and time are made null in FUTURE rescheduled end time will not be correct
+var timeFrom;
+var timeThru;
+if (!validateDate(newDateFrom)) {
+    logMsg("Input Planned Start Date is not Defined or Empty");
+    return;
+}
+if(!validateTime(newTimeFrom)){
+   logMsg("Input Planned Start Time is not Defined or Empty");
+   return;
+}
+timeFrom = Utils.convertAnsiDate2Date(newDateFrom);
+timeFrom.setHours(newTimeFrom.substring(0,2));
+timeFrom.setMinutes(newTimeFrom.substring(3,5));
+
+if (validateDate(newDateThru)) {
+    if(!validateTime(newTimeThru)){
+       logMsg("Input Planned End Date is not Present but End Time is specified");
+       return;
+	}
+     timeThru = Utils.convertAnsiDate2Date(newDateThru);
+     timeThru.setHours(newTimeThru.substring(0,2));
+     timeThru.setMinutes(newTimeThru.substring(3,5));
+    
+}
+else 
+{
+  if(me.getPlannedEndDate() === Utils.getMinDateAnsi())
+  {
+       rescheduleStartTime();
+       return;
+  }
+  else
+   {
+      var timeDifference = me.getCallDuration(me.getPlannedStartDate(), me.getPlannedStartTime(), me.getPlannedEndDate(), me.getPlannedEndTime());
+      timeThru = Utils.convertAnsiDate2Date(newDateFrom);
+      timeThru.setHours(timeFrom.getHours());
+      timeThru.setMinutes(timeFrom.getMinutes() + timeDifference);
+
+   }
+}
+if(validateDateTimeOrder())
+  {
+    rescheduleStartTime();
+    rescheduleEndTime();
+  }
+else
+  {
+    logMsg("Start Datetime should be lesser than End DateTime");
+    return;
+  }
+
+function validateDateTimeOrder()
+{
+     if(timeThru.toJSON()>timeFrom.toJSON())
+         return true;
+     return false;
+}
+
+function rescheduleStartTime()
+{
+    me.setPlannedStartDate(timeFrom);
+    me.setPlannedStartTime(Utils.convertTime2Ansi(timeFrom));
+}
+function rescheduleEndTime()
+{
+    me.setPlannedEndDate(timeThru);
+    me.setPlannedEndTime(Utils.convertTime2Ansi(timeThru));
+}
+
+function validateDate(inputDate)
+{
+  if(Utils.isDefined(inputDate)&&inputDate)
+    return true;
+  return false;
+}
+
+function validateTime(inputTime)
+{
+  if(Utils.isDefined(inputTime)&&inputTime&&!Utils.isEmptyString(inputTime))
+    return true;
+  return false;
+}
+
+function logMsg(msg)
+{
+  AppLog.info("Error : Reschedule Failed - " + msg);
+  return;
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

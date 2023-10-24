@@ -1,0 +1,33 @@
+<BusinessLogic methodName="updateCustomerCallSetting" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {}; 
+jsonQuery.params = [
+  {
+    "field": "customerPKey",
+    "operator": "EQ",
+    "value": me.getBpaMainPKey()
+  },
+  {
+    "field": "clbMetaPKey",
+    "operator": "EQ",
+    "value": me.getClbMetaPKey()
+  }
+];
+var promise = BoFactory.loadListAsync("LoBpaUsrCallSettings", jsonQuery).then(
+  function (object) {
+    me.setLoBpaUsrCallSettings(object);
+    var items = object.getAllItems();    
+    if(items.length >0){
+      if(items[0].overdueCheck =="1"){
+        if(items[0].frequency > 0){
+          items[0].setOverdueDate(Utils.addDays2AnsiDate(Utils.createDateToday(), items[0].frequency * 7));
+        } else {
+          items[0].setOverdueDate(Utils.createDateToday());
+        }
+      }
+    }
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

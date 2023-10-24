@@ -1,0 +1,13 @@
+<BusinessLogic methodName="saveImmediately" businessObjectClass="LoUsrTimeEntry" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[Facade.startTransaction();
+
+var promise = Facade.saveListAsync(me).then(
+  function () {
+    return Facade.commitTransaction();
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

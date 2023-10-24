@@ -1,0 +1,13 @@
+<BusinessLogic methodName="getFirstEntry" businessObjectClass="LoReplenishmentMeta" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Code language="JavaScript"><![CDATA[
+      
+      var orderMetas = this.getItemObjects();
+      var pKey = " ";
+      
+      if (orderMetas.length > 0) {
+          pKey = orderMetas[0].getPKey();
+      }
+      
+    ]]></Code>
+  <Return name="pkey" value="pKey" />
+</BusinessLogic>

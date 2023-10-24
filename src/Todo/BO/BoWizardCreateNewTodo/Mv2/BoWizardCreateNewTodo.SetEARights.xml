@@ -1,0 +1,11 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewTodo" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[    
+      var me = this;
+      var acl = me.getACL();
+      if (me.getLuSvcRequestMeta().getIsPrivate() == '0') {
+          me.getLuUser().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+     }else {                    
+          me.getLuUser().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+      }		
+   ]]></Code>
+</BusinessLogic>

@@ -1,0 +1,44 @@
+<BusinessLogic methodName="getActivitiesForCard" businessObjectClass="LoActivitiesForStoreCockpit" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CallStatus" type="String" />
+    <MethodInput name="mobilityUserGuidance" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var contextMenuItemList = [];
+
+me.removeAllItems();
+
+var menuEntry0 = {
+  "id" : "Promotion",
+  "text" : Localization.resolve("CardActivities_StoreCheck"),
+  "image" : "TaskList_Today"
+};
+
+var menuEntry1 = {
+  "id" : "Survey",
+  "text" : Localization.resolve("CardActivities_CaptureSurvey"),
+  "image" : "Survey_Today"
+};
+
+contextMenuItemList.push(menuEntry0);
+contextMenuItemList.push(menuEntry1);
+
+if (CallStatus != "Completed" && CallStatus != "Canceled" && mobilityUserGuidance == "Sales"){
+  var menuEntry2 = {
+    "id" : "CreateOrder",
+    "text" : Localization.resolve("CardActivities_CreateOrder"),
+    "image" : "Clipboard_Today"
+  };
+  contextMenuItemList.push(menuEntry2);
+}
+if (mobilityUserGuidance == "Merchandizing" || mobilityUserGuidance == "Sales"){
+  var menuEntry3 = {
+    "id" : "TrackAssets",
+    "text" : Localization.resolve("CardActivities_TrackAssets"),
+    "image" : "Fridge_Today"
+  };
+  contextMenuItemList.push(menuEntry3);
+}
+
+me.addItems(contextMenuItemList);]]></Code>
+  <Return name="me" value="me" />
+</BusinessLogic>

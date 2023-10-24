@@ -1,0 +1,54 @@
+<BusinessLogic methodName="loadRoleObjectsAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var objectState = me.getObjectStatus();
+var defereds = [];
+
+if(bReload == "1" || !Utils.isDefined(me.getBoOrderRole())) {
+  defereds.push(BoFactory.loadObjectByParamsAsync(BO_ORDERROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (boOrderRole) {
+      me.setBoOrderRole(boOrderRole);
+    }));
+}
+if(bReload == "1" || !Utils.isDefined(me.getBoCustomerRole())) {
+  defereds.push(BoFactory.loadObjectByParamsAsync(BO_CUSTOMERROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (boCustomerRole) {
+      me.setBoCustomerRole(boCustomerRole);
+    }));
+}
+if(bReload == "1" || !Utils.isDefined(me.getBoPayerRole())) {
+  defereds.push(BoFactory.loadObjectByParamsAsync(BO_PAYERROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (boPayerRole) {
+      me.setBoPayerRole(boPayerRole);
+    }));
+}
+if(bReload == "1" || !Utils.isDefined(me.getBoDeliveryRole())) {
+  defereds.push(BoFactory.loadObjectByParamsAsync(BO_DELIVERYROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (boDeliveryRole) {
+      me.setBoDeliveryRole(boDeliveryRole);
+      me.getBoDeliveryRole().onSdoSplittingOptionChanged();
+    }));
+}
+if(bReload == "1" || !Utils.isDefined(me.getLoBpaRole())) {
+  defereds.push(BoFactory.loadListAsync(LO_BPAROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (loBpaRoleJson) {
+      me.setLoBpaRole(loBpaRoleJson);
+    }));
+}
+if(bReload == "1" || !Utils.isDefined(me.getBoStoreRole())) {
+  defereds.push(BoFactory.loadObjectByParamsAsync(BO_STOREROLE, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (boStoreRole) {
+      me.setBoStoreRole(boStoreRole);
+    }));
+}
+var promise = when.all(defereds).then(
+  function(){
+    //reset object status for save handling 
+    //(make not BoCustomer DIRTY after reloading data via tab click)
+    me.setObjectStatus(objectState);
+  });]]>
+</Code>
+  <Return name="BoCustomer_LoadRoleObjectsAsync" value="promise" />
+</BusinessLogic>

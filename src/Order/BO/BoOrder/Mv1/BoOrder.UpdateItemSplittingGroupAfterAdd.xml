@@ -1,0 +1,12 @@
+<BusinessLogic methodName="updateItemSplittingGroupAfterAdd" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+var itemPKey = me.getBoItemTabManager().getAddProductResult().selectPKey;
+var item = me.getLoItems().getItemByPKey(itemPKey);
+
+me.determineItemSplittingGroups(item);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

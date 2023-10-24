@@ -1,0 +1,77 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoToDoOverviewContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Build context menu list
+var contextMenuItemList = [];
+var newParams = context.jsonQuery;
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+var promise = BoFactory.loadObjectByParamsAsync("BoWorkflow", me.getQueryBy("pKey", context.jsonQuery.wfeWorkflowPKey)).then(
+  function (object) {
+    var cancelMenuEntry = {
+      "id": "0000001",
+      "actionImg": "CancelDarkGrey24",
+      "actionId": "Cancel",
+      "processEvent": "Cancel",
+      "actionVisible": "1",
+      "actionEnabled": "0"
+    };
+    var deleteMenuEntry = {
+      "id": "0000002",
+      "actionImg": "TrashcanDarkGrey24",
+      "actionId": "Delete",
+      "processEvent": "Delete",
+      "actionVisible": "1",
+      "actionEnabled": "0"
+    };
+    var copyMenuEntry = {
+      "id": "0000003",
+      "actionImg": "CopyDarkGrey24",
+      "actionId": "Copy",
+      "processEvent": "Copy",
+      "actionVisible": "1",
+      "actionEnabled": "0"
+    };
+    var nextStates = object.getNextStatesByStateType(context.jsonQuery.actualStatePKey, "Cancelled");
+    if(Utils.isSfBackend()) {
+      if (context.jsonQuery.issuePhase.getText().toLowerCase() === "initial" || context.jsonQuery.issuePhase.getText().toLowerCase() === "released") {
+        cancelMenuEntry.actionEnabled = "1";
+      }
+    }  
+    else {
+      if ((context.jsonQuery.issuePhase.getText().toLowerCase() === "initial" || context.jsonQuery.issuePhase.getText().toLowerCase() === "released") && (Utils.isDefined(nextStates) && nextStates.length > 0)) {
+        cancelMenuEntry.actionEnabled = "1";
+      }
+    }
+    var user = ApplicationContext.get('user');
+    var userPkey = user.getPKey();
+    var userIsSupervisor = (user.getIsSupervisor() == "1");
+    var taskIsPrivate = (context.jsonQuery.isPrivate.getId() == "1");
+    var taskIsActive = (context.jsonQuery.isActive.getId() == "1");
+    if(context.jsonQuery.initiatorPKey === userPkey) {
+      deleteMenuEntry.actionEnabled = "1";
+    }
+    if (!Utils.isSfBackend() && (context.jsonQuery.responsiblePKey === userPkey && taskIsPrivate)) {
+      deleteMenuEntry.actionEnabled = "1";
+    }
+    if (userIsSupervisor && !taskIsPrivate && taskIsActive) {
+      copyMenuEntry.actionEnabled = "1";
+    }
+    if (!Utils.isSfBackend() && (taskIsPrivate && taskIsActive)) {
+      copyMenuEntry.actionEnabled = "1";
+    }
+    var menuEntries = [cancelMenuEntry, deleteMenuEntry, copyMenuEntry];
+    menuEntries.forEach(
+      function (item) {
+        contextMenuItemList.push(item);
+      }
+    );
+    me.addItems(contextMenuItemList);
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

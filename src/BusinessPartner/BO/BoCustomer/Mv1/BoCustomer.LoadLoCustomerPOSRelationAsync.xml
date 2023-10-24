@@ -1,0 +1,23 @@
+<BusinessLogic methodName="loadLoCustomerPOSRelationAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+if(bReload == "1" || !Utils.isDefined(me.getLoCustomerPOSRelation())) {
+  promise = BoFactory.loadListAsync(LO_CUSTOMERPOSRELATION, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (loCustomerPOSRelationJson) {
+      //set POS relation list and reset object status for save handling 
+      //(make not BoCustomer DIRTY after reloading data via tab click)
+      var objectState = me.getObjectStatus();
+      me.setLoCustomerPOSRelation(loCustomerPOSRelationJson);
+      me.addItemChangedEventListener('loCustomerPOSRelation', me.onPOSChanged);
+      me.setObjectStatus(objectState);
+    });
+}
+else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoCustomer_LoadLoCustomerPOSRelationAsync" value="promise" />
+</BusinessLogic>

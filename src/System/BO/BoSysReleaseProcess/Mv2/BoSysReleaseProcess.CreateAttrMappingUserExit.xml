@@ -1,0 +1,10 @@
+<BusinessLogic methodName="createAttrMappingUserExit" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="attributeSetName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//for customizing
+var attributes = Utils.createDictionary();]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

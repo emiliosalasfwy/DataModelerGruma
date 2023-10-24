@@ -1,0 +1,112 @@
+<BusinessLogic methodName="presetOrderRoles" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var mainDelivRecPKey = "";
+var mainPayerPKey = "";
+var mainBillRecPKey = "";
+var mainBrokerPKey = "";
+var customerDetailPresent;
+
+var jsonParams = JSON.parse('[{"objectClass": "LuCustomerIsMainDeliveryRecipient", "pKey": "' + pKey + '", "reference": "luCustomerIsMainDeliveryRecipient"},{"objectClass": "LuCustomerIsMainPayer", "pKey": "' + pKey + '", "reference": "luCustomerIsMainPayer"},{"objectClass": "LuCustomerIsMainBillRecipient", "pKey": "' + pKey + '", "reference": "luCustomerIsMainBillRecipient"},{"objectClass": "LuCustomerIsMainBroker", "pKey": "' + pKey + '", "reference": "luCustomerIsMainBroker"}]');
+
+var promise = Facade.loadLookupsAsync(jsonParams)
+.then(function (lookups) {
+
+  mainDelivRecPKey = lookups.luCustomerIsMainDeliveryRecipient.getFromPKey();
+  if(!Utils.isEmptyString(mainDelivRecPKey)){
+    me.setDeliveryRecipientPKey(mainDelivRecPKey);
+  }
+  
+  mainPayerPKey = lookups.luCustomerIsMainPayer.getFromPKey();
+  if(!Utils.isEmptyString(mainPayerPKey)){
+    me.setPayerCustomerPKey(mainPayerPKey);
+  }
+  
+  mainBillRecPKey = lookups.luCustomerIsMainBillRecipient.getFromPKey();
+  if(!Utils.isEmptyString(mainBillRecPKey)){
+    me.setBillToCustomerPKey(mainBillRecPKey);
+  }
+
+  mainBrokerPKey = lookups.luCustomerIsMainBroker.getFromPKey();
+
+  if (me.getBoOrderMeta().getBrokerRequired() == "0"){
+    //First Found Main Wholesaler or Empty.
+    var isMainBroker = lookups.luCustomerIsMainBroker.getMain();
+    if (Utils.isDefined(mainBrokerPKey) && Utils.isDefined(isMainBroker) && isMainBroker == "1"){
+      me.setBrokerCustomerPKey(mainBrokerPKey);
+    }
+    else{
+      me.setBrokerCustomerPKey(" ");
+    }
+  }
+  else{
+    if (Utils.isDefined(mainBrokerPKey)){
+      //First Found Main Wholesaler or fall back to alphabetically first found wholesaler.
+      me.setBrokerCustomerPKey(mainBrokerPKey);
+    }
+    else{
+      me.setBrokerCustomerPKey(" ");
+    }
+  }
+
+  customerDetailPresent = !Utils.isEmptyString(mainDelivRecPKey) && !Utils.isEmptyString(mainPayerPKey) && !Utils.isEmptyString(mainBillRecPKey);
+
+  return customerDetailPresent;
+})
+.then(function (customerDetailPresent) {
+  if (customerDetailPresent){
+    me.setDeliveryRecipientPKey(mainDelivRecPKey);
+    me.setPayerCustomerPKey(mainPayerPKey);
+    me.setBillToCustomerPKey(mainBillRecPKey);
+
+    return undefined;
+  }
+  else{
+    return BoFactory.loadObjectByParamsAsync("LoBpaRole",me.getQueryBy("customerPKey", me.getOrdererPKey()));
+  }
+
+})
+.then(function (loBpaRole) {
+  if (Utils.isDefined(loBpaRole)){
+    if (Utils.isEmptyString(mainDelivRecPKey)){
+      if (loBpaRole.getHasDeliveryRole() == "1"){
+        me.setDeliveryRecipientPKey(pKey);
+      }
+      else{
+        me.setDeliveryRecipientPKey(" ");
+      }
+    }
+
+
+    if (Utils.isEmptyString(mainPayerPKey)){  
+      if (loBpaRole.getHasPayerRole() == "1"){
+        me.setPayerCustomerPKey(pKey);
+      }
+      else{
+        me.setPayerCustomerPKey(" ");
+      }
+    }  
+
+    if (Utils.isEmptyString(mainBillRecPKey)){  
+      if (loBpaRole.getHasBillToRole() == "1"){
+        me.setBillToCustomerPKey(pKey);
+      }
+      else{
+        me.setBillToCustomerPKey(" ");
+      }
+    } 
+  }
+
+  var jsonParams = JSON.parse('[{"objectClass": "LuDeliveryRecipient", "pKey": "' + me.getDeliveryRecipientPKey() + '", "reference": "luDeliveryRecipient"}, {"objectClass": "LuCustomer", "pKey": "' + me.getBrokerCustomerPKey() + '", "reference": "luBrokerCustomer"}]');
+
+  return Facade.loadLookupsAsync(jsonParams);
+})
+.then(function (lookups) {
+  me.setLuDeliveryRecipient(lookups.luDeliveryRecipient);
+  me.setLuBrokerCustomer(lookups.luBrokerCustomer);
+});]]>
+</Code>
+  <Return name="orderRoles" value="promise" />
+</BusinessLogic>

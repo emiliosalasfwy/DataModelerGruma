@@ -1,0 +1,25 @@
+<BusinessLogic methodName="afterSaveAsync" businessObjectClass="BoUserSettings" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var syncTimeIntervall = me.getSyncTimeIntervall() * 60;
+Facade.startEndlessReplication(syncTimeIntervall, undefined);
+
+var tglQuery = {};
+
+tglQuery.params = [
+  { "field" : "id", "value" : "RpsPictureQuality" },
+  { "field" : "code", "value" : me.getPictureQuality() }
+];
+
+var promise = BoFactory.loadObjectByParamsAsync("LuSysToggleItem", tglQuery).then(
+  function (lusystoggle) {
+    me.setPictureQualityValues(lusystoggle.getValidationCode());
+    me.setObjectStatus(me.self.STATE_UNMODIFIED);
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

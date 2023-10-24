@@ -1,0 +1,11 @@
+<BusinessLogic methodName="determineOver100Reports" businessObjectClass="LoUsrDailyReportOverview" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+    
+       var Over100Reports = "0";
+        if(this.getItemObjects().length > 100){
+          Over100Reports = "1";
+        }
+
+   ]]></Code>
+  <Return name="Over100Reports" value="Over100Reports" />
+</BusinessLogic>

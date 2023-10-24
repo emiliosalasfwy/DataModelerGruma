@@ -1,0 +1,30 @@
+<BusinessLogic methodName="getPicturesCount" businessObjectClass="LoCallAttachments" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var iPictureCount = 0;
+var dictFileTypes = Utils.createDictionary();
+var stateDeleted = STATE.DIRTY | STATE.DELETED;
+var stateNew = STATE.NEW;
+var stateUnmodified = STATE.PERSISTED;
+
+dictFileTypes.add("jpg", "jpg");
+dictFileTypes.add("jpeg", "jpeg");
+dictFileTypes.add("png", "png");
+dictFileTypes.add("gif", "gif");
+dictFileTypes.add("image/jpg", "image/jpg");
+dictFileTypes.add("image/jpeg", "image/jpeg");
+dictFileTypes.add("image/png", "image/png");
+dictFileTypes.add("image/gif", "image/gif");
+
+var listItems = me.getItemsByParamArray([{"objectStatus" : stateDeleted + stateNew, "op" : "NE"},
+                                         {"objectStatus" : stateDeleted + stateUnmodified, "op" : "NE"}]);
+
+//Filter the attachments by Pictures
+for(var i = 0; i < listItems.length; i++) {
+  if(dictFileTypes.containsKey(listItems[i].getFileType())) {
+    iPictureCount = iPictureCount + 1;
+  }
+}]]>
+</Code>
+  <Return name="picturesCount" value="iPictureCount" />
+</BusinessLogic>

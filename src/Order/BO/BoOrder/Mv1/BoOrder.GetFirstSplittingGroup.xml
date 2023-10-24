@@ -1,0 +1,16 @@
+<BusinessLogic methodName="getFirstSplittingGroup" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="availableSplittingGroups" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (availableSplittingGroups === null){
+  availableSplittingGroups = me.getLoSplittingGroups().getAllItems();
+}
+var splittingGroup;
+//Get First Splitting Group
+if (availableSplittingGroups.length > 0) {
+  splittingGroup = availableSplittingGroups[0].splittingGroup;
+}]]>
+</Code>
+  <Return name="splittingGroup" value="splittingGroup" />
+</BusinessLogic>

@@ -1,0 +1,14 @@
+<BusinessLogic methodName="getNavigationProcess" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var navigationId;
+
+if(Utils.isDefined(me.getBoTourMeta().getMobilityStartUserGuidance())) {
+  navigationId = me.getBoTourMeta().getMobilityStartUserGuidance();
+}
+else {
+  navigationId = "None";
+}]]>
+</Code>
+  <Return name="navigationId" value="navigationId" />
+</BusinessLogic>

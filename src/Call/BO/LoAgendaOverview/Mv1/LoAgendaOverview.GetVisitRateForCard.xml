@@ -1,0 +1,72 @@
+<BusinessLogic methodName="getVisitRateForCard" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="setDateFunction" type="String" />
+    <MethodInput name="filterCalls" type="String" />
+    <MethodInput name="currentResponsiblePKey" type="String" />
+    <MethodInput name="cardMode" type="String" />
+    <MethodInput name="currentDate" type="Date" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(currentDate)){
+  currentDate = Utils.createDateByString(Utils.createAnsiDateTimeToday());
+}
+else{
+  currentDate = Utils.createDateByString(currentDate);
+}
+
+var day = currentDate.getDay();
+var sundayAdjustment = (day === 0 ? -7 : 0);
+var mondayOfTheWeek = Utils.createSpecificDate(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() +(1 - day + sundayAdjustment));
+
+var promise = me.getCallsByDate(setDateFunction, filterCalls, Utils.convertFullDate2Ansi(mondayOfTheWeek), Utils.convertFullDate2Ansi(currentDate), currentResponsiblePKey, undefined, cardMode)
+.then(function () {
+
+  var items = me.getAllItems();
+
+  if(items.length > 0){
+    var completedVisitsRow;
+    var plannedVisitsRow;
+    var canceledVisitsRow;
+
+    items.forEach(function(item){
+      if(item.getClbStatus() === "Completed" && !Utils.isDefined(completedVisitsRow)){
+        completedVisitsRow = item;
+      }
+      if(item.getClbStatus() === "Planned" && !Utils.isDefined(plannedVisitsRow)){
+        plannedVisitsRow = item;
+      }
+      if(item.getClbStatus() === "Abandoned" && !Utils.isDefined(canceledVisitsRow)){
+        canceledVisitsRow = item;
+      }
+    });
+
+    var completedVisits = 0;
+    if(Utils.isDefined(completedVisitsRow)){
+      completedVisits = completedVisitsRow.clbStatusCount;
+    }
+
+    var plannedVisits = 0;
+    if(Utils.isDefined(plannedVisitsRow)){
+      plannedVisits = plannedVisitsRow.clbStatusCount;
+    }
+
+    var canceledVisits = 0;
+    if(Utils.isDefined(canceledVisitsRow)){
+      canceledVisits = canceledVisitsRow.clbStatusCount;
+    }
+
+    var numberOfRelevantCalls = completedVisits + plannedVisits + canceledVisits;
+    if(numberOfRelevantCalls === 0 || completedVisits === 0) {
+      return 0;
+    }
+    else {
+      return Number.parseFloat((completedVisits/numberOfRelevantCalls) * 100).toFixed(1);
+    }
+
+  } else {
+    return 0;
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

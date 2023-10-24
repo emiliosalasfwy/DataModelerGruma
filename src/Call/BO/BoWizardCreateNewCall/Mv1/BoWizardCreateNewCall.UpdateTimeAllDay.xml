@@ -1,0 +1,9 @@
+<BusinessLogic methodName="updateTimeAllDay" businessObjectClass="BoWizardCreateNewCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getTimeFrom()) && me.getAllDay() == "1") {
+  me.setTimeFrom(Utils.createAnsiTimeNow());
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

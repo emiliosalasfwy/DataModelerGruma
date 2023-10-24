@@ -1,0 +1,28 @@
+<BusinessLogic methodName="isOrderOnDemandDataAvailable" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customerPKey" type="Object" />
+    <MethodInput name="orderPKey" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var availabilityPromises = [];
+
+if(Utils.isSfBackend() && Utils.isDefined(customerPKey) && !Utils.isEmptyString(customerPKey) && !me.isLocalID(customerPKey)){
+  var request = new BatchNftRequest();
+  // only necessary in case the sync after startup is still running
+  availabilityPromises.push(me.executeRequestsAsync([{"dataSource": "DsBoSfReplicationCallbacks", "dataSourceMethod" : "UnmanagedDeliveryRecipients", "jsonParams" : { "customerPKey": customerPKey }, "uniqueReturnKey" : "UnmanagedDeliveryRecipients" }]).then(
+    function (accountIds){
+      if (accountIds.length > 0){
+        var idsOfDeliveryRecipients = me.removeLocalIDs(me.getPropertyValuesFromArray(accountIds.UnmanagedDeliveryRecipients, "AccountID"));
+        request.addRequest('NFT_Account_Header', idsOfDeliveryRecipients);
+      }
+      return me.addOrderNftsToRequest(request, customerPKey, orderPKey).then(
+        function (orderNftRequest){
+          return Facade.getBatchSfOnDemandDataAvailabilityAsync(orderNftRequest); 
+        });
+    }));
+}
+
+var promise = when.reduce(availabilityPromises, me.evaluateAvailabilityResult, 1);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

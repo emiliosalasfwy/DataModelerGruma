@@ -1,0 +1,56 @@
+<BusinessLogic methodName="createDisplayInformationForUoMItem" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="unitOfMeasureItem" type="Object" />
+    <MethodInput name="userPKey" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var unitInformation = [];
+unitInformation.unitInformationForTruckInventory = "";
+unitInformation. unitInformationForFreeItems = "";
+if(me.getBoOrderMeta().getItemPresettingPolicy() !== "Prepopulated")
+{
+  if(unitOfMeasureItem.getQuantity()!== null)
+  {
+    if(me.getMode() === "ReviewStock" && !(Utils.isEmptyString(unitOfMeasureItem.getQuantityLogisticUnit())))
+    {
+      unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getTargetQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit()) + " ";
+      unitInformation.unitInformationForFreeItems = unitOfMeasureItem.getTargetQuantityForFreeItems()+ " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit()) + " ";
+
+    }
+    else 
+    {
+      unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+    }   
+
+  }
+  else
+  {
+    unitInformation.unitInformationForTruckInventory = Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+  }
+
+}
+//Check on Recipient In - Fake Inward document
+else if( me.getDocumentType() == "TruckIvcTransferOutward" && me.getPhase() == "Released" && me.getRecipientPKey() == userPKey && Utils.isEmptyString(me.getInwardTransferDocumentPKey())){
+  unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getQuantity() + "/" + unitOfMeasureItem.getQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+}
+//Check on Sender back In - Fake Inward document
+else if( me.getDocumentType() == "TruckIvcTransferInward" && me.getPhase() == "Canceled" && me.getSenderPKey() == userPKey && Utils.isEmptyString(me.getInwardTransferDocumentPKey())){
+  unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getQuantity() + "/" + unitOfMeasureItem.getQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+}
+else
+{
+  if(!(Utils.isEmptyString(unitOfMeasureItem.getQuantityLogisticUnit())))
+  {
+    if(me.getMode() === "ReviewStock")
+    {
+      unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getTargetQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit()) + " ";
+      unitInformation.unitInformationForFreeItems = unitOfMeasureItem.getTargetQuantityForFreeItems()+ " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit())+ " ";
+
+    }
+    else 
+    {
+      unitInformation.unitInformationForTruckInventory = unitOfMeasureItem.getTargetQuantity() + "/" + unitOfMeasureItem.getQuantity() + " " + Utils.getToggleText("DomPrdLogisticUnit", unitOfMeasureItem.getQuantityLogisticUnit());
+    }
+  }
+}]]></Code>
+  <Return name="unitInformation" value="unitInformation" />
+</BusinessLogic>

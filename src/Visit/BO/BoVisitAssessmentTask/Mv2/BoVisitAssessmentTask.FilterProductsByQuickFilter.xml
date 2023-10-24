@@ -1,0 +1,40 @@
+<BusinessLogic methodName="filterProductsByQuickFilter" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="items" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loProductCategoryQuickFilter = me.getLoProductCategoryQuickFilter();
+var loPrimaryRetailVisitKPI = me.getLoPrimaryRetailVisitKPI();
+
+loPrimaryRetailVisitKPI.resetAllFilters();
+me.setCategoryFilter(null);
+
+
+var previousAppliedGroup = loProductCategoryQuickFilter.getItemsByParam({"isSelected": true});
+var currentAppliedGroup = loProductCategoryQuickFilter.getItemsByParam({"text": items[0].text});
+
+
+
+//Update LoProductQuickFilter with current filter
+if(previousAppliedGroup.length > 0 && previousAppliedGroup[0].getText() !== items[0].text){
+  previousAppliedGroup[0].setIsSelected(false);
+  if(items[0].specialOption !== "CLEAR"){
+    currentAppliedGroup[0].setIsSelected(true);
+  }
+} else if(previousAppliedGroup.length === 0 && items[0].specialOption !== "CLEAR"){
+  currentAppliedGroup[0].setIsSelected(true);
+}
+
+//Apply filter on main list items 
+if(items[0].specialOption !== "CLEAR"){
+  me.setCategoryFilter(items[0].text);
+  var filterArray = [];
+  filterArray.push({"productCategoryName": items[0].text, "op": "EQ"});
+  if(Utils.isDefined(me.getLocationFilter()) && !Utils.isEmptyString(me.getLocationFilter()))filterArray.push({"inStoreLocationName": me.getLocationFilter(), "op": "EQ"});
+  loPrimaryRetailVisitKPI.setFilterArray(filterArray);
+}else{
+  if(Utils.isDefined(me.getLocationFilter()) && !Utils.isEmptyString(me.getLocationFilter()))loPrimaryRetailVisitKPI.setFilterArray([{"inStoreLocationName": me.getLocationFilter(), "op": "EQ"}]);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

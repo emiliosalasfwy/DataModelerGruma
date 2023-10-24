@@ -1,0 +1,43 @@
+<BusinessLogic methodName="esSetSignatureAttributes" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingDocument" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+//get the signature Bo
+var signatureBo = me.getReleaseProcessBo();
+
+if(Utils.isDefined(signatureBo))
+{
+  //set the splitting document as reference
+  signatureBo.setReferenceObject(splittingDocument);
+
+  //setting a new attribute list for the signature bo
+  signatureBo.setLoSysSignatureAttribute(BoFactory.instantiate("LoSysSignatureAttribute"));
+
+  //creating the mapping
+  signatureBo.createAttributeMapping();
+
+  //copy over that list
+  promise = signatureBo.mapSignatureInformationToRefObject()
+    .then(
+    function()
+    {
+      //now we have to update the pkeys of the blobs
+      var signatureBlobs = splittingDocument.getLoSysSignatureBlob().getAllItems();
+      signatureBlobs.forEach(
+        function(x)
+        {
+          x.setPKey(PKey.next());
+        });     
+    }
+  );
+}
+else
+{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

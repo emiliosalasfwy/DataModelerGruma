@@ -1,0 +1,16 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoEtpWarehouseProducts" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[for (var index in context.jsonQuery.params) {
+  if (context.jsonQuery.params[index].field === 'asoName') {
+    context.jsonQuery.params[index].value = 'AsoEtpProductForAdd';
+    break;
+  }
+}
+
+var promise = when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

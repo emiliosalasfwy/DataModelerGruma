@@ -1,0 +1,47 @@
+<BusinessLogic methodName="deleteAutomaticCalls" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var functions = [];
+var seqence_arguments = [];
+var visits = me.getAllItems();
+var currentUsrMainPKey = ApplicationContext.get('user').getPKey();
+Facade.startTransaction();
+
+if(Utils.isDefined(visits) && visits.length > 0){
+  for(var index = 0; index < visits.length; index++){
+    if(visits[index].getClbStatus() === "Planned" && visits[index].getCreationMode() === "Automatically" && visits[index].initiatorPKey === currentUsrMainPKey){
+      var jsonQuery = {};
+      var jsonParams = [];
+      jsonParams.push({
+        "field" : "pKey",
+        "operator" : "EQ",
+        "value" : visits[index].getPKey()
+      });
+      jsonQuery.params = jsonParams;
+      seqence_arguments.push(jsonQuery);
+      functions.push(deleteBoCall);
+    }
+  }
+}
+var allfinished = when_sequence(functions, seqence_arguments)
+.then(function () {
+  return Facade.commitTransaction();
+});
+function deleteBoCall(args) {
+  var query = args[0];
+  var boCall;
+  var promise = BoFactory.loadObjectByParamsAsync("BoCall", query)
+  .then(function (object) {
+    boCall = object;
+    return boCall.setDeleted();
+  }).then(function () {
+    return boCall.updateJobListMagnetization();
+  }).then(function () {
+    return boCall.saveAsync();
+  });
+  args.shift();
+  return promise;
+}]]>
+</Code>
+  <Return name="returnName" value="allfinished" />
+</BusinessLogic>

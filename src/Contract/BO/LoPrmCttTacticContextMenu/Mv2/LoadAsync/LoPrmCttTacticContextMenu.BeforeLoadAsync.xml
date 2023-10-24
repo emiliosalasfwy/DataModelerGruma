@@ -1,0 +1,29 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPrmCttTacticContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQueryNew = context.jsonQuery,
+    boContract = jsonQueryNew.boContract,
+    sContractPhase = boContract.getPhase(),
+    contextMenuItemList= [],  
+    menuEntry0 = { "id" : "0000001",
+  		"actionImg" : "TrashcanDarkGrey24",
+	  	"actionId" : "Delete",
+		"processEvent" : "Delete",
+   		"actionEnabled" : "1"},
+    userPKey = ApplicationContext.get('user').getPKey();
+   
+   contextMenuItemList.push(menuEntry0);
+    
+  // The User must be the responsible of the contract in order to delete a tactic. This prevents that a subsitute user can delete tactics.
+  if (!boContract.isContractEditable() || boContract.getResponsiblePKey() != userPKey)
+  {     
+      menuEntry0.actionEnabled = "0";
+  }
+  
+    this.addItems(contextMenuItemList);
+	 var result = when.resolve(this);]]>
+</Code>
+  <Return name="LoPrmCttTacticContextMenu" value="result" />
+</BusinessLogic>

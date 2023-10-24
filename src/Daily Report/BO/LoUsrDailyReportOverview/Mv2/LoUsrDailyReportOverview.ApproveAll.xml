@@ -1,0 +1,43 @@
+<BusinessLogic methodName="approveAll" businessObjectClass="LoUsrDailyReportOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var setWorkflowStateAndSave = function (boUserDailyReport) {
+  AppLog.log("loaded DR: " + boUserDailyReport.getPKey() + "  " + boUserDailyReport.getPhase());
+
+  var currentUser = ApplicationContext.get('user').getPKey();
+  //Check if current user is responsible
+  if (currentUser === boUserDailyReport.getResponsiblePKey()) {
+    return boUserDailyReport.setNextWorkflowState("Approve").then(
+      function (boUserDailyReport2Save) {
+        return boUserDailyReport2Save.saveAsync();
+      });
+  } 
+  else {
+    AppLog.log("not responsible for DR: " + boUserDailyReport.getPKey());
+  }
+};
+
+var promise = Utils.showLoadMask("UserDailyReport_ApproveAllWaitCursorLabel", true, null, function () {
+  var currentDailyReportOverviewItems = Framework.getProcessContext().dailyReportList.getItemObjects().slice();
+  var numberOfRecordsForApproval = Math.min(currentDailyReportOverviewItems.length, 499);
+  var deferreds = [];
+
+  Facade.startTransaction();
+
+  for (var idxOverviewItems = 0; idxOverviewItems < numberOfRecordsForApproval; idxOverviewItems++) {
+    if (currentDailyReportOverviewItems[idxOverviewItems].getApprovable() === '1') {
+      deferreds.push(BoFactory.loadObjectAsync("BoUserDailyReport", currentDailyReportOverviewItems[idxOverviewItems].getPKey()).then(setWorkflowStateAndSave));
+    }
+  }
+
+  return when.all(deferreds).then(
+    function () {
+      return Facade.commitTransaction();
+    }).then(
+    function () {
+      Utils.hideLoadMask();
+    });
+});]]>
+</Code>
+  <Return name="approveAll" value="promise" />
+</BusinessLogic>

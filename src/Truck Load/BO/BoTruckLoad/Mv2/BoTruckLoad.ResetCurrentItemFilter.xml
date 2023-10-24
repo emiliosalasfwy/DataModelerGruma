@@ -1,0 +1,9 @@
+<BusinessLogic methodName="resetCurrentItemFilter" businessObjectClass="BoTruckLoad" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+   <Parameters />
+  <Code language="JavaScript"><![CDATA[// Reset filters of image selector 
+   
+      this.getLoItems().resetFilterArray(["promoted", "newState", "history", "outOfStock", "quantity"]);
+     
+     ]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

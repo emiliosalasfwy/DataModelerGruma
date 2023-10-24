@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getMainAddress" businessObjectClass="LoBpaAddress" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+		var me = this;
+		var oMainAddress;
+		
+		var parameters = {"main":"1"};
+		var oCustAddresses = me.getItemsByParam(parameters); 
+		
+		 if (oCustAddresses.length === 1) 
+		 {
+            oMainAddress = oCustAddresses[0];
+         }
+   ]]></Code>
+  <Return name="mainAddress" value="oMainAddress" />
+</BusinessLogic>

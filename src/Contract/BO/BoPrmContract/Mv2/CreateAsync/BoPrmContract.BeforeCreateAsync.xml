@@ -1,0 +1,27 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoPrmContract" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise = when.resolve(context);
+var jsonParamDictionary = Utils.convertDsParamsOldToNew(context.jsonQuery);
+
+// set responsible / owner
+if (Utils.isSfBackend())
+{
+  if (!Utils.isEmptyString(jsonParamDictionary.substitutedUsrPKey)) {
+
+    jsonParamDictionary.responsiblePKey = jsonParamDictionary.substitutedUsrPKey;
+    jsonParamDictionary.ownerPKey = jsonParamDictionary.substitutedUsrPKey;
+  }
+}
+else
+{
+  if (!Utils.isEmptyString(jsonParamDictionary.isManagedCustomer) && jsonParamDictionary.isManagedCustomer.getId() == "0" && !Utils.isEmptyString(jsonParamDictionary.substitutedUsrPKey)) {
+
+    jsonParamDictionary.responsiblePKey = jsonParamDictionary.substitutedUsrPKey;
+    jsonParamDictionary.ownerPKey = jsonParamDictionary.substitutedUsrPKey;
+  }
+}
+context.jsonQuery = Utils.convertDsParamsNewToOld(jsonParamDictionary);]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

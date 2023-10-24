@@ -1,0 +1,52 @@
+<BusinessLogic methodName="determineItemSplittingGroups" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="LiOrderItem" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var splittingRule = me.getSplittingRule();
+
+// If the splitting rule is not defined, return 
+if(me.isGroupingEnabled() && !Utils.isEmptyString(splittingRule))
+{
+  var splittingRuleFunc;
+  // Get the splittng rule
+  switch(splittingRule)
+  {
+    case "DeliveryReturn":
+      splittingRuleFunc = me.invoiceSplittingRule_DeliveryReturn;
+      break;
+    case "DelRetPrdType":
+      splittingRuleFunc = me.invoiceSplittingRule_DelRetPrdType;
+      break;
+  }
+
+  var determineSplittingGroupForItem = function(item){
+
+    // Do not add splitting group for free items
+    if(Utils.isEmptyString(item.getSdoParentItemPKey()))
+    {
+      // we have to pass a reference to the order because java script messes up the this reference
+      splittingRuleFunc(item, me);
+    }
+  };
+
+
+  //If item is passed, then get the splitting group for the item otherwise do it for all
+  if(Utils.isDefined(item))
+  {
+    determineSplittingGroupForItem(item);
+  }
+  else if(Utils.isDefined(me.getLoItems()))
+  {
+    var items = me.getLoItems().getAllItems();
+    for(var i=0; i < items.length; i++)
+    {
+      determineSplittingGroupForItem(items[i]);
+    }
+  }
+
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

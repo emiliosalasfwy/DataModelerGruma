@@ -1,0 +1,10 @@
+<BusinessLogic methodName="savePOS" businessObjectClass="BoCustomer" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="CurrentPos" type="BoPos" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+		CurrentPos.saveAsync();
+
+		]]></Code>
+</BusinessLogic>

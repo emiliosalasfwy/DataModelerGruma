@@ -1,0 +1,7 @@
+<BusinessLogic methodName="checkBoMTabVisible" businessObjectClass="BoProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var bVisible = true;]]>
+</Code>
+  <Return name="result" value="bVisible" />
+</BusinessLogic>

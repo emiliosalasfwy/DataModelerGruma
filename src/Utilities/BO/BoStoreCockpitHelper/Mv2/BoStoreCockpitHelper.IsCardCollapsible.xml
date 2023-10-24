@@ -1,0 +1,30 @@
+<BusinessLogic methodName="isCardCollapsible" businessObjectClass="BoStoreCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="cardName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var collapsible = false;
+
+switch (cardName) {
+
+  case 'CardHeader':
+  case 'CardSellIns':
+  case 'CardReportingSurveyExceptions':
+  case 'CardOrderHistory':
+  case 'CardCustomerTasks':
+  case 'CardPicture':
+  case 'CardMobileLinks':
+  case 'CardQuickAccess':
+  case 'CardCallNotes':
+  case 'CardActivityPerformance':
+  case 'CardAccountReceivables':
+  case 'CardFollowUpVisits':    
+  case 'VisitTasks':
+  case 'VisitDetails':
+  case 'RetailStoreCockpit_CardOrderHistory':
+    collapsible = true;
+    break;
+}]]>
+</Code>
+  <Return name="collapsible" value="collapsible" />
+</BusinessLogic>

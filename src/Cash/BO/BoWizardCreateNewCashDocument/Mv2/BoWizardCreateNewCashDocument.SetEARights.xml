@@ -1,0 +1,20 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardCreateNewCashDocument" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+
+var multipleWarehousesAllowed = "0";
+  if(Utils.isDefined(ApplicationContext.get('currentTour'))){
+  multipleWarehousesAllowed = ApplicationContext.get('currentTour').getConsiderMultipleWarehouses();
+  }
+
+if(multipleWarehousesAllowed === "0"){
+  me.getACL().removeRight(AclObjectType.OBJECT, "luEtpWarehouse", AclPermission.VISIBLE); 
+  me.getLuEtpWarehouse().getACL().removeRight(AclObjectType.PROPERTY, "text", AclPermission.VISIBLE); 
+
+  
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

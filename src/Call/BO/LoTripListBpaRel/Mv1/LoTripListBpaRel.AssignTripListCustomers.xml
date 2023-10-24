@@ -1,0 +1,38 @@
+<BusinessLogic methodName="assignTripListCustomers" businessObjectClass="LoTripListBpaRel" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tplMainPKey" type="String" />
+    <MethodInput name="metaType" type="String" />
+    <MethodInput name="validFrom" type="String" />
+    <MethodInput name="validThru" type="String" />
+    <MethodInput name="selectedDay" type="DomInteger" />
+    <MethodInput name="overviewList" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var customerList = overviewList.getItemsByParamArray([{"bpaMainPKey": " ", "op":"NE"}]);
+
+var j = 0;
+for(var i=0; i < customerList.length; i++) {
+  if(customerList[i].getClbStatus() === "Planned" || customerList[i].getClbStatus() === "Completed") {
+    var dateFrom = Utils.convertAnsiDate2Date(customerList[i].getDateFrom());
+    var dayOfWeek = dateFrom.getDay();
+    if(metaType === "Daily" && selectedDay == dayOfWeek) {
+      //Used for the sort value in case of metaType != 'Weekly'
+      j = j +1;
+    }
+    if((metaType === "Weekly") || (metaType === "Daily" && selectedDay == dayOfWeek)) {
+      me.addListItems([{
+        "pKey" : PKey.next(),
+        "tplMainPKey" : tplMainPKey,
+        "dayOfWeek" : metaType === "Weekly" ? dayOfWeek : 0,
+        "bpaMainPKey" : customerList[i].bpaMainPKey,
+        "validFrom" : validFrom,
+        "validThru" : validThru,
+        "sort" : metaType === "Weekly" ? i+1 : j,
+        "objectStatus" : STATE.NEW | STATE.DIRTY
+      }]);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

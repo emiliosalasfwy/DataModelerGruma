@@ -1,0 +1,26 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getObjectAsync(BO_WORKFLOW, jsonQuery).then(
+  function (selfJson) {      
+    me.setProperties(selfJson);
+
+    return BoFactory.loadListAsync(LO_WFESTATE, me.getQueryBy("wfeWorkflowPKey", me.getPKey()));
+  }).then(
+  function (object) {
+    me.setLoWfeState(object);
+
+    return BoFactory.loadListAsync(LO_WFESTATETRANSITIONS,  me.getQueryBy("wfeWorkflowPKey", me.getPKey()));
+  }).then(
+  function (object) {
+    me.setLoWfeStateTransitions(object);
+    me.setObjectStatus(STATE.PERSISTED);
+
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="boWorkflow" value="promise" />
+</BusinessLogic>

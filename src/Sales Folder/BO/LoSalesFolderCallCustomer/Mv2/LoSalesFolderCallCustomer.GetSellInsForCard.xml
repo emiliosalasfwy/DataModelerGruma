@@ -1,0 +1,65 @@
+<BusinessLogic methodName="getSellInsForCard" businessObjectClass="LoSalesFolderCallCustomer" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="currentCustomerPKey" type="String" />
+    <MethodInput name="callDate" type="String" />
+    <MethodInput name="leadTime" type="String" />
+    <MethodInput name="callDateThru" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+jsonQuery.params = [{
+  "field" : "currentCustomerPKey",
+  "operator" : "EQ",
+  "value" : currentCustomerPKey
+},{
+  "field" : "callDate",
+  "operator" : "EQ",
+  "value" : callDate
+}];
+
+if(Utils.isSfBackend()) {
+  jsonQuery.params.push({
+    "field" : "callDateThru",
+    "operator" : "EQ",
+    "value" : callDateThru
+  });
+} else {
+  jsonQuery.params.push({
+    "field" : "leadTime",
+    "operator" : "EQ",
+    "value" : leadTime
+  });
+}
+
+var promise = Facade.getListAsync("LoSalesFolderCallCustomer", jsonQuery)
+.then(function(sellIns) {
+  var numberVisibleCalls = numberOfListItems;
+  var dateFrom;
+  var dateThru;
+
+  if(!Utils.isDefined(numberVisibleCalls)){
+    numberVisibleCalls = Utils.isPhone() ? 3 : 5;
+  }
+  me.cardItemCount = sellIns.length;
+  sellIns = sellIns.splice(0, numberVisibleCalls);
+
+  for(var i = 0; i < sellIns.length; i++){	
+    if(Utils.isSfBackend()){
+      dateFrom = Localization.localize(Utils.convertFullDate2Ansi(Utils.createDateByMilliSec(Utils.unixepochToTicks(sellIns[i].dateFrom))), "date");
+      dateThru = Localization.localize(Utils.convertFullDate2Ansi(Utils.createDateByMilliSec(Utils.unixepochToTicks(sellIns[i].dateThru))), "date");
+    }
+    else{
+      dateFrom = Localization.localize(sellIns[i].dateFrom, "date");
+      dateThru = Localization.localize(sellIns[i].dateThru, "date");
+    }
+    sellIns[i].dateText = dateFrom + " - " + dateThru;
+  }
+
+  me.removeAllItems();
+  me.addItems(sellIns);
+  return me;
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

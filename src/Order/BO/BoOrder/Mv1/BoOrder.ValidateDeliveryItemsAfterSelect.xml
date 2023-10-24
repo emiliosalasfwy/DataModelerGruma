@@ -1,0 +1,62 @@
+<BusinessLogic methodName="validateDeliveryItemsAfterSelect" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="eventPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var previousPKey = "";
+var promise = when.resolve(previousPKey);
+
+if (me.getBoOrderMeta().getSdoSubType() == "Delivery")
+{
+  var newError;
+  var itemMeta;
+  var itemMetas = me.getBoOrderMeta().getItemMetaJsonDictionary();
+  var message;
+  var itemName;
+  var item = me.getBoItemTabManager().getCurrentSelectedOrderItem();
+
+  if (!Utils.isDefined(item))
+  {
+    item = me.getLoItems().getItems().getAt(0);
+  }
+
+  if (Utils.isDefined(item) && eventPKey !== item.getPKey())
+  {
+    var unitOfMeasureItems = me.getLoItems().getUnitOfMeasureItemsForMainItem(item);
+
+    for (var i = 0; i < unitOfMeasureItems.length; i++)
+    {
+      var unitOfMeasureItem = unitOfMeasureItems[i];
+
+      //if Item was changed
+      if (unitOfMeasureItem.getObjectStatus() == "3" || unitOfMeasureItem.getObjectStatus() == "5")
+      {
+        itemMeta = itemMetas.get(item.getSdoItemMetaPKey());
+        if (me.getBoOrderMeta().getConsiderItemModReason() == "1" &&
+            itemMeta.modReasonRequired == "Mand" &&
+            unitOfMeasureItem.getSuggestedQuantity() !== 0 &&
+            unitOfMeasureItem.getSuggestedQuantity() != unitOfMeasureItem.getQuantity() &&
+            unitOfMeasureItem.getModReason() == " ")
+        {
+
+          itemName = item.getText1();
+          message = Localization.resolve("ReasonMessage");
+          previousPKey = unitOfMeasureItem.getPKey();
+          var buttonValues = {};
+          buttonValues[Localization.resolve("Back")] = "back";
+
+          promise = MessageBox.displayMessage(itemName, message,buttonValues)
+            .then(
+            function (result)
+            {
+              return previousPKey;
+            }
+          );
+        }
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="previousPKey" value="promise" />
+</BusinessLogic>

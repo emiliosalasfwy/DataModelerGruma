@@ -1,0 +1,37 @@
+<BusinessLogic methodName="filterProductDiscrepancies" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="DomPKey" />
+    <MethodInput name="boCall" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items;
+var quickFilterApplied;
+var loCurrentPOS = me.getLoPOS().getItemsByParam({"posId": posId});
+
+boCall.getLoProductQuickFilter().onTabChange(boCall);
+quickFilterApplied = boCall.getLoProductQuickFilter().getItemsByParam({"isSelected": true});
+
+if (loCurrentPOS.length > 0) {
+  var liCurrentPOS = loCurrentPOS[0];
+  me.getLoPOS().setCurrent(liCurrentPOS);
+  var loProducts = liCurrentPOS.getSurveyProducts();
+
+  loProducts.resetFilter("planned");
+  if(quickFilterApplied.length > 0) {
+    var category = quickFilterApplied[0].text;
+    loProducts.resetFilter("category");
+    loProducts.setFilterArray([{"category": category, "op": "EQ"}, {"hasDiscrepance": "1", "op": "EQ"}]);
+  }
+  else {
+    loProducts.setFilter("hasDiscrepance", "1", "EQ");
+  }
+
+  loProducts.refreshUI();
+
+  if (loProducts.getCount() > 0) {
+    loProducts.setCurrent(loProducts.getItems()[0]);
+  }
+}]]>
+</Code>
+  <Return name="posId" value="posId" />
+</BusinessLogic>

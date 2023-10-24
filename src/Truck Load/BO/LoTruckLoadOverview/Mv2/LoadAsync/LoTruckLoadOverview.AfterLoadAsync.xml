@@ -1,0 +1,28 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoTruckLoadOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var idxRemoveElement = [];
+var navigation;
+if (Utils.isDefined(Framework.getProcessContext().navigationMode)){
+  navigation = Framework.getProcessContext().navigationMode;
+}
+if(items.length > 0){
+  for(var i = 0; i < items.length; i++) {  
+    if((items[i].getDocumentType() === "TruckIvcTransferOutward" || items[i].getDocumentType() === "TruckIvcTransferInward") && (navigation === "StartOfDay" || navigation === "EndOfDay")){
+      idxRemoveElement.push(i);
+    }
+  }
+}
+for(var idR = idxRemoveElement.length-1; idR >=0; idR--){
+  items.splice(idxRemoveElement[idR], 1);
+}
+this.removeAllItems();
+this.addObjectItems(items);
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

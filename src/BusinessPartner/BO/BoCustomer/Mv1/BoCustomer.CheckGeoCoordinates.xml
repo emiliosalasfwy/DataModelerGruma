@@ -1,0 +1,9 @@
+<BusinessLogic methodName="checkGeoCoordinates" businessObjectClass="BoCustomer" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+var geoCoordinatesOK = '1';
+if (this.getLoCustomerAddress().getMainAddress().getLongitude() === 0 && this.getLoCustomerAddress().getMainAddress().getLatitude() === 0) {
+geoCoordinatesOK = '0';
+}
+]]></Code>
+  <Return name="geoCoordinatesOK" value="geoCoordinatesOK"></Return>
+</BusinessLogic>

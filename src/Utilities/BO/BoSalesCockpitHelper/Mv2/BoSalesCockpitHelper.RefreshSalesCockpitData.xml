@@ -1,0 +1,66 @@
+<BusinessLogic methodName="refreshSalesCockpitData" businessObjectClass="BoSalesCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="cardDate" type="DomDate" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dateText = " ";
+
+if(me.dsdMode == "1") {
+  dateText = Localization.localize(Utils.createDateNow(), "date", "dddd, MMMM D");
+}
+
+me.setCardUserWelcome_DateText(dateText);
+
+var isTourUser = ApplicationContext.get('user').hasRole('TourUser');
+me.setIsTourUser(isTourUser);
+
+var cardVisits_emptyMainMessage = "";
+var cardVisits_emptySubMessage = "";
+
+var cardTasks_emptyMainMessage = "";
+var cardTasks_emptySubMessage = "";
+
+var cardCustomerTasks_emptyMainMessage = "";
+var cardCustomerTasks_emptySubMessage = "";
+
+var cardCustomersOverdue_emptyMainMessage = "";
+
+if(me.dsdMode == "1") {
+  cardVisits_emptyMainMessage = Localization.resolve("CardVisits_NoDataMessageMainTourText");
+}
+else if(Utils.createAnsiDateToday() == cardDate) {
+  cardVisits_emptyMainMessage = Localization.resolve("CardVisits_NoDataMessageMainText");
+  cardVisits_emptySubMessage = Localization.resolve("CardVisits_NoDataMessageSubText");
+
+  cardTasks_emptyMainMessage = Localization.resolve("CardTasks_NoDataMessageMainText");
+  cardTasks_emptySubMessage = Localization.resolve("CardTasks_NoDataMessageSubText");
+
+  cardCustomerTasks_emptyMainMessage = Localization.resolve("CardTasks_NoDataMessageMainText");
+  cardCustomerTasks_emptySubMessage = Localization.resolve("CardTasks_NoDataMessageSubText");
+}
+else {
+  cardVisits_emptyMainMessage = Localization.resolve("CardVisits_NoDataMessageMainDateText");
+  cardVisits_emptySubMessage = Localization.resolve("CardVisits_NoDataMessageSubText");
+
+  cardTasks_emptyMainMessage = Localization.resolve("CardTasks_NoDataMessageMainDateText");
+  cardTasks_emptySubMessage = Localization.resolve("CardTasks_NoDataMessageMainDateSubText");
+
+  cardCustomerTasks_emptyMainMessage = Localization.resolve("CardTasks_NoDataMessageMainDateText");
+  cardCustomerTasks_emptySubMessage = Localization.resolve("CardTasks_NoDataMessageMainDateSubText");
+}
+
+cardCustomersOverdue_emptyMainMessage = Localization.resolve("CardCustomersOverdue_NoDataMessageMainText");
+
+me.setCardVisits_emptyMainMessage(cardVisits_emptyMainMessage);
+me.setCardVisits_emptySubMessage(cardVisits_emptySubMessage);
+
+me.setCardTasks_emptyMainMessage(cardTasks_emptyMainMessage);
+me.setCardTasks_emptySubMessage(cardTasks_emptySubMessage);
+
+me.setCardCustomerTasks_emptyMainMessage(cardCustomerTasks_emptyMainMessage);
+me.setCardCustomerTasks_emptySubMessage(cardCustomerTasks_emptySubMessage);
+
+me.setCardCustomersOverdue_emptyMainMessage(cardCustomersOverdue_emptyMainMessage);]]>
+</Code>
+  <Return name="result" value="me" />
+</BusinessLogic>

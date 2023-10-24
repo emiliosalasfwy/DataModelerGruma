@@ -1,0 +1,25 @@
+<BusinessLogic methodName="showMessageBox" businessObjectClass="LoCallAttachments" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+    var showBox = false;
+    var errorJson = Facade.getErrorDetails();
+    var promise;
+	if (Utils.isDefined(errorJson) && errorJson.success == true) {
+		   // for picture taking use case if errorJson.success is true it means user clicks on the cancel button or didn't select any image from the gallery.
+           promise = when.resolve(showBox);
+    } else {
+          showBox = true;
+          var buttonValues = {};
+          buttonValues[Localization.resolve("OK")] = "ok";
+          promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbSomethingWentWrong"), buttonValues) 
+            .then(function (input) {	
+ 				   return showBox;
+             }, function () {
+                   return false;
+             }).catch(function(){
+                   return false;
+             });
+    }
+]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

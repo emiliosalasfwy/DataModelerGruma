@@ -1,0 +1,15 @@
+<BusinessLogic methodName="checkProductTabVisible" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this,
+    luMeta = me.getLuPrmMeta(),
+    bVisible = true;
+if(Utils.isDefined(luMeta)) {
+		if((luMeta.getPrdAssortmentPolicy() == "No") && (luMeta.getPrdPolicy()== "No"))
+		{
+			bVisible = false;
+		}
+}]]>
+</Code>
+  <Return name="result" value="bVisible" />
+</BusinessLogic>

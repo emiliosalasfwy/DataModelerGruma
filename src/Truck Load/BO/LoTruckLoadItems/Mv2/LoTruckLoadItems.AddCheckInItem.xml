@@ -1,0 +1,142 @@
+<BusinessLogic methodName="addCheckInItem" businessObjectClass="LoTruckLoadItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="checkInDocumentPKey" type="DomPKey" />
+    <MethodInput name="inventoryMeta" type="LiInventoryMetaByItemMeta" />
+    <MethodInput name="inventoryItem" type="LiInventoryFinding" />
+    <MethodInput name="itemTemplate" type="LiOrderItemMeta" />
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// - Creates new truck load item
+// - Return: New truck load item
+
+var truckLoadItem = {
+  pKey: PKey.next(),
+  sdoMainPKey: checkInDocumentPKey,
+  text1: " ",
+  prdId: " ",
+  sdoParentItemPKey: " ",
+  quantityLogisticUnit: " ",
+  quantity: 0,
+  targetQuantity: 0,
+  suggestedQuantity: 0,
+  piecesPerSmallestUnit: 0,
+  basePrice: 0,
+  basePriceReceipt: 0,
+  price: 0,
+  priceReceipt: 0,
+  specialPrice: 0,
+  specialPriceReceipt: 0,
+  valueReceipt: 0,
+  grossValue: 0,
+  grossValueReceipt: 0,
+  promoted: "0",
+  listed: "0",
+  history: "0",
+  outOfStock: "0",
+  discount: "0",
+  erpId: " ",
+  freeItemCreationStep: " ",
+  modReason: " ",
+  priceEffect: itemTemplate.getPriceEffect(),
+  calculationGroup: itemTemplate.getCalculationGroup(),
+  saveZeroQuantity: itemTemplate.getSaveZeroQuantity(),
+  shortText: itemTemplate.getShortText(),
+  metaId: " ",
+  freeItemBalance: 0,
+};
+
+// this section will not be executed for "rest" items (if balance/ivc quantity to order unit qty conversion delivers a rest)
+if (Utils.isDefined(inventoryMeta) && Utils.isDefined(inventoryItem)) {
+  truckLoadItem.sdoItemMetaPKey = inventoryMeta.getSdoItemMetaPKey();
+  truckLoadItem.prdMainPKey = inventoryItem.getPrdMainPKey();
+  truckLoadItem.metaId = inventoryMeta.getMetaId();
+  var ivcInformation = {};
+
+  ivcInformation.ivcMeasure = inventoryMeta.getIvcMeasure();
+  ivcInformation.ivcMainPKey = inventoryItem.getIvcMainPKey();
+  ivcInformation.balance = inventoryItem.getBalance();
+  truckLoadItem.refPKey = truckLoadItem.sdoMainPKey + truckLoadItem.prdMainPKey + truckLoadItem.sdoItemMetaPKey;
+  ivcInformation.restItem = false;
+
+  truckLoadItem.ivcInformationObject = ivcInformation;
+}
+
+var jsonParams = [];
+var jsonQuery = {};
+var prdMainPKey = truckLoadItem.prdMainPKey;
+
+jsonQuery.addCond = "AND CndMain.ValidFrom <= #commitDate# AND CndMain.ValidThru >= #commitDate#";
+jsonParams.push({ field: "itemTemplate", value: itemTemplate });
+jsonParams.push({ field: "prdMainPKey", value: prdMainPKey });
+jsonParams.push({ field: "commitDate", value: Utils.createAnsiDateTimeNow() });
+jsonQuery.params = jsonParams;
+
+var promise = BoFactory.loadObjectByParamsAsync("LuProductUom", jsonQuery).then(
+  function (lookupData) {
+    // Instantiate lookup from lookup data
+    var productInformationLookup = BoFactory.instantiate("LuProductUom", lookupData);
+    var uoM = truckLoadItem.quantityLogisticUnit;
+
+    if (!Utils.isDefined(uoM) || Utils.isEmptyString(uoM)) {
+      // Set unit information depending on default unit
+      if (itemTemplate.getQuantityLogisticUnit() == "OrderUnit") {
+        uoM = productInformationLookup.getOrderQuantityLogisticUnit();
+      } else if (itemTemplate.getQuantityLogisticUnit() == "ConsumerUnit") {
+        uoM = productInformationLookup.getConsumerQuantityLogisticUnit();
+      } else if (itemTemplate.getQuantityLogisticUnit() == "PriceUnit") {
+        uoM = productInformationLookup.getPriceQuantityLogisticUnit();
+      } else {
+        uoM = productInformationLookup.getOrderQuantityLogisticUnit();
+      }
+    }
+
+    truckLoadItem.quantityLogisticUnit = uoM;
+    truckLoadItem.piecesPerSmallestUnit = productInformationLookup.getPiecesPerSmallestUnit();
+    if (uoM === productInformationLookup.getOrderQuantityLogisticUnit()) {
+      truckLoadItem.isOrderUnit = "1";
+    }
+
+    //load free items(Total number of items to be delivered) to review current stock and add the balance
+    if (mode == "ReviewStock") {
+      var jsonParams = [];
+      var jsonQuery = {};
+      var tmgTourPKey = ApplicationContext.get("currentTourPKey");
+      var prdMainPKey = truckLoadItem.prdMainPKey;
+      var freeItemBalance = 0;
+
+      jsonParams.push({ field: "tmgTourPKey", value: tmgTourPKey });
+      jsonParams.push({ field: "prdMainPKey", value: prdMainPKey });
+      jsonQuery.params = jsonParams;
+
+      return BoFactory.loadObjectByParamsAsync("LoQuantityForFreeItems", jsonQuery).then(
+        function (loQuantityForFreeItems) {
+          if (Utils.isDefined(loQuantityForFreeItems)) {
+            var freeItems = loQuantityForFreeItems.getAllItems();
+            for (var mainIndex = 0; mainIndex < freeItems.length; mainIndex++) {
+              freeItemBalance = freeItems[mainIndex].quantitySumPerProduct;
+            }
+          }
+
+          truckLoadItem.freeItemBalance = freeItemBalance;
+          truckLoadItem.selectPKey = truckLoadItem.pKey;
+          me.addObjectItems([truckLoadItem]);
+
+          return me.addMissingUoMsToItem(truckLoadItem, itemTemplate, mode).then(
+            function () {
+              return truckLoadItem;
+            });
+        });
+    } else {
+      truckLoadItem.selectPKey = truckLoadItem.pKey;
+      me.addObjectItems([truckLoadItem]);
+
+      return me.addMissingUoMsToItem(truckLoadItem, itemTemplate, mode).then(
+        function () {
+          return truckLoadItem;
+        });
+    }
+  });]]>
+</Code>
+  <Return name="truckLoadItem" value="promise" />
+</BusinessLogic>

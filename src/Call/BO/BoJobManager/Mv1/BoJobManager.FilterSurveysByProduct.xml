@@ -1,0 +1,42 @@
+<BusinessLogic methodName="filterSurveysByProduct" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="prdMainPKey" type="String" />
+    <MethodInput name="posId" type="String" />
+    <MethodInput name="isPromotionFilterSet" type="String" />
+    <MethodInput name="isDiscrepanciesFilterSet" type="String" />
+    <MethodInput name="loProductQuickFilter" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(this.getLoPOS().getCurrent()) && Utils.isDefined(this.getLoPOS().getCurrent().getSurveys())){
+  var filterArray = [];
+  var loSurveys = this.getLoPOS().getCurrent().getSurveys();
+  var loSurveyProducts = this.getLoPOS().getCurrent().getSurveyProducts();
+
+  loSurveys.setFilterArray([{"prdMainPKey": prdMainPKey, "op": "EQ"}, {"hide": "0", "op": "EQ"}]);
+
+  if(isPromotionFilterSet == "1"){
+    filterArray.push({"planned": "1", "op": "EQ"});
+  }
+  if(isDiscrepanciesFilterSet == "1"){
+    filterArray.push({"hasDiscrepance": "1", "op": "EQ"});
+  }
+
+  if(Utils.isDefined(loProductQuickFilter)){
+    var quickFilterApplied = loProductQuickFilter.getItemsByParam({"isSelected": true});
+    if(quickFilterApplied.length > 0){
+      var category = quickFilterApplied[0].text;
+      filterArray.push({"category": category, "op": "EQ"});
+    }
+  }
+
+  if(filterArray.length > 0){
+    loSurveyProducts.setFilterArray(filterArray);
+  }
+
+  loSurveys.refreshUI();
+  this.setLoCurrentSurveys(loSurveys);
+  this.addItemChangedEventListener('loCurrentSurveys', this.onSurveyChanged);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

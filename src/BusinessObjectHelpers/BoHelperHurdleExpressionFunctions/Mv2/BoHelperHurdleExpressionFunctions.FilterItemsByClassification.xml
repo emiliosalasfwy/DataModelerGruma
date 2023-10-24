@@ -1,0 +1,23 @@
+<BusinessLogic methodName="filterItemsByClassification" businessObjectClass="BoHelperHurdleExpressionFunctions" businessObjectType="businessobjecthelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="items" type="Object" />
+    <MethodInput name="hurdle" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var filteredItems = items;
+if(hurdle.getAllowsClassification() == "1" && !Utils.isEmptyString(hurdle.getClassification())) {
+    var classifications = hurdle.getClassification().split(";");
+    filteredItems = items.filter(function(item){ 
+      var itemMatchesClassification = false;
+      if (!Utils.isEmptyString(item.getProductClassifications())) {
+        var productClassifications = item.getProductClassifications().split(";");
+        itemMatchesClassification = productClassifications.reduce(function (matchingClassificationFound, currentClassification) {
+          return matchingClassificationFound || classifications.indexOf(currentClassification) >= 0;
+        }, false);
+      }
+      return itemMatchesClassification;
+    });
+}]]>
+</Code>
+  <Return name="filteredItems" value="filteredItems" />
+</BusinessLogic>

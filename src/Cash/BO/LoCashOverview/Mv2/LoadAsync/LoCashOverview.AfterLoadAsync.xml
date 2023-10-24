@@ -1,0 +1,40 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoCashOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Localize release time
+
+// Order the list based on sort1 and releaseTime
+me.orderBy({
+  "sort1" : "ASC",
+  "sortReleaseTime" : "DESC",
+  "id" : "DESC"   
+});
+
+var items = me.getAllItems();
+for(var i=0; i < items.length; i++)
+{
+
+  var item =  items[i];
+  if(item.getPhase() === "Released" || item.getPhase() === "Initial")
+  {
+    if(item.getReleaseTime() === Utils.getMinDate() || item.getReleaseTime() == " "){
+      item.setReleaseTime(' ');
+    }else{
+      var releaseTime = item.getReleaseTime();
+      item.setReleaseTime(Localization.localize(releaseTime, 'date'));
+      item.setRelTime(Localization.localize(releaseTime, 'time'));
+    }
+  }else{
+    item.setReleaseTime(' ');
+  }
+}
+
+me.resetAllFilters();
+
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

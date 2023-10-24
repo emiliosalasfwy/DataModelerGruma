@@ -1,0 +1,60 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!jsonQuery) {
+  jsonQuery={};
+}
+
+var promise = Facade.getObjectAsync(BO_CUSTOMER, jsonQuery).then(
+  function (selfJson) {
+    if (Utils.isDefined(selfJson)) {
+      me.setProperties(selfJson);
+      var jsonParams = me.prepareLookupsLoadParams(selfJson);
+      return Facade.loadLookupsAsync(jsonParams);
+    }
+  }).then(
+  function (lookups) {
+    if (Utils.isDefined(lookups)) {
+      me.assignLookups(lookups);
+    }
+    return BoFactory.loadObjectByParamsAsync(BO_BPAMETA, me.getQueryBy("pKey", me.getBpaMetaPKey()));
+  }).then(
+  function (boBpaMeta) {
+    me.setBoBpaMeta(boBpaMeta);
+    return BoFactory.loadListAsync(LO_BPAADDRESS, me.getQueryBy("referencePKey", me.getPKey()));
+  }).then(
+  function (loBpaAddressJson) {
+    me.setLoCustomerAddress(loBpaAddressJson);
+    me.getLoCustomerAddress().orderBy({ "city" : "ASC" , "street" : "ASC" });
+
+    var jsonQuery = {
+      "bpaMainPKey" : me.getPKey(),
+      "year" : Utils.createDateToday().getUTCFullYear()
+    };
+
+    return BoFactory.loadListAsync(LO_CUSTOMERSALESREVENUE, jsonQuery);
+  }).then(
+  function(loCustomerSalesRevenue){
+    me.setLoCustomerSalesRevenue(loCustomerSalesRevenue);
+    
+    // Due to differences regarding the validation of emails on the mobile device compared to the salesforce backend,
+    // we are checking whether an email is valid as per the mobile device validation upon load.
+    // If the email is NOT valid as per the mobile device validation, it will be set to readonly and cannot be changed.
+    var email1 = me.getEmail1();    
+    var isValidEmail = '1';
+    if (!Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1)) {
+      isValidEmail = '0';
+    }     
+    me.setEmailEditable(isValidEmail);
+    
+    //set EARights
+    me.setEARights();
+    //Reset dirty flag
+    me.setObjectStatus(STATE.PERSISTED);
+    return me;
+  });]]>
+</Code>
+  <Return name="BoCustomer_LoadAsync" value="promise" />
+</BusinessLogic>

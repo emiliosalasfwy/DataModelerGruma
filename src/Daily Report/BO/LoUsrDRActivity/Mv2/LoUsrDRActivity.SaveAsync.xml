@@ -1,0 +1,10 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoUsrDRActivity" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+
+    Facade.saveListAsync(this);
+
+    var promise = when.resolve(this);
+		
+   ]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

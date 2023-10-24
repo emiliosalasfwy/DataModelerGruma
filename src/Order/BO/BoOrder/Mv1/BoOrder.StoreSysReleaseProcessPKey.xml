@@ -1,0 +1,10 @@
+<BusinessLogic methodName="storeSysReleaseProcessPKey" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = me.determineSysReleaseProcessPKey()
+  .then(function(pkey){
+  me.setStoredSysReleasePKey(pkey);
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

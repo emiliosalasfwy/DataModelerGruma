@@ -1,0 +1,53 @@
+<BusinessLogic methodName="validateTruckRunningStatus" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (me.getTmgStatus().toLowerCase() === "completed") {
+
+  if (Utils.isDefined(me.getDateFrom()) && Utils.isDefined(me.getDateThru())) {
+    if(me.getDateFrom() > me.getDateThru()) {
+      newError =
+        {
+        "level": "error",
+        "objectClass": "BoTour",
+        "messageID": "CasBoTourDate"
+      };
+      messageCollector.add(newError);
+    }
+  }
+  if(me.getVehicleOKEnd()==="0" && Utils.isEmptyString(me.getVehicleStatusEnd())) {
+    newError =
+      {
+      "level": "error",
+      "objectClass": "BoTour",
+      "messageID": "CasBoTourReasonCode"
+    };
+    messageCollector.add(newError);
+  }
+}
+
+if (me.getTmgStatus().toLowerCase() === "running") {
+
+  if(me.getVehicleOKStart()==="0" && Utils.isEmptyString(me.getVehicleStatusStart())) {
+    newError =
+      {
+      "level": "error",
+      "objectClass": "BoTour",
+      "messageID": "CasBoTourReasonCode"
+    };
+    messageCollector.add(newError);
+  }
+
+  if(!Utils.isDefined(me.getVehicleOKEnd())) {
+    me.setVehicleOKEnd("0");
+  }
+  if(!Utils.isDefined(me.getVehicleStatusEnd())) {
+    me.setVehicleStatusEnd("");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

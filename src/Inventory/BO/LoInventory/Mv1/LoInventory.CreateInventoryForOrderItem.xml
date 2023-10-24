@@ -1,0 +1,60 @@
+<BusinessLogic methodName="createInventoryForOrderItem" businessObjectClass="LoInventory" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItem" type="LiOrderItem" />
+    <MethodInput name="ivcInformation" type="Object" />
+    <MethodInput name="recordTypeId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var ivcMetaByItemMeta;
+var ivcMainPKey;
+var jsonIvcData = {};
+
+ivcMetaByItemMeta = ivcInformation.ivcMetaByItemMeta;
+
+// Consider only UserInventories
+if(Utils.isDefined(ivcMetaByItemMeta)) {
+  if ((ivcMetaByItemMeta.getMetaId() === "UserInventory" && !Utils.isEmptyString(recordTypeId)) ||
+      ivcMetaByItemMeta.getMetaId() === "Unsalable"){
+
+    //check if inventory is already available in list
+    //e.g. if different item metas in same order (std, return) first item creates inventory second item has to reuse it
+    var inventoryItems = me.getAllItems();
+    for(var i = 0; i < inventoryItems.length; i++) {
+      var currentInventoryItem = inventoryItems[i];
+      if(currentInventoryItem.getIvcMetaPKey() === ivcMetaByItemMeta.getIvcMetaPKey() &&
+         currentInventoryItem.getUsrMainPKey() === ivcMetaByItemMeta.getUsrMainPKey() &&
+         currentInventoryItem.getBpaMainPKey() === ivcMetaByItemMeta.getBpaMainPKey() &&
+         currentInventoryItem.getPrdMainPKey() === orderItem.getPrdMainPKey() &&
+         currentInventoryItem.getTmgTourPKey() === ivcMetaByItemMeta.getTmgTourPKey() &&
+         currentInventoryItem.getEtpVehiclePKey() === ivcMetaByItemMeta.getEtpVehiclePKey()) {
+        ivcMainPKey = currentInventoryItem.getPKey();
+        break;
+      }
+    }
+
+    if(!Utils.isDefined(ivcMainPKey)) {
+      ivcMainPKey = PKey.next();
+      // Create inventory
+      jsonIvcData = {};
+      jsonIvcData.pKey = ivcMainPKey;
+      jsonIvcData.ivcMetaPKey = ivcMetaByItemMeta.getIvcMetaPKey();
+      jsonIvcData.usrMainPKey = ivcMetaByItemMeta.getUsrMainPKey();
+      jsonIvcData.bpaMainPKey = ivcMetaByItemMeta.getBpaMainPKey();
+      jsonIvcData.prdMainPKey = orderItem.getPrdMainPKey();
+      jsonIvcData.phase = "Active";
+      jsonIvcData.validFrom = Utils.createAnsiDateToday();
+      jsonIvcData.validThru = Utils.getMaxDate();
+      jsonIvcData.invalid = "0";
+      jsonIvcData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+      jsonIvcData.tmgTourPKey = ivcMetaByItemMeta.getTmgTourPKey();
+      jsonIvcData.etpVehiclePKey = ivcMetaByItemMeta.getEtpVehiclePKey();
+      jsonIvcData.recordTypeId = recordTypeId;
+
+      me.addItems([jsonIvcData]);
+      me.getItemByPKey(jsonIvcData.pKey).setObjectStatus(STATE.NEW | STATE.DIRTY);
+    }
+  }
+}]]>
+</Code>
+  <Return name="ivcMainPKey" value="ivcMainPKey" />
+</BusinessLogic>

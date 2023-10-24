@@ -1,0 +1,9 @@
+<BusinessLogic methodName="isFreeItem" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isFreeItem = !Utils.isEmptyString(item.getSdoParentItemPKey()) || (Utils.isSfBackend() && !Utils.isEmptyString(item.getParentType()));]]>
+</Code>
+  <Return name="isFreeItem" value="isFreeItem" />
+</BusinessLogic>

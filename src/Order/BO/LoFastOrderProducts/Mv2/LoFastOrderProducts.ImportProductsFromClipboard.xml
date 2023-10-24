@@ -1,0 +1,31 @@
+<BusinessLogic methodName="importProductsFromClipboard" businessObjectClass="LoFastOrderProducts" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="importedItems" type="Object" />
+    <MethodInput name="productNumberDictionary" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/* This method is used to add imported products from clipboard to fast order screen
+   It recieves two inputs : importedItems returned by framework and productNumberDictionary
+*/
+
+if(Utils.isDefined(importedItems)){
+  importedItems.forEach(function(item){
+    var currentItem = productNumberDictionary.get(item.productNumber);
+    var quantity = item.quantity > 0 ? item.quantity : 0;
+
+    if((quantity - Math.floor(quantity)) !== 0){
+      quantity = Utils.roundDown(quantity, 0);
+    }
+    //product with negative or zero quantity will not be added to fast order screen
+    if(quantity > 0){
+      //maximum allowed quantity is 9999 for core (customizer needs to change the limit based on requirement)
+      if(quantity > 9999){
+        quantity = 9999;
+      }
+      me.addOrUpdateItem(currentItem.getPKey(), quantity, item.productNumber, currentItem.getProductDescription());
+    }
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

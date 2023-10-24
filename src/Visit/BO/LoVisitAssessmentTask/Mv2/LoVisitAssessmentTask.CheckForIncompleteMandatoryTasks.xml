@@ -1,0 +1,22 @@
+<BusinessLogic methodName="checkForIncompleteMandatoryTasks" businessObjectClass="LoVisitAssessmentTask" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var assessmentTasks = me.getAllItems();
+var returnValue = "No";
+
+var openOffline = false;
+var openOnline = false;
+
+assessmentTasks.forEach(function(task) {
+  if(task.isRequired == '1' && task.status!=='Completed') {
+    if(task.taskType === "Other" || task.taskType === "InventoryCheck")openOffline = true;
+    else openOnline = true;
+  }else if (task.isRequired == '0' && task.status!=='Completed' && task.taskType !== "Other" && task.taskType !== "InventoryCheck") returnValue = "NoButOpenOnline";
+});
+
+if(openOffline && !openOnline) returnValue = "openOffline";
+else if (openOnline && !openOffline) returnValue = "openOnline";
+else if (openOnline && openOffline) returnValue = "openMixed";]]>
+</Code>
+  <Return name="returnValue" value="returnValue" />
+</BusinessLogic>

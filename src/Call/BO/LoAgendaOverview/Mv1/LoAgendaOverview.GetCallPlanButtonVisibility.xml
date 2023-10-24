@@ -1,0 +1,27 @@
+<BusinessLogic methodName="getCallPlanButtonVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentDate" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isAutoCallPlanVisibile = false;
+
+if(!(ApplicationContext.get('user').hasRole('TourUser'))){
+  var todaysdate = Utils.createAnsiDateToday();
+  var startDayOfWeek = Utils.convertAnsiDate2Date(todaysdate); 
+  var dayValue = startDayOfWeek.getDay();
+  var difference = startDayOfWeek.getDate() - dayValue + (dayValue === 0 ? -6:1);
+  startDayOfWeek = startDayOfWeek.setDate(difference);
+
+  var currentDate = Utils.convertAnsiDate2Date(currentDate);
+  if(currentDate.getDay() === 0){
+    currentDate = currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  var daydifference = parseInt(((currentDate - startDayOfWeek) / (24 * 3600 * 1000)), 10);
+  if (daydifference < 14 && daydifference >= 0){
+    isAutoCallPlanVisibile = true;
+  }
+}]]>
+</Code>
+  <Return name="isAutoCallPlanVisibile" value="isAutoCallPlanVisibile" />
+</BusinessLogic>

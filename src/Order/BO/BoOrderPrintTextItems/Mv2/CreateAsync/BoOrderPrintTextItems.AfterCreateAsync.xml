@@ -1,0 +1,82 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoOrderPrintTextItems" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var documentTransactionType = params.documentTransactionType;
+
+// Set end of print message
+if(params.subType === "OrderEntry"){
+  switch(documentTransactionType){
+    case "CashOrder":
+    case "CreditOrder":
+    case "NoPaymentOrder":
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint1") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+  }
+}  else if  (params.subType === "Invoice"){
+  switch(documentTransactionType){
+    case "InvoiceCashInvoice":
+    case "InvoiceCreditInvoice":
+    case "NoPayment":
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint3") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+    case "CreditMemo":
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint4") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+  }
+}  else if (params.subType === "Delivery" && params.reportPolicy === "Confirmation"){
+  me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint1") + " (" +
+                   Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                   Localization.localize(Utils.createDateNow(), "date") + ")");
+}
+
+if(Utils.isEmptyString(me.getEndOfPrint())){
+  switch(params.subType){
+    case "OrderEntry":
+    case "Delivery":
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint1") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+    case "Invoice":
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint3") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+    default:
+      me.setEndOfPrint(Localization.resolve("Order_Print_EndOfPrint3") + " (" +
+                       Localization.resolve("Order_Print_EndOfPrint2") + " " +
+                       Localization.localize(Utils.createDateNow(), "date") + ")");
+      break;
+  }
+}
+
+if (params.phase === "Initial" && params.releaseInProgress !== "yes") {
+  //In case of printing sdo document for initial/editable orders, the watermark will display 'Draft'.
+  me.setDocumentStatus(Localization.resolve("DraftId"));
+} else {
+  //In case of printing sdo document for non-editable orders, the watermark will not be displayed.
+  me.setDocumentStatus("");
+}
+
+if (params.releaseInProgress === "yes") {
+  //during order release, generate and save pdf
+  me.setPrintV2GenerateAndSave(true);
+  me.setBlobPKey(PKey.next());
+} else {
+  me.setPrintV2GenerateAndSave(false);
+}
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

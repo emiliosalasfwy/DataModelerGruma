@@ -1,0 +1,11 @@
+<BusinessLogic methodName="validateScannedCustomer" businessObjectClass="LoScannedCustomer" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var isCustomerFound = "1";
+
+if (me.getAllItems().length === 0) {
+  isCustomerFound= "0";
+}]]>
+</Code>
+  <Return name="isCustomerFound" value="isCustomerFound" />
+</BusinessLogic>

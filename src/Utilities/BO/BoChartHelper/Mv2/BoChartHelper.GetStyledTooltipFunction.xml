@@ -1,0 +1,45 @@
+<BusinessLogic methodName="getStyledTooltipFunction" businessObjectClass="BoChartHelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+    
+var tooltipFunction = function (d, defaultTitleFormat, defaultValueFormat, color) {
+	var $$ = this,
+	config = $$.config,
+	titleFormat = config.tooltip_format_title || defaultTitleFormat,
+	nameFormat = config.tooltip_format_name || function (name) {
+		return name;
+	},
+	valueFormat = config.tooltip_format_value || defaultValueFormat,
+	text,
+	i,
+	title,
+	value,
+	name,
+	bgcolor;
+	for (i = 0; i < d.length; i++) {
+		if (!(d[i] && (d[i].value || d[i].value === 0))) {
+			continue;
+		}
+
+		if (!text) {
+			title = titleFormat ? titleFormat(d[i].x) : d[i].x;
+			text = "<table class='c3-tooltip'>" + (title || title === 0 ? "<tr><th colspan='2' style='background-color: #666e81'>" + title + "</th></tr>" : "");
+		}
+
+		value = valueFormat(d[i].value, d[i].ratio, d[i].id, d[i].index);
+		if (value !== undefined) {
+			name = nameFormat(d[i].name, d[i].ratio, d[i].id, d[i].index);
+			bgcolor = $$.levelColor ? $$.levelColor(d[i].value) : color(d[i].id);
+
+			text += "<tr class='c3-tooltip-name-" + d[i].id + "'>";
+			text += "<td class='name' style='background-color: #eeeeee; color: #000000'><span style='background-color:" + bgcolor + "'></span>" + name + "</td>";
+			text += "<td class='value' style='color: #000000'>" + value + "</td>";
+			text += "</tr>";
+		}
+	}
+	return text + "</table>";
+};
+
+		
+   ]]></Code>
+  <Return name="tooltipFunction" value="tooltipFunction" />
+</BusinessLogic>

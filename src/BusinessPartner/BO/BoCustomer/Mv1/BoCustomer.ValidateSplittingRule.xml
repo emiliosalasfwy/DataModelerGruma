@@ -1,0 +1,23 @@
+<BusinessLogic methodName="validateSplittingRule" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var newError;
+
+if(Utils.isDefined(me.getBoDeliveryRole())){
+  var deliveryRole = me.getBoDeliveryRole();
+
+  if((deliveryRole.getSdoSplittingOption() === "Yes" || deliveryRole.getSdoSplittingOption() === "Optional") && Utils.isEmptyString(deliveryRole.getSdoSplittingRule())){
+    newError = {
+      "level": "error", 
+      "objectClass": "BoCustomer", 
+      "messageID": "CasBpaSplittingRuleHasToBeFilled"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

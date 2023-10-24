@@ -1,0 +1,28 @@
+<BusinessLogic methodName="setPromotedListed" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[
+// OBSOLETE!! - No longer called by core - Setting of values is done via the datasource of LoOrderItemsPreopopulation based on the temporary table of the merge result
+
+
+// Set itemState attribute for displaying the icon (Listed/Promoted) within the item list
+        var itemState = "";
+
+       if (!(Utils.isDefined(orderItem.getPromoted())) && !(Utils.isDefined(orderItem.getListed()))) {
+          itemState = " ";
+       } else {
+          if ((Utils.isDefined(orderItem.getPromoted())) && (orderItem.getPromoted() == "1")) {
+              itemState = "P";
+          }
+
+          if ((Utils.isDefined(orderItem.getListed())) && (orderItem.getListed() == "1")) {
+              itemState += "L";
+          }
+       }
+
+       orderItem.setItemState(itemState);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

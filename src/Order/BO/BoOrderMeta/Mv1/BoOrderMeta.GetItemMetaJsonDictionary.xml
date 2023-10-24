@@ -1,0 +1,36 @@
+<BusinessLogic methodName="getItemMetaJsonDictionary" businessObjectClass="BoOrderMeta" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+ 
+    var dictionary = this.getItemMetaDictionary();
+    
+    if (!Utils.isDefined(dictionary)) {
+        dictionary = Utils.createDictionary();
+        
+        var itemMetas = this.getLoOrderItemMetas().getItemObjects();
+        var itemMeta;
+        var element;
+        
+        for (var i=0; i < itemMetas.length; i++) {
+            itemMeta = itemMetas[i];
+            element = {};
+            
+            element.saveZeroQuantity = itemMeta.getSaveZeroQuantity();
+            element.checkUniqueness = itemMeta.getCheckUniqueness();
+            element.checkMaxQuantity = itemMeta.getCheckMaxQuantity();
+            element.maxQuantity = itemMeta.getMaxQuantity();
+            element.useUserInventory = itemMeta.getUseUserInventory();
+            element.useQuota = itemMeta.getUseQuota();
+            element.checkUserInventoryOver = itemMeta.getCheckUserInventoryOver();
+            element.checkQuotaOver = itemMeta.getCheckQuotaOver();
+			element.modReasonRequired = itemMeta.getModReasonRequired();
+            element.text = itemMeta.getText();
+        
+            dictionary.add(itemMeta.getPKey(), element);
+        }
+        
+        this.setItemMetaDictionary(dictionary);
+    }
+
+    ]]></Code>
+  <Return name="dictionary" value="dictionary" />
+</BusinessLogic>

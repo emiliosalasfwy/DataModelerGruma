@@ -1,0 +1,14 @@
+<BusinessLogic methodName="setPageTitle" businessObjectClass="BoPromotionDetail" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PageTitle" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var pageHeaderText = PageTitle;
+
+if (Utils.isPhone() && pageHeaderText.length >= 28) {
+  pageHeaderText = pageHeaderText.substring(0,28) + "...";
+}
+]]>
+</Code>
+  <Return name="result" value="pageHeaderText" />
+</BusinessLogic>

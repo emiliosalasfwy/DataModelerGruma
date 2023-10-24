@@ -1,0 +1,11 @@
+<BusinessLogic methodName="determineMaxPagingSizeUsed" businessObjectClass="LoUsrDailyReportOverview" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Code language="JavaScript"><![CDATA[
+    var MaxPageSizeUsed= "0";
+
+    if(Framework.getProcessContext().dailyReportList.getItemObjects().length >= 500){
+      MaxPageSizeUsed = "1";
+    }
+		
+   ]]></Code>
+  <Return name="MaxPageSizeUsed" value="MaxPageSizeUsed" />
+</BusinessLogic>

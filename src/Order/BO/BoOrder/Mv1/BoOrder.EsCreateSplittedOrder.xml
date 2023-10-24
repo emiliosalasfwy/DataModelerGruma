@@ -1,0 +1,84 @@
+<BusinessLogic methodName="esCreateSplittedOrder" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="splittingGroup" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var splittingDoc = BoFactory.instantiate("BoOrder", {
+  "actualStatePKey" : me.getActualStatePKey(),
+  "asn" : me.getAsn(),
+  "billToCustomerPKey": me.getBillToCustomerPKey(),
+  "brokerCustomerPKey" :  me.getBrokerCustomerPKey(),
+  "calculationStatus" :  me.getCalculationStatus(),
+  "calculationTime" :  me.getCalculationTime(),
+  "cancelReason" :  me.getCancelReason(),
+  "clbMainPKey" :  me.getClbMainPKey(),
+  "cndCpCalculationSchemaPKey" :  me.getCndCpCalculationSchemaPKey(),
+  "commitDate" :  me.getCommitDate(),
+  "currency" :  me.getCurrency(),
+  "customerOrderId" :  me.getCustomerOrderId(),
+  "debitCredit" :  me.getDebitCredit(),
+  //"deliveryDate" :  me.getDeliveryDate(),
+  "deliveryRecipientPKey" :  me.getDeliveryRecipientPKey(),
+  "distribChannel" :  me.getDistribChannel(),
+  "division" :  me.getDivision(),
+  "docTaType" :  me.getDocTaType(),
+  "documentType" :  me.getDocumentType(),
+  //"headerDiscount" :  me.getHeaderDiscount(),
+  "initiationDate" :  me.getInitiationDate(),
+  "initiatorPKey" :  me.getInitiatorPKey(),
+  "ivcRef1PKey" :  me.getIvcRef1PKey(),
+  "ivcRef2PKey" :  me.getIvcRef2PKey(),
+  "ivcRef3PKey" :  me.getIvcRef3PKey(),
+  "ivcRef4PKey" :  me.getIvcRef4PKey(),
+  "ivcRef5PKey" :  me.getIvcRef5PKey(),
+  "message" :  me.getMessage(),
+  "nextStatePKey" :  me.getNextStatePKey(),
+  "ordererPKey" :  me.getOrdererPKey(),
+  "ownerPKey" :  me.getOwnerPKey(),
+  "payerCustomerPKey" :  me.getPayerCustomerPKey(),
+  "paymentMethod" :  me.getPaymentMethod(),
+  //"paymentReason" :  me.getPaymentReason(),
+  "pricingDate" :  me.getPricingDate(),
+  "releaseTime" :  me.getReleaseTime(),
+  "responsiblePKey" :  me.getResponsiblePKey(),
+  "salesOrg" :  me.getSalesOrg(),
+  "sdoMetaPKey" :  me.getSdoMetaPKey(),
+  "tmgMainPKey" :  me.getTmgMainPKey(),
+  "wfeWorkflowPKey" :  me.getWfeWorkflowPKey()
+});
+
+//Lo's and Lu's BOs
+splittingDoc.setLuDeliveryRecipient(me.getLuDeliveryRecipient());
+splittingDoc.setLuOrderer(me.getLuOrderer());
+
+//nested BOs
+splittingDoc.setBoOrderMeta(me.getBoOrderMeta());
+splittingDoc.setBoWorkflow(me.getBoWorkflow());
+
+var selectedSplittingGroupItems = me.getLoSplittingGroups().getItemsByParam({"splittingGroup" : splittingGroup});
+var selectedSplittingGroup = selectedSplittingGroupItems[0];
+
+var itemSplittingData = me.esCreateItemSplittingData();
+
+//Header Attributes and Pricing information
+var promise = me.esSetHeaderAttributes(splittingDoc, selectedSplittingGroup)
+  .then(function() {
+  //setting the items of the splitting document
+  me.esCreateSplittingDocumentItems(splittingDoc, itemSplittingData.get(selectedSplittingGroup.getSplittingGroup()));
+
+  //copy over the notes
+  me.esCopyNotes(splittingDoc);
+  //In CGCloud we create order Sdo Conditions in preparePrint method now. Thus this method is not ready to use when splitting order is enabled in CGCloud.
+  //For a consistent behaviour as in Order this method needs an update.
+  return splittingDoc.cpCreateSdoConditions();
+})
+  .then(function() {
+  //Signature Attributes and Blobs
+  return me.esSetSignatureAttributes(splittingDoc);
+})
+  .then(function() {
+  return splittingDoc;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

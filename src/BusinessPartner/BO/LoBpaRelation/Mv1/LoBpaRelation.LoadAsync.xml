@@ -1,0 +1,15 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoBpaRelation" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_BPARELATION, jsonParams).then(
+  function(items) {
+    me.addItems(items, jsonParams);
+    me.orderBy({"name":"ASC"});				
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="LoBpaRelation_LoadAsync" value="promise" />
+</BusinessLogic>

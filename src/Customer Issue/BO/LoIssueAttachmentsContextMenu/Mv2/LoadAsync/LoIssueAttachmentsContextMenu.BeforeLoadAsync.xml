@@ -1,0 +1,52 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoIssueAttachmentsContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Build context menu list
+var contextMenuItemList = [];
+
+var newParams = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+
+var user = ApplicationContext.get('user');
+var issueDetail = context.jsonQuery.issueDetail;
+
+var customerManagementInfoLookup = issueDetail.getLuCustomerManagementInfo();
+var isResponsible = false;
+var nextStates;
+
+//Check if current user is responsible or a substitute
+if (Utils.isDefined(customerManagementInfoLookup)) {
+  if (((issueDetail.getResponsiblePKey() === ApplicationContext.get('user').getPKey()) && (customerManagementInfoLookup.getHasSubstitute() === "0"))
+      || ((issueDetail.getResponsiblePKey() !== customerManagementInfoLookup.getReferenceUsrMainPKey()) && (customerManagementInfoLookup.getSubstitutedInLeadFollowUpTime() === "0")
+          && (customerManagementInfoLookup.getIsSubstituted() == "1"))) {
+
+    isResponsible = true;
+  }
+}
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "Delete",
+  "actionVisible" : "1",
+  "actionEnabled" : "0"
+};
+
+if (isResponsible && issueDetail.getIssuePhase().toLowerCase() !== "closed" && issueDetail.getIssuePhase().toLowerCase() !== "cancelled") {
+  menuEntry0.actionEnabled = "1";
+}
+
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

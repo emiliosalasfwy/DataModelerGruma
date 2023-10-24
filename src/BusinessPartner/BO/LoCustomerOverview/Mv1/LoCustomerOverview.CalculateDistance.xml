@@ -1,0 +1,36 @@
+<BusinessLogic methodName="calculateDistance" businessObjectClass="LoCustomerOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="lat1" type="DomDegree" />
+    <MethodInput name="lng1" type="DomDegree" />
+    <MethodInput name="lat2" type="DomDegree" />
+    <MethodInput name="lng2" type="DomDegree" />
+    <MethodInput name="distanceUnit" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//This function has been deprecated, we are using Utils.distanceBetween() to calculate distance now
+
+var distance;
+var latitudeInRadian = DegToRad(lat2-lat1);
+var longitudeInRadian = DegToRad(lng2-lng1);
+var lat1InRadian = DegToRad(lat1);
+var lat2InRadian = DegToRad(lat2);
+
+var chordLength = Math.sin(latitudeInRadian / 2) * Math.sin(latitudeInRadian / 2) +
+    Math.sin(longitudeInRadian / 2) * Math.sin(longitudeInRadian / 2) *
+    Math.cos(lat1InRadian) * Math.cos(lat2InRadian);
+var angularDistance = 2 * Math.atan2(Math.sqrt(chordLength), Math.sqrt(1 - chordLength));
+
+if (distanceUnit === "miles") {
+  distance = 3956 * angularDistance;
+}
+else if (distanceUnit === "km") {
+  distance = 6371 * angularDistance;
+}
+
+//Method to convert Degree to Radiance.
+function DegToRad (deg) {
+  return deg * Math.PI / 180;
+}]]>
+</Code>
+  <Return name="result" value="distance" />
+</BusinessLogic>

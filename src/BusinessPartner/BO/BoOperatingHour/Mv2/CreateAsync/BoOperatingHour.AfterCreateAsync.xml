@@ -1,0 +1,20 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoOperatingHour" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(result);
+
+//#############################
+//### fill mandatory fields ###
+//#############################
+
+//set timezone to device timezone
+me.setTimeZone(Utils.getDeviceTimeZone());
+
+//in create functions object is frozen hence opject status must be set manually
+me.setObjectStatus(STATE.NEW | STATE.DIRTY);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

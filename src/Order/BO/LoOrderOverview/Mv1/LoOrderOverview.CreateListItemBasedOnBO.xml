@@ -1,0 +1,46 @@
+<BusinessLogic methodName="createListItemBasedOnBO" businessObjectClass="LoOrderOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderBo" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var initiatorName = '';
+var initiatorPKey = orderBo.getInitiatorPKey();
+
+if (initiatorPKey === ApplicationContext.get('user').getPKey()) {
+  initiatorName = ApplicationContext.get('user').firstName + ' ' + ApplicationContext.get('user').lastName;
+}
+else if (initiatorPKey === orderBo.getOwnerPKey()) {
+  initiatorName = orderBo.getLuOwner().getFirstName() + ' ' + orderBo.getLuOwner().getLastName();
+} 
+
+// Preset attributes
+var liOrder = {
+  "pKey" : orderBo.getPKey(),
+  "id" : orderBo.getOrderId(),
+  "phase" : orderBo.getPhase(),
+  "commitDate" : orderBo.getCommitDate(),
+  "deliveryDate" : orderBo.getDeliveryDate(),
+  "responsiblePKey" : orderBo.getResponsiblePKey(),
+  "responsibleName" : orderBo.getLuResponsible().getFirstName() + ' ' + orderBo.getLuResponsible().getLastName(),
+  "initiatorPKey" : initiatorPKey,
+  "initiatorName" : initiatorName,
+  "grossTotalValue" : orderBo.getGrossTotalValue(),
+  "customerName" : orderBo.getLuOrderer().getName(),
+  "customerPKey" : orderBo.getLuOrderer().getPKey(),
+  "deletionAllowed" : orderBo.getBoOrderMeta().getDeletionAllowed(),
+  "orderType" : orderBo.getBoOrderMeta().getText(),
+  "orderMetaPKey" : orderBo.getBoOrderMeta().getId(),
+  "mobilityRelevant" : orderBo.getBoOrderMeta().getMobilityRelevant(),
+  "message" : orderBo.getMessage(),
+  "clbMainPKey" : Utils.isDefined(orderBo.getClbMainPKey()) ? orderBo.getClbMainPKey() : "",
+  "sdoSubType" : orderBo.getBoOrderMeta().getSdoSubType(),
+  "orderPhaseImage" : 'OrderphaseImage_' + orderBo.getPhase(),
+  "syncStatusIcon"  : 'OrderAwaitingSync'
+};
+
+// Add new Item to ListObject
+me.addListItems([liOrder]);
+me.setCurrentByPKey(liOrder.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

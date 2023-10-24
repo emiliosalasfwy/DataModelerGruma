@@ -1,0 +1,30 @@
+<BusinessLogic methodName="filterQuestions" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loQuestions = me.getLoQuestions();
+loQuestions.setFilterArray([{"posId": posId, "op": "EQ"}]);
+loQuestions.orderBy({"sort" : "ASC"});
+
+//Evaluate questions for handling their visibility
+if(me.getClbStatus() === "Planned"){
+  me.evaluateQuestions(loQuestions.getItems());
+  loQuestions.setEARights(false);
+}
+else{
+  loQuestions.setEARights(true);
+}
+
+//Set current item to first question
+//get sorted and visible list items
+var visibleSortedQuestionItems = loQuestions.getItems().filter(function(item){
+  if(item.visible == "1") return item;
+});
+
+if(visibleSortedQuestionItems.length > 0){
+  loQuestions.setCurrentByPKey(visibleSortedQuestionItems[0].pKey);
+}]]>
+</Code>
+  <Return name="posId" value="posId" />
+</BusinessLogic>

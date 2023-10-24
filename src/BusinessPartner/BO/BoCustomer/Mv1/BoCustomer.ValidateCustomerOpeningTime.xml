@@ -1,0 +1,37 @@
+<BusinessLogic methodName="validateCustomerOpeningTime" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/** Account Harmonization: obsolete:  OperatingHours (LoTimeSlot) is used instead of Account_Opening_Hours__c -->
+	UC:  NGM Customer - Opening Hours
+	The system validates edited opening hour information:
+	Both time from and time thru must not be empty. Time from must not be bigger than time thru.  
+
+
+if (Utils.isDefined(this.getLoCustomerOpeningTime()))
+{
+    var items = this.getLoCustomerOpeningTime().getItemObjects();
+
+    if (items.some(function (item) { return item.getTimeThru() < item.getTimeFrom(); }))
+    {
+        messageCollector.add({
+            "level": "error",
+            "objectClass": "BoCustomer",
+            "messageID": "CasBpaMainOpeningTimeFromGreaterTimeThru"
+        });
+    }
+
+    if (items.some(function (item) { return Utils.isEmptyString(item.getTimeThru()) || Utils.isEmptyString(item.getTimeFrom()); }))
+    {
+        messageCollector.add({
+            "level": "error",
+            "objectClass": "BoCustomer",
+            "messageID": "CasBpaMainOpeningTimeFromOrTimeThruNotEmpty"
+        });
+    }
+}
+Account Harmonization: obsolete:*/]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

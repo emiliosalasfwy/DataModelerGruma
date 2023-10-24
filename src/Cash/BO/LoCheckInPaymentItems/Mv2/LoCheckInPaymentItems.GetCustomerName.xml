@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getCustomerName" businessObjectClass="LoCheckInPaymentItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentItem" type="LoCheckInPaymentItems" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LuOrderer", me.getQueryBy("pKey", currentItem.getOrdererPKey())).then(
+  function(LuOrderer){
+    if(Utils.isDefined(LuOrderer)){
+      currentItem.setCustomerName(LuOrderer.getName());
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

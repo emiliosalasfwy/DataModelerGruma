@@ -1,0 +1,39 @@
+<BusinessLogic methodName="getDSForHistoricProducts" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="ordererPKey" type="DomPKey" />
+    <MethodInput name="sdoMetaPKey" type="DomPKey" />
+    <MethodInput name="dateFrom" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Datasource name (required by merge engine)
+var LO_MEHISTORICPRODUCTS = "LoMeHistoricProducts";
+
+var datasourceDefiniton = {
+	"boName" : LO_MEHISTORICPRODUCTS,
+	"dsParams" : {
+		"params" : [{
+				"field" : "ordererPKey",
+				"value" : ordererPKey
+			}, {
+				"field" : "sdoMetaPKey",
+				"value" : sdoMetaPKey
+			}, {
+				"field" : "dateFrom",
+				"value" : dateFrom
+			}
+		]
+	},
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "history",
+			"alias" : "history",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : "NONE",
+	"lookupDataSource" : "false"
+};
+]]>
+</Code>
+  <Return name="dsForHistoricProducts" value="datasourceDefiniton" />
+</BusinessLogic>

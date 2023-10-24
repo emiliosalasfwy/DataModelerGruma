@@ -1,0 +1,25 @@
+<BusinessLogic methodName="getOrderValueForPositiveSalesTarget" businessObjectClass="LoOrdersByTargetSetting" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="sdoMainPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Get all the parameters for getting positive sales total
+var jqueryParams = [];
+var jqueryQuery = {};
+jqueryParams.push({
+  "field" : "SdoMainPKey",
+  "value" : sdoMainPKey
+});
+jqueryQuery.params = jqueryParams;
+// get the sum of all positive sales
+var promise = BoFactory.loadObjectByParamsAsync("LuTotalOrderValueForPositiveSales", jqueryQuery)
+  .then(function(object){
+  if(Utils.isDefined(object)){
+    return object.getTotalValue(); 
+  }else{
+    return 0; 
+  }
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

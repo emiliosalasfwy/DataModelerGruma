@@ -1,0 +1,17 @@
+<BusinessLogic methodName="validateUser" businessObjectClass="BoWizardTimeFrameSelection" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isDefined(me.getUserName()) || !Utils.isDefined(me.getUserPKey()) ||
+   Utils.isEmptyString(me.getUserName()) || Utils.isEmptyString(me.getUserPKey())) {
+  var newError = {
+    "level": "error",
+    "objectClass": "BoWizardTimeFrameSelection",
+    "messageID": "CasWizardTimeFrameSelectionEmpty"
+  };
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

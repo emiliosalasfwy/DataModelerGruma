@@ -1,0 +1,91 @@
+<BusinessLogic methodName="convertIvcMeasureToOrderUnit" businessObjectClass="LoUnitFactorsForProductList" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productPKey" type="DomPKey" />
+    <MethodInput name="ivcMeasure" type="DomIvcMeasure" />
+    <MethodInput name="balance" type="DomDecimal" />
+    <MethodInput name="freeItemBalance" type="DomDecimal" />
+    <MethodInput name="metaId" type="DomIvcMetaType" />
+    <MethodInput name="mode" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var result = {};
+var relevantItems = me.getItemsByParam({
+  "productPKey" : productPKey
+});
+
+//find order unit informations
+for (var i = 0; i < relevantItems.length; i++) {
+  if (relevantItems[i].getIsOrderUnit() == "1") {
+    result.orderUnitType = relevantItems[i].getUnitType();
+    result.orderUnitPiecesPerSmallestUnit = relevantItems[i].getPiecesPerSmallestUnit();
+  }
+
+  //Determine unit information of ivcMeasure
+  if (ivcMeasure == "QtyCUnit" && relevantItems[i].getIsConsumerUnit() == "1") {
+    result.IvcUnitType = relevantItems[i].getUnitType();
+    result.IvcUnitPiecesPerSmallestUnit = relevantItems[i].getPiecesPerSmallestUnit();
+  } else if (ivcMeasure == "QtyOUnit" && relevantItems[i].getIsOrderUnit() == "1") {
+    result.IvcUnitType = relevantItems[i].getUnitType();
+    result.IvcUnitPiecesPerSmallestUnit = relevantItems[i].getPiecesPerSmallestUnit();
+  } else if (ivcMeasure == "QtyIUnit" && relevantItems[i].getIsStocktakingUnit() == "1") {
+    result.IvcUnitType = relevantItems[i].getUnitType();
+    result.IvcUnitPiecesPerSmallestUnit = relevantItems[i].getPiecesPerSmallestUnit();
+  }
+
+  //Determine Smallest Unit
+  if (relevantItems[i].getPiecesPerSmallestUnit() == 1) {
+    result.smallestUnitType = relevantItems[i].getUnitType();
+  }
+
+} //end of for
+
+
+//Convert value for truck inventory balance
+var balanceInSmallestUnit = balance * result.IvcUnitPiecesPerSmallestUnit;
+result.convertedValue = Math.floor(balanceInSmallestUnit / result.orderUnitPiecesPerSmallestUnit);
+
+
+if(result.convertedValue * result.orderUnitPiecesPerSmallestUnit < balanceInSmallestUnit){
+
+  result.convertedValueRest = (balanceInSmallestUnit - (result.convertedValue * result.orderUnitPiecesPerSmallestUnit)) / result.IvcUnitPiecesPerSmallestUnit;
+}
+
+if(mode === "ReviewStock"){
+  // Convert value for free item balnce
+  if (!Utils.isDefined(freeItemBalance)){
+    //Initialize freeItemBalance
+    freeItemBalance = 0;
+  }
+
+  //If truck has a damaged item ,set free item balance = 0
+  if(metaId === "Unsalable"){
+    freeItemBalance = 0 ;
+  }
+  else{
+    freeItemBalance = balanceInSmallestUnit - freeItemBalance;
+  }
+
+  //If free item value is negative then set it to zero.
+  if(freeItemBalance < 0){
+    freeItemBalance = 0 ;
+  }
+
+  result.convertedValueForFreeItems = Math.floor(freeItemBalance / result.orderUnitPiecesPerSmallestUnit);
+
+  if(result.convertedValueForFreeItems * result.orderUnitPiecesPerSmallestUnit < freeItemBalance){
+    result.convertedValueRestForFreeItems = (freeItemBalance - (result.convertedValueForFreeItems * result.orderUnitPiecesPerSmallestUnit)) / result.IvcUnitPiecesPerSmallestUnit;
+  }
+}
+
+
+/*Example:
+Inventory is hold in consumerUnit
+ConsumerUnit                         1      piece per smalles unit
+SalesUnit		isConsumerUnit       12     pieces oer smalles unit		6 ordered
+Layer			isOrderUnit          144    pieces per smalles unit
+Converting 6 SalesUnit (72 pieces per smallest) into orderUnit is not possible because 6 salesUnits are less than 1 consumer unit
+So we have to convert into the inventory unit which is the consumerUnit which is in our case the SalesUnit ;-)
+*/]]>
+</Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

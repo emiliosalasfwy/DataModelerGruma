@@ -1,0 +1,47 @@
+<BusinessLogic methodName="getOutOfStockProducts" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var productPKeys = "";
+
+if(Utils.isDefined(me.getLoPOS())){
+  var loPos = me.getLoPOS().getAllItems();
+  var idxPos;
+  var loSurveys;
+
+  for (idxPos = 0; idxPos < loPos.length; idxPos++) {
+    loSurveys = loPos[idxPos].getSurveys();
+
+    if (Utils.isDefined(loSurveys)) {
+      var surveysOutOfStock = loSurveys.getItemsByParamArray([{"dataWareHouseKey" : "OutOfStock"}, {"Done" : "1"}, {"Value" : "1"}]);
+      var surveysDistributed = loSurveys.getItemsByParamArray([{"dataWareHouseKey" : "Distribution"}, {"Done" : "1"}, {"Value" : "OutOfStock"}]);
+
+      if ((surveysOutOfStock.length + surveysDistributed.length) > 0) {
+        var idxSurvey;
+        var prdMainPKey;
+
+        for (idxSurvey = 0; idxSurvey < surveysOutOfStock.length; idxSurvey++) {
+          prdMainPKey = surveysOutOfStock[idxSurvey].getPrdMainPKey();
+          if (productPKeys.indexOf(prdMainPKey) < 0) {
+            if (productPKeys !== "") {
+              productPKeys += ",";
+            }
+            productPKeys += prdMainPKey;
+          }
+        }
+
+        for (idxSurvey = 0; idxSurvey < surveysDistributed.length; idxSurvey++) {
+          prdMainPKey = surveysDistributed[idxSurvey].getPrdMainPKey();
+          if (productPKeys.indexOf(prdMainPKey) < 0) {
+            if (productPKeys !== "") {
+              productPKeys += ",";
+            }
+            productPKeys += prdMainPKey;
+          }
+        }
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="productPKeys" value="productPKeys" />
+</BusinessLogic>

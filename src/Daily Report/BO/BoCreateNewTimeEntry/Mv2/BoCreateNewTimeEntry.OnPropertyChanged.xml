@@ -1,0 +1,78 @@
+<BusinessLogic methodName="onPropertyChanged" businessObjectClass="BoCreateNewTimeEntry" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+var completeDate;
+var time;
+var offsets;
+
+//Reset time to blank on clicking cross icon (X)
+if(handlerParams.newValue === "") {
+  handlerParams.newValue = undefined;
+}
+
+if(Utils.isDefined(handlerParams.newValue) && handlerParams.oldValue != handlerParams.newValue && me.getEventChanged() !== "1") {
+  if(handlerParams.simpleProperty === "startdate") {
+    me.setEventChanged("1");
+    me.setEnddate(handlerParams.newValue);
+    completeDate = Utils.convertAnsiDate2Date(handlerParams.newValue);
+    time = Utils.convertAnsiTime2Time(me.getStarttime());
+    completeDate.setHours(time.getHours());
+    completeDate.setMinutes(time.getMinutes());
+    offsets = dateTimeHelper.getTimeZoneOffset(completeDate);
+    me.setTimeFromGeoOffset(offsets.geoOffset);
+    me.setTimeFromDSTOffset(offsets.dstOffset);
+    me.setTimeThruGeoOffset(offsets.geoOffset);
+    me.setTimeThruDSTOffset(offsets.dstOffset);
+    me.setEventChanged("0");
+  }
+
+  if(handlerParams.simpleProperty === "starttime") {
+    completeDate = Utils.convertAnsiDate2Date(me.getStartdate());
+    time = Utils.convertAnsiTime2Time(handlerParams.newValue);
+    completeDate.setHours(time.getHours());
+    completeDate.setMinutes(time.getMinutes());
+    offsets = dateTimeHelper.getTimeZoneOffset(completeDate);
+    me.setEventChanged("1");
+    me.setTimeFromGeoOffset(offsets.geoOffset);
+    me.setTimeFromDSTOffset(offsets.dstOffset);
+    me.setStarttime((completeDate.getHours() < 10 ? "0" + completeDate.getHours() : completeDate.getHours()) + ":" + (completeDate.getMinutes() < 10 ? "0" + completeDate.getMinutes() : completeDate.getMinutes()));
+    handlerParams.allowChange = false;
+
+    if(completeDate.getHours() * 60 + completeDate.getMinutes() > Utils.convertAnsiTime2Time(me.getEndtime()).getHours() * 60 + Utils.convertAnsiTime2Time(me.getEndtime()).getMinutes()) {
+      me.setTimeThruGeoOffset(offsets.geoOffset);
+      me.setTimeThruDSTOffset(offsets.dstOffset);
+      me.setEndtime((completeDate.getHours() < 10 ? "0" + completeDate.getHours() : completeDate.getHours()) + ":" + (completeDate.getMinutes() < 10 ? "0" + completeDate.getMinutes() : completeDate.getMinutes()));
+    }
+    me.setEventChanged("0");
+  }
+
+  if(handlerParams.simpleProperty === "enddate") {
+    completeDate = Utils.convertAnsiDate2Date(handlerParams.newValue);
+    time = Utils.convertAnsiTime2Time(me.getStarttime());
+    completeDate.setHours(time.getHours());
+    completeDate.setMinutes(time.getMinutes());
+    offsets = dateTimeHelper.getTimeZoneOffset(completeDate);
+    me.setTimeThruGeoOffset(offsets.geoOffset);
+    me.setTimeThruDSTOffset(offsets.dstOffset);
+  }
+
+  if(handlerParams.simpleProperty === "endtime") {
+    completeDate = Utils.convertAnsiDate2Date(me.getEnddate());
+    time = Utils.convertAnsiTime2Time(handlerParams.newValue);
+    completeDate.setHours(time.getHours());
+    completeDate.setMinutes(time.getMinutes());
+    offsets = dateTimeHelper.getTimeZoneOffset(completeDate);
+    me.setEventChanged("1");
+    me.setTimeThruGeoOffset(offsets.geoOffset);
+    me.setTimeThruDSTOffset(offsets.dstOffset);
+    me.setEndtime((completeDate.getHours() < 10 ? "0" + completeDate.getHours() : completeDate.getHours()) + ":" + (completeDate.getMinutes() < 10 ? "0" + completeDate.getMinutes() : completeDate.getMinutes()));
+    handlerParams.allowChange = false;
+    me.setEventChanged("0");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,75 @@
+<BusinessLogic methodName="getTasksForCard" businessObjectClass="LoToDoOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="teamList" type="Object" />
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="cardDate" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+var convertedCardDate;
+jsonQuery.params = jsonParams;
+jsonQuery.teamList = teamList;
+
+if (Utils.isSfBackend()) {
+  convertedCardDate = Utils.convertForDBParam(cardDate, "DomDate");
+  jsonQuery.cond = " AND issuePhase IN (#released#, #initial#) AND Task.ActivityDate <> #minimumDate# AND Task.ActivityDate <= #cardDate# ";
+  jsonQuery.params.push({"field" : "released", "value" : 'Released'});
+  jsonQuery.params.push({"field" : "initial", "value" : 'initial'});
+  jsonQuery.params.push({"field" : "minimumDate", "value" : Utils.convertForDBParam(Utils.getMinDate(), "DomDate")});
+  jsonQuery.params.push({"field" : "cardDate", "value" : convertedCardDate});
+}
+else {
+  convertedCardDate = Utils.convertAnsiDate2Date(cardDate);
+  convertedCardDate.setHours(0, 0, 0, 0);
+  convertedCardDate = Utils.convertForDBParam(convertedCardDate, "DomDateTime");
+  jsonQuery.cond = " AND SvcTodo.IssuePhase IN (#released#, #initial#) AND DATETIME(SvcTodo.DueDate) <> #minimumDate# AND DATETIME(SvcTodo.DueDate) <= #cardDate# ";
+  jsonQuery.params.push({"field" : "released", "value" : 'Released'});
+  jsonQuery.params.push({"field" : "initial", "value" : 'initial'});
+  jsonQuery.params.push({"field" : "minimumDate", "value" : Utils.convertForDBParam(Utils.getMinDate(), "DomDate")});
+  jsonQuery.params.push({"field" : "cardDate", "value" : convertedCardDate});
+}
+me.removeAllItems();
+
+var promise = Facade.getListAsync("LoToDoOverview", jsonQuery).then(
+  function(todo) {
+    var numberOfTasks;
+    if(!Utils.isDefined(numberOfListItems)) {
+      if(Utils.isPhone()) {
+        numberOfTasks = 3;
+      }
+      else {
+        numberOfTasks = 5;
+      }
+    }
+    else {
+      numberOfTasks = numberOfListItems;
+    }
+
+    me.addItems(todo, jsonQuery.params);
+    me.orderBy({"dueDate":"DESC", "priority": "ASC"});
+    todo = me.getAllItems();
+    me.cardItemCount = todo.length;
+    me.removeAllItems();
+    todo = todo.splice(0,numberOfTasks);
+
+    for(var i=0; i<todo.length; i++) {
+      if(Utils.isPhone()) {
+        if(todo[i].text.length > 35) {
+          todo[i].text= todo[i].text.substr(0, 35);
+          todo[i].text+= "...";
+        }
+      }
+      else {
+        if(todo[i].text.length > 40) {
+          todo[i].text= todo[i].text.substr(0, 40);
+          todo[i].text+= "...";
+        }
+      }
+    }
+    me.addItems(todo, jsonQuery.params);
+    return me;
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

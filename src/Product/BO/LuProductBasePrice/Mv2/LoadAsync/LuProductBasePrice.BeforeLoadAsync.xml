@@ -1,0 +1,27 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LuProductBasePrice" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = context.jsonQuery;
+if (!jsonQuery) {
+  jsonQuery = {
+    'params' : []
+  };
+}
+
+var promise = Facade.getObjectAsync(LU_PRODUCTBASEPRICE, jsonQuery).then(
+  function (selfJson) {
+    if (Utils.isDefined(selfJson)){
+      if (Utils.isCasBackend()){
+        // Extract base price from condition XML
+        CP.PricingHandler.getInstance().extractPriceValues(selfJson, "conditionContent", "basePrice", "unitType", Utils.createDateNow(), "USD");
+      }
+
+      me.setProperties(selfJson);
+    }
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

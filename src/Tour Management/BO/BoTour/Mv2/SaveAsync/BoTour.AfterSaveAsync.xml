@@ -1,0 +1,90 @@
+<BusinessLogic methodName="afterSaveAsync" businessObjectClass="BoTour" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(me.getTmgStatus()==="Running") {
+  var lu = BoFactory.instantiate("LuRunningTour", {
+    "pKey": me.getPKey(),
+    "dateFrom": me.getDateFrom(),
+    "dateThru": me.getDateThru(),
+    "id": me.getTourId(),
+    "tmgMetaPKey": me.getTmgMetaPKey(),
+    "considerMultipleWarehouses": me.getBoTourMeta().getConsiderMultipleWarehouses(),
+    "startEtpWarehousePKey": me.getStartEtpWarehousePKey(),
+    "etpVehicleTruckPKey": me.getEtpVehicleTruckPKey(),
+    "defaultEtpVehicleTruckPKey": me.getDefaultEtpVehicleTruckPKey(),
+    "driverName":me.getLuDriver().getName()
+  });
+  ApplicationContext.set('currentTour', lu);
+}
+
+var deferreds = [];
+
+// Save Tour Checks
+if (Utils.isDefined(me.getLoTourChecks()) && me.getLoTourChecks().getObjectStatus() != STATE.PERSISTED) {
+  deferreds.push(Facade.saveListAsync(me.getLoTourChecks()));
+}
+
+if (!Utils.isSfBackend()) {
+  // Save TimeCard
+  if (Utils.isDefined(me.getBoUserDailyReport()) && Utils.isDefined(me.getBoUserDailyReport().getPKey()) && !Utils.isEmptyString(me.getBoUserDailyReport().getPKey())) {        
+    deferreds.push(me.getBoUserDailyReport().saveAsync());
+  }
+
+  if (Utils.isDefined(me.getLoSysSignatureAttribute())) {
+    deferreds.push(me.getLoSysSignatureAttribute().saveAsync());
+  }
+
+  if (Utils.isDefined(me.getLoSysSignatureBlob())) {
+    deferreds.push(me.getLoSysSignatureBlob().saveAsync());
+  }
+
+  if (Utils.isDefined(me.getLoGeoLocation())) {
+    deferreds.push(Facade.saveListAsync(me.getLoGeoLocation()));
+  }
+
+  promise = when.all(deferreds).then(
+    function () {
+
+      var syncOptions = me.getBoTourMeta().getSyncOptions();
+      var onTourEndStart = syncOptions === "OnTourEndStart";
+      var tmgStatus = me.getTmgStatus();
+
+      if(tmgStatus === "Running" && (syncOptions === "OnTourStart" || onTourEndStart)) {
+        Facade.startBackgroundReplication();
+      }
+      else if(tmgStatus === "Completed"  && (syncOptions === "OnTourEnd" || onTourEndStart)) {
+        Facade.startBackgroundReplication();
+      }
+
+      //Reset object status for all to prevent multiple saves
+      me.traverse(function(node) {
+        node.setObjectStatus(STATE.PERSISTED);
+        if(node.isList) {
+          node.getAllItems().forEach(function(item) {
+            item.setObjectStatus(STATE.PERSISTED);
+          });
+        }
+      },function (a, b, c){});
+    }
+  );
+}
+else {
+  me.traverse(function(node) {
+    node.setObjectStatus(STATE.PERSISTED);
+    if(node.isList) {
+      node.getAllItems().forEach(function(item) {
+        item.setObjectStatus(STATE.PERSISTED);
+      });
+    }
+  },function (a, b, c){});
+
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

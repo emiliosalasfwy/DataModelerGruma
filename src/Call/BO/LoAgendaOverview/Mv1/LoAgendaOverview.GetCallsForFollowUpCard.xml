@@ -1,0 +1,53 @@
+<BusinessLogic methodName="getCallsForFollowUpCard" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="callCustomer" type="String" />
+    <MethodInput name="dateFrom" type="DomDate" />
+    <MethodInput name="timeFrom" type="DomTime" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var jsonParams = [];
+var jsonQuery = {};
+var splitString = timeFrom.split(":");
+var newDateFrom = Utils.convertAnsiDate2Date(dateFrom);
+newDateFrom.setHours(splitString[0], splitString[1], 0, 0);
+
+jsonParams.push({"field": "followUpCardMode", "operator": "EQ", "value": "FollowUp"});
+jsonParams.push({"field": "dateFromStart", "operator": "EQ", "value": newDateFrom});
+jsonParams.push({"field": "ClbStatus", "operator": "EQ", "value": "Planned"});
+jsonParams.push({"field": "callCustomer", "operator": "EQ", "value": callCustomer});
+jsonQuery.params = jsonParams;
+
+var promise = BoFactory.loadObjectByParamsAsync("LoAgendaOverview", jsonQuery).then(
+  function(loAgendaOverview) {
+    var followUpVisits = loAgendaOverview.getAllItems();
+    var followUpVisitsCount = followUpVisits.length;
+    var visibleVisitsCount = 5;
+
+    if(Utils.isPhone()) {
+      visibleVisitsCount = 3;
+    }
+    if(followUpVisitsCount <= visibleVisitsCount) {
+      visibleVisitsCount = followUpVisitsCount;
+    }
+    var info = " ";
+    if(visibleVisitsCount > 0) {
+      info = visibleVisitsCount.toString() + " / " + followUpVisitsCount;
+    }
+
+    followUpVisits = followUpVisits.splice(0, visibleVisitsCount);
+
+    var currentUser = ApplicationContext.get('user').getPKey();
+    followUpVisits.forEach(function(currentVisit){
+      if(currentVisit.getResponsiblePKey() === currentUser){
+        currentVisit.setResponsibleName("");
+      }
+      var dateFrom = Localization.localize(currentVisit.getDateFrom(), "date");
+      var timeFrom = currentVisit.getTimeFrom();
+      currentVisit.setDateFromTimeFrom(dateFrom + "  " + timeFrom);
+    });
+
+    me.removeAllItems();
+    me.addItems(followUpVisits);
+    return when.resolve(info);
+  });]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

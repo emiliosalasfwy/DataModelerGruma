@@ -1,0 +1,6 @@
+<BusinessLogic methodName="prepareTour" businessObjectClass="BoTour" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+    
+		
+   ]]></Code>
+</BusinessLogic>

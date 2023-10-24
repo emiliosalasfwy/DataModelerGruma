@@ -1,0 +1,65 @@
+<BusinessLogic methodName="addProductGroup" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productGroupPKey" type="String" />
+    <MethodInput name="productGroupId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// determine if product exists already
+var promise;
+var loProducts = me.getLoPrmCttProducts();
+var existingProducts = loProducts.getItemsByParam({"referencePKey": productGroupPKey});
+var liProduct;
+if (existingProducts.length > 0)
+{
+  for (var index in existingProducts) 
+  {
+    if ((existingProducts[index].getObjectStatus() & STATE.DELETED) === 0)
+    {
+      liProduct = existingProducts[index];
+    }
+  }
+}
+
+if(!Utils.isDefined(liProduct))
+{
+  promise = BoFactory.loadObjectByParamsAsync("LuProductGroup", me.getQueryBy('pKey', productGroupPKey)).then(
+    function(luProductGroup){
+      var pKey = PKey.next();
+      var liProduct = {
+        "pKey": pKey,
+        "prmContractPKey": me.getPKey(),
+        "prdProductGroupName": luProductGroup.getShortText(),
+        "text": luProductGroup.getText1(),
+        "quantity": 0,
+        "specialPrice": 0,
+        "discount": 0,
+        "productId": productGroupId,
+        "prdgroupId": luProductGroup.getProductId(),
+        "groupFlag": " ",
+        "referencePKey": luProductGroup.getPKey(),
+        "prdMetaType": "PrdGroup",
+        "dataType": "Decimal",
+        "formatType": "0.1",
+        "maxValue": "100.0",
+        "minValue": "0.0",
+        "stepSize": "0",
+        "manual": "1",
+        "sortId": productGroupId,
+        "objectStatus": STATE.NEW | STATE.DIRTY
+      };
+
+      me.getLoPrmCttProducts().addObjectItems([liProduct]);
+      me.getLoPrmCttProducts().sortList();
+      me.getLoPrmCttProducts().setCurrentByPKey(pKey);
+      me.getLuPrmCttTacticProductCount().setProductCount(me.getLuPrmCttTacticProductCount().getProductCount() + 1);  // SF/CASDIFF: set and validate does not exist in CGCloud
+    }
+  );
+}
+else
+{
+  loProducts.setCurrent(liProduct);
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

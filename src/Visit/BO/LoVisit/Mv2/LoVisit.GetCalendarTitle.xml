@@ -1,0 +1,21 @@
+<BusinessLogic methodName="getCalendarTitle" businessObjectClass="LoVisit" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentDate" type="String" />
+    <MethodInput name="displayCalendarWeek" type="Bool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(displayCalendarWeek == "1") {
+  var startDayOfWeek = Utils.convertAnsiDate2Date(currentDate);
+  var dayValue = startDayOfWeek.getDay();
+  var difference = startDayOfWeek.getDate() - dayValue + (dayValue === 0 ? -6:1);
+  startDayOfWeek = Utils.createDateByMilliSec(startDayOfWeek.setDate(difference));
+  var currentweek = Utils.getCalendarWeekISO(startDayOfWeek);
+  currentDate = Localization.localize(Utils.convertAnsiDate2Date(currentDate), "date");
+  currentDate = Localization.resolve("Display_Current_Week") + " " + currentweek + " - " + currentDate;
+
+} else {
+  currentDate = Localization.localize(Utils.convertAnsiDate2Date(currentDate), "date");
+}]]>
+</Code>
+  <Return name="currentDate" value="currentDate" />
+</BusinessLogic>

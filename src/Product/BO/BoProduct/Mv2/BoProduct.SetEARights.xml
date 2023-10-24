@@ -1,0 +1,32 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoProduct" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var aclBo = me.getACL();
+var aclLuProductBasePrice;
+
+if (me.getForeignProduct() == "1"){
+  aclBo.removeRight(AclObjectType.PROPERTY, "category", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "taxClassification", AclPermission.VISIBLE);
+  aclBo.removeRight(AclObjectType.PROPERTY, "prdType", AclPermission.VISIBLE);
+  me.getLoProductHierarchy().getACL().removeRight(AclObjectType.OBJECT, "LoProductHierarchy", AclPermission.VISIBLE);
+
+  //Hide BasePrice
+  aclLuProductBasePrice = me.getLuProductBasePrice().getACL();
+  aclLuProductBasePrice.removeRight(AclObjectType.PROPERTY, "basePrice", AclPermission.VISIBLE);
+}
+else{
+  aclBo.addRight(AclObjectType.PROPERTY, "category", AclPermission.VISIBLE);
+  aclBo.addRight(AclObjectType.PROPERTY, "taxClassification", AclPermission.VISIBLE);
+  aclBo.addRight(AclObjectType.PROPERTY, "prdType", AclPermission.VISIBLE);
+  me.getLoProductHierarchy().getACL().removeRight(AclObjectType.OBJECT, "LoProductHierarchy", AclPermission.VISIBLE);
+
+  //Show BasePrice
+  aclLuProductBasePrice = me.getLuProductBasePrice().getACL();
+  aclLuProductBasePrice.addRight(AclObjectType.PROPERTY, "basePrice", AclPermission.VISIBLE);
+}
+
+//Hide Product Image initially
+me.getLuPrdUsageIcon().getACL().removeRight(AclObjectType.OBJECT, "LuPrdUsageIcon", AclPermission.VISIBLE);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

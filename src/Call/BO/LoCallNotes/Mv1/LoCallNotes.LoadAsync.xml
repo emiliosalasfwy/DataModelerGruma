@@ -1,0 +1,88 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoCallNotes" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_CALLNOTES, jsonQuery).then(
+  function (notes) {
+    var clbMainPKey;
+    var bpaMainPKey;
+    var dateFrom;
+    var timeFrom;
+    var responsibleName;
+    var responsiblePKey;
+
+    for (var index in jsonQuery.params) {
+      switch (jsonQuery.params[index].field) {
+        case "clbMainPKey":
+          clbMainPKey = jsonQuery.params[index].value;
+          break;
+        case "bpaMainPKey":
+          bpaMainPKey = jsonQuery.params[index].value;
+          break;
+        case "dateFrom":
+          dateFrom = jsonQuery.params[index].value;
+          break;
+        case "timeFrom":
+          timeFrom = jsonQuery.params[index].value;
+          break;
+        case "responsiblePKey":
+          responsiblePKey = jsonQuery.params[index].value;
+          break;
+        case "responsibleName":
+          responsibleName = jsonQuery.params[index].value;
+          break;
+      }
+    }
+
+    var currentNoteExists = false;
+    for (var i=0; i<notes.length; i++) {
+      notes[i].noteDate = Localization.localize(notes[i].noteDate, "default");
+      notes[i].shortText = notes[i].text.substr(0, 100);
+      if (notes[i].text.length > 100) {
+        notes[i].shortText += "...";
+      }
+      if (notes[i].pKey === clbMainPKey) {
+        currentNoteExists = true;
+      }
+    }
+
+    if (!currentNoteExists && Utils.isDefined(dateFrom)) {
+      var note = {
+        "pKey": clbMainPKey,
+        "bpaMainPKey": bpaMainPKey,
+        "noteDate": dateFrom.substr(0,10) + " " + timeFrom + ":00",
+        "responsiblePKey": responsiblePKey,
+        "responsibleName": responsibleName,
+        "text": " ",
+        "shortText": " "};
+      notes.push(note);
+    }
+
+    notes.sort(function(a,b){return (a.noteDate === b.noteDate) ? 0 : ((a.noteDate > b.noteDate) ? -1 : 1);});
+    me.addItems(notes, jsonQuery.params);
+
+    //set EA rights
+    var allNotes = me.getAllItems();
+    for (var j=0; j<allNotes.length; j++) {
+      if (allNotes[j].getPKey() !== clbMainPKey) {
+        allNotes[j].getACL().removeRight(AclObjectType.PROPERTY, "text", AclPermission.EDIT);
+      }
+    }
+
+    me.orderBy({"noteDate": "DESC"});
+    var boCall = Framework.getProcessContext().mainBO;
+    
+    //clean call notes list
+    me.setObjectStatus(STATE.PERSISTED);
+    
+    boCall.setObjectStatusFrozen(true);
+    boCall.setLoNotes(me);
+    boCall.setObjectStatusFrozen(false);
+    
+    boCall.addItemChangedEventListener('loNotes', boCall.onNotesChanged);
+    return me;
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

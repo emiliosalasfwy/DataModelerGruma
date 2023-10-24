@@ -1,0 +1,53 @@
+<BusinessLogic methodName="getTruckLoadDocumentByPhaseAndUsage" businessObjectClass="LoTruckLoadOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="usage" type="String" />
+    <MethodInput name="phase" type="String" />
+    <MethodInput name="forcedFlagHandling" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var documentPKey = " ";
+var items = me.getItemObjects();
+var usedForStartOfDay = "0";
+var usedForEndOfDay = "0";
+
+if(Utils.isDefined(forcedFlagHandling) && !Utils.isEmptyString(forcedFlagHandling)){
+
+  switch (forcedFlagHandling.toLowerCase()){
+    case "startofday":
+      usedForStartOfDay = "1";
+      usedForEndOfDay = "0";
+      break;
+
+    case "endofday":
+      usedForStartOfDay = "0";
+      usedForEndOfDay = "1";
+      break;
+
+    case "both":
+      usedForStartOfDay = "1";
+      usedForEndOfDay = "1";
+      break;
+
+    case "none":
+      usedForStartOfDay = "0";
+      usedForEndOfDay = "0";
+      break;
+  }
+}
+
+
+if(items.length > 0){
+  for(var i=0; i<items.length; i++){
+    if (!Utils.isEmptyString(usage) && !Utils.isEmptyString(phase) &&
+        items[i].getUsage().toLowerCase() === usage.toLowerCase() &&
+        items[i].getPhase().toLowerCase() === phase.toLowerCase() &&
+        items[i].getUsedForStartOfDay() === usedForStartOfDay &&
+        items[i].getUsedForEndOfDay() === usedForEndOfDay){
+      documentPKey = items[i].getPKey();
+      break;
+    }
+  }
+}]]>
+</Code>
+  <Return name="documentPKey" value="documentPKey" />
+</BusinessLogic>

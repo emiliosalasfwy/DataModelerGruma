@@ -1,0 +1,8 @@
+<BusinessLogic methodName="isPromotionEditable" businessObjectClass="BoPromotion" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var usrUserPKey = ApplicationContext.get('user').getPKey();
+var editable = (me.getResponsiblePKey() === usrUserPKey);]]>
+</Code>
+  <Return name="result" value="editable" />
+</BusinessLogic>

@@ -1,0 +1,11 @@
+<BusinessLogic methodName="createTourId" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var tourId = "";
+
+if(Utils.isDefined(this.getPKey()) && !Utils.isEmptyString(this.getPKey()) && this.getPKey().length > 6){
+   tourId = this.getPKey().substr(this.getPKey().length -6, 6); 
+   }]]>
+</Code>
+  <Return name="tourId" value="tourId" />
+</BusinessLogic>

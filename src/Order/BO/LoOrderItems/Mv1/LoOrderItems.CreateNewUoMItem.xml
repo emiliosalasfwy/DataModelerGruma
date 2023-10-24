@@ -1,0 +1,37 @@
+<BusinessLogic methodName="createNewUoMItem" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="logisticsItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newItem = {};
+var setter = function(val, idx, array) 
+{
+  newItem[val] = mainItem[val];
+};
+
+var UoM = logisticsItem.getUnitType();
+
+Object.getOwnPropertyNames(mainItem).forEach(setter);
+
+newItem.pKey = PKey.next();
+newItem.quantityLogisticUnit = UoM;
+newItem.piecesPerSmallestUnit = logisticsItem.getPiecesPerSmallestUnit();
+newItem.isOrderUnit = logisticsItem.getIsOrderUnit();
+newItem.sort = logisticsItem.getSort();
+newItem.ivcInformationObject = " ";
+newItem.objectStatus = STATE.NEW;
+newItem.quantity = 0;
+newItem.basePriceReceipt = 0;
+newItem.price = 0;
+newItem.priceReceipt = 0;
+newItem.value = 0;
+newItem.valueReceipt = 0;
+newItem.pricingInformation = ' ';
+if(logisticsItem.getIsOrderUnit() == "0" && newItem.specialPromoted == "1") {
+	newItem.specialQuantity = 0;
+    newItem.suggestedQuantity = 0;
+}]]>
+</Code>
+  <Return name="newItem" value="newItem" />
+</BusinessLogic>

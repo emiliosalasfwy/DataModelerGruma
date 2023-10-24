@@ -1,0 +1,7 @@
+<BusinessLogic methodName="releaseButtonVisible" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = (me.getPhase() !== "Released") && (me.getPhase() !== "Canceled");]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

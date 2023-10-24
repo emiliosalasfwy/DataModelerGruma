@@ -1,0 +1,12 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoPrmCttSlogan" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var user = ApplicationContext.get('user');
+result.setLanguage(user.getLanguageSpoken());
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

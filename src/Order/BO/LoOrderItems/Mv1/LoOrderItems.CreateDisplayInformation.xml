@@ -1,0 +1,79 @@
+<BusinessLogic methodName="createDisplayInformation" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderMeta" type="Object" />
+    <MethodInput name="loSuggestedQuantity" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liMainObject;
+var allItems = me.getItems();
+var mainItem;
+var currentRefPKey = allItems.length > 0 ? allItems[0].getRefPKey() : null;
+var orderUnitInformation = "";
+var unitInformation = "";
+var isSuggestedVisible;
+
+// items are ordered by refPKey
+for (var i = 0; i < allItems.length; i++) {
+  var currentItem = allItems[i];
+
+  isSuggestedVisible = (!Utils.isEmptyString(orderMeta.getConsiderQuantitySuggestion()) && orderMeta.getConsiderQuantitySuggestion() !== "No") || currentItem.getSpecialPromoted() == "1";
+  if (currentRefPKey !== currentItem.getRefPKey() && Utils.isDefined(mainItem)) {
+    mainItem.setOrderUnitInformation(orderUnitInformation);
+    mainItem.setUnitInformation(unitInformation);
+    //RefPKey changed which means that is a new main list item --> mainItem is not known yet
+    mainItem = undefined;
+
+    currentRefPKey = currentItem.getRefPKey();
+    orderUnitInformation = "";
+    unitInformation = "";
+  
+  }else if (currentRefPKey !== currentItem.getRefPKey()){
+    //RefPKey changed without having a main item (e.g. if last record was a free item which was granted but not granted in order unit)
+    currentRefPKey = currentItem.getRefPKey();
+  }
+
+  var info = me.createDisplayInformationForUoMItem(currentItem, orderMeta);
+
+  if (isSuggestedVisible) {
+    currentItem.setOQtyString(info.oQtyString);
+    currentItem.setSpecialPromotionIcon(info.specialPromotionIcon);
+  }
+  else {
+    currentItem.setOQtyString("");
+    currentItem.setSpecialPromotionIcon("");
+  }
+
+  currentItem.setLogicUnitsforDisplay(info.logicUnitsforDisplay);
+
+  //check for free item
+  var isFreeItem = false;
+  isFreeItem = (currentItem.sdoItemMetaPKey === orderMeta.luOrderMetaForFreeItems.sdoItemMetaPKey) || !Utils.isEmptyString(currentItem.getRewardPKey());
+
+  if(Utils.isEmptyString(currentItem.promotionPKey) && !isFreeItem && isSuggestedVisible) {
+    me.displayQuantitySuggestion(currentItem, loSuggestedQuantity, orderMeta);
+  }
+
+  if (currentItem.getIsOrderUnit() == "1") {
+    //mainItem holds a reference to the item loOrderItems list
+    mainItem = currentItem;
+    orderUnitInformation += info.unitInformation;
+  }
+  else {
+    unitInformation += Utils.isEmptyString(unitInformation) ? info.unitInformation : ", " + info.unitInformation;
+  }
+
+  // for free reward products set orderUnitInformation correctly
+  if(currentItem.getParentType() === "Reward") {
+    currentItem.setOrderUnitInformation(orderUnitInformation);
+    currentItem.setUnitInformation(unitInformation);
+  }
+}
+
+
+if (Utils.isDefined(mainItem)) {
+  mainItem.setOrderUnitInformation(orderUnitInformation);
+  mainItem.setUnitInformation(unitInformation);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

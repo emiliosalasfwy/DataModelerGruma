@@ -1,0 +1,41 @@
+<BusinessLogic methodName="addTactic" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tacticMetaPKey" type="String" />
+    <MethodInput name="tacticMetaId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LuPrmMeta", me.getQueryBy('pKey', tacticMetaPKey)).then(
+  function(luPrmMeta) {
+    var pKey = PKey.next();
+    var liTactic ={
+      "pKey": pKey,
+      "active": "1",
+      "costAmount": 0,
+      "dateFrom": me.getDateFrom(),
+      "dateThru": me.getDateThru(),
+      "tacticParentPKey": me.getPKey(),
+      "tacticMetaName": luPrmMeta.getText(),
+      "prmMetaPKey": luPrmMeta.getPKey(),
+      "metaId": tacticMetaId,
+      "bpaCustomerPKey": me.getBpaCustomerPKey(),
+      "managementType": " ",
+      "tacticId": pKey,
+      "initiatorPKey": ApplicationContext.get('user').getPKey(),
+      "useStepper" : "0",
+      "dataType" :  "Decimal",
+      "minValue" : "0",
+      "maxValue" : "9999999",
+      "salesOrg" : ApplicationContext.get('user').getBoUserSales().getSalesOrg(),
+      "objectStatus": STATE.NEW | STATE.DIRTY
+    };      
+
+    me.getLoPrmCttTactics().addListItems([liTactic]);        
+    var currentItem = me.getLoPrmCttTactics().getItemByPKey(pKey);   
+    currentItem.setObjectStatus(currentItem.getObjectStatus());
+    me.getLoPrmCttTactics().setCurrentByPKey(pKey);
+    me.getLuPrmCttTacticProductCount().set('tacticCount', (me.getLuPrmCttTacticProductCount().getTacticCount() + 1));
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

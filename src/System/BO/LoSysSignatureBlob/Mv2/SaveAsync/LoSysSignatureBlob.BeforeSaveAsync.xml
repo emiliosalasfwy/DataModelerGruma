@@ -1,0 +1,48 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoSysSignatureBlob" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var items = me.getItems();
+
+if(Utils.isSfBackend()) {
+  promise = BoFactory.createObjectAsync("BoSfHelper", {}).then(
+    function (helper) {
+      var datasource = AppManager.getDataSource("LoSysSignature");
+
+      var mapping = {
+        tableName: datasource.objectName,
+        idColumn: datasource.idAttribute,
+        idProperty: datasource.idProperty,
+        columnMapping: Utils.clone(datasource.attributeToColumnMapping)
+      };
+
+      var promises = [];
+      for (var i = 0; i < items.length; i++)
+      {
+        if (Utils.isEmptyString(items[i].getBlobPKey()))
+        {
+          items[i].setBlobPKey(PKey.next());
+        }
+        if (Utils.isEmptyString(items[i].getFileName()))
+        {
+          items[i].setFileName(items[i].getBlobPKey() + '.png');
+        }
+        if (Utils.isEmptyString(items[i].getSignaturePKey()))
+        {
+          items[i].setSignaturePKey(PKey.next());
+        }
+        promises.push(helper.saveTrackedObjectWithMapping(items[i], mapping, {}));
+      }
+      promises.push(Facade.saveListAttachmentAsync(me, "SysSignature", "SysSignatureBlob", "mediaPath", "blobPKey", "type"));
+      return when.all(promises);
+    }
+  );
+} else {
+  promise = Facade.saveListAttachmentAsync(me, "SysSignature", "SysSignatureBlob", "mediaPath", "pKey", "type");
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

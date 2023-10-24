@@ -1,0 +1,32 @@
+<BusinessLogic methodName="defineWizardHeaderLabel" businessObjectClass="LoSvcRequestMeta" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="MetaType" type="Text" />
+    <MethodInput name="IssueType" type="Text" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var WizardHeaderLabel;
+
+if ( MetaType === "Issue" )
+{
+  WizardHeaderLabel = Localization.resolve("SvcRequestMetaLookupIssueId");
+  if(!Utils.isDefined(WizardHeaderLabel))
+  {
+    WizardHeaderLabel = "Customer Task Types";
+  }
+
+  if( IssueType === "ToDo")
+  {
+    WizardHeaderLabel = "Task Types";
+  }
+}
+else if( MetaType === "Todo")
+{
+  WizardHeaderLabel = Localization.resolve("SvcRequestMetaLookupTodoId");
+  if(!Utils.isDefined(WizardHeaderLabel))
+  {
+    WizardHeaderLabel = "Task Types";
+  }
+}]]>
+</Code>
+  <Return name="WizardHeaderLabel" value="WizardHeaderLabel" />
+</BusinessLogic>

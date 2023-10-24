@@ -1,0 +1,15 @@
+<BusinessLogic methodName="loadCustomerLookup" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customerPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setCustomerPKey(customerPKey);
+
+var promise = BoFactory.loadObjectByParamsAsync("LuCustomer", me.getQueryBy("pKey", customerPKey)).then(
+  function (lookup) {
+    me.setLuCustomer(lookup);
+    me.setObjectStatus(STATE.NEW);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

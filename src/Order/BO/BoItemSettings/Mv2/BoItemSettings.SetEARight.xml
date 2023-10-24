@@ -1,0 +1,17 @@
+<BusinessLogic methodName="setEARight" businessObjectClass="BoItemSettings" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="barcodeScanBehavior" type="DomSdoBarcodeScanBehavior" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+if((barcodeScanBehavior.isToggle && barcodeScanBehavior === "SelectIncrease") || barcodeScanBehavior === "SelectIncrease") {
+  acl.addRight(AclObjectType.PROPERTY, "currentScanIncrementQuantity", AclPermission.VISIBLE);
+}
+else {
+  acl.removeRight(AclObjectType.PROPERTY, "currentScanIncrementQuantity", AclPermission.VISIBLE);
+}
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

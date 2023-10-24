@@ -1,0 +1,82 @@
+<BusinessLogic methodName="afterDoValidateAsync" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var deferreds = [];
+
+
+if(me.getAllDay() == '1'){
+  //update duration for all day calls and multiple all day calls. Time part must be ignored
+  if(me.getDateFrom() === me.getDateThru())me.setDuration(24*60);
+  else me.setDuration(me.getCallDuration(me.getDateFrom(), "00:00", me.getDateThru(), "00:00") + (24*60));
+}else{
+  me.setDuration(me.getCallDuration(me.getDateFrom(), me.getTimeFrom(), me.getDateThru(), me.getTimeThru()));
+}
+
+if (me.getClbStatus() === "Completed" && me.getOriginalClbStatus() !== "Completed") {
+  //On Error reset ClbStatus & Magnetization
+  if (context.messageCollector.getMessages().length > 0) {
+    me.setClbStatus(me.getOriginalClbStatus());
+
+    // reset demagnetization flags that might have been set during validation
+    me.getBoJobManager().getLoMagnetizedJobList().resetMagnetizationFlag();
+
+  } else {
+    // call has just been completed and is valid ==> excute actions
+
+    // update the customer's last call date
+    var jsonQuery2 = {
+      "customerPKey" : me.getBpaMainPKey(),
+      "clbMetaPKey" : me.getClbMetaPKey()
+    };
+    deferreds.push(BoFactory.loadListAsync("LoBpaCallSetting", jsonQuery2).then(function (list) {
+      list.updateLastCallDate(me.getBpaMainPKey(), me.getClbMetaPKey(), me.getDateThru());
+    }));
+
+    // retrieve location
+    if (me.getLuCallMeta().getLocCaptureDuringComplete() == "1") {
+      deferreds.push(me.getPosition());
+    }
+
+    //update call times
+    me.captureProceedingTime("true");
+    me.setCompletedDate(Utils.createAnsiDateToday());
+
+    //Get Effective Duration
+    if (me.getLuCallMeta().getCaptureProceedingTime() == "1") {
+      var startDate = me.getStartTimeEffective();
+      var dStartDate = Utils.convertAnsiDate2Date(startDate);
+      var startTime = Utils.convertTime2Ansi(dStartDate);
+
+      var stopDate = me.getStopTimeEffective();
+      var dStopDate = Utils.convertAnsiDate2Date(stopDate);
+      var stopTime = Utils.convertTime2Ansi(dStopDate);
+
+      me.setDurationEffective(me.getCallDuration(startDate, startTime, stopDate, stopTime));
+
+      //Update TimeFrom, TimeThru, Duration
+      if (me.getLuCallMeta().getUpdatePlannedTimes() == "1") {
+        me.setTimeFrom(startTime);
+        me.setTimeThru(stopTime);
+        me.setDuration(me.getDurationEffective());
+        var ansiStartDate = Utils.convertAnsiDateTime2AnsiDate(startDate);
+        var ansiStopDate = Utils.convertAnsiDateTime2AnsiDate(stopDate);
+        me.setDateFrom(ansiStartDate);
+        me.setDateThru(ansiStopDate);
+      }
+    }
+  }
+}
+
+promise = when.all(deferreds).then(function () {
+  //Update JobListMagnetization if no error occured
+  if (context.messageCollector.getMessages().length === 0) {
+    return me.updateJobListMagnetization();
+  }
+});]]>
+</Code>
+  <Return name="returnValue" value="promise" />
+</BusinessLogic>

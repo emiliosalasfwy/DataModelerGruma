@@ -1,0 +1,7 @@
+<BusinessLogic methodName="isKAMVisible" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = !(Utils.isPhone() || Utils.isEmptyString(me.getLuUserHasRoleById().getPKey()));]]>
+</Code>
+  <Return name="result" value="visible" />
+</BusinessLogic>

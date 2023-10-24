@@ -1,0 +1,100 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoSurveyColumns" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var surveyColumnList = [];
+
+/* STORE surveys */
+
+var surveyColumn1 = {
+  "displayColumnIndex" : "1",
+  "displayColumnName" : "svyFacings",
+  "displayColumnNameCapitalized" : "SvyFacings",
+  "jobMetaId" : "53001"
+};
+
+var surveyColumn2 = {
+  "displayColumnIndex" : "2",
+  "displayColumnName" : "svyPrice",
+  "displayColumnNameCapitalized" : "SvyPrice",
+  "jobMetaId" : "53002"
+};
+
+var surveyColumn3 = {
+  "displayColumnIndex" : "3",
+  "displayColumnName" : "svyDistributed",
+  "displayColumnNameCapitalized" : "SvyDistributed",
+  "jobMetaId" : "53003"
+};
+
+/* POS surveys */
+
+var surveyColumn4 = {
+  "displayColumnIndex" : "4",
+  "displayColumnName" : "svyPosFacings",
+  "displayColumnNameCapitalized" : "SvyPosFacings",
+  "jobMetaId" : "540041",
+  "measureType" : "POS"
+};
+
+var surveyColumn6 = {
+  "displayColumnIndex" : "6",
+  "displayColumnName" : "svyPosDistributed",
+  "displayColumnNameCapitalized" : "SvyPosDistributed",
+  "jobMetaId" : "54003",
+  "measureType" : "POS"
+};
+
+var surveyColumn5 = {
+  "displayColumnIndex" : "5",
+  "displayColumnName" : "svyPosPrice",
+  "displayColumnNameCapitalized" : "SvyPosPrice",
+  "jobMetaId" : "54002",
+  "measureType" : "POS"
+};
+
+surveyColumnList.push(surveyColumn1);
+surveyColumnList.push(surveyColumn2);
+surveyColumnList.push(surveyColumn3);
+surveyColumnList.push(surveyColumn4);
+surveyColumnList.push(surveyColumn5);
+surveyColumnList.push(surveyColumn6);
+
+var surveyColumnListIdx;
+var sJobDefMetaIds = "";
+for (surveyColumnListIdx = 0; surveyColumnListIdx < surveyColumnList.length; surveyColumnListIdx++) {
+  if (surveyColumnListIdx > 0){
+    sJobDefMetaIds += ",";
+  }
+  sJobDefMetaIds += "'" + surveyColumnList[surveyColumnListIdx].jobMetaId + "'";
+}
+
+me.addItems(surveyColumnList);
+
+var jsonParams = {};
+jsonParams.jobDefinitionMetaIds = sJobDefMetaIds;
+
+var promise = Facade.selectSQL("DsLoJobDefinitionMetas", "JobDefinitionMetaInfoById", jsonParams)
+.then(function(list){
+  var rowList = list.getResultData();
+  var rowData;
+  var rowDataFound;
+  var orderedSurveyColumns = me.getItemsByParamArray([], [{"jobMetaId" : "ASC"}]);
+  var rowDataDic = Utils.createDictionary();
+
+  rowList.forEach(function(rowListElement){
+    rowData = rowListElement.data.rowData;
+    rowDataDic.add(rowData.jobMetaId, rowData);
+  });
+
+  orderedSurveyColumns.forEach(function(column){
+    rowDataFound = rowDataDic.get(column.getJobMetaId());
+    if(Utils.isDefined(rowDataFound)){
+      column.updateProperties(rowDataFound);
+    }
+  });
+
+  return me;
+});]]>
+</Code>
+  <Return name="promise" value="promise " />
+</BusinessLogic>

@@ -1,0 +1,21 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoUsrDRActivity" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var length = items.length;
+
+for (var i = 0; i < length; i++){
+  var callType = items[i].getCallType();
+  var imageId = 'ClbTypeStatus_' + callType + '_Planned';
+  items[i].setClbTypeStatus(imageId);
+}
+
+me.orderBy({ "clbText" : "ASC" });
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

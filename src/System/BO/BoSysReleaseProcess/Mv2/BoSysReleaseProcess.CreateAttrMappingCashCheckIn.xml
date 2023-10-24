@@ -1,0 +1,65 @@
+<BusinessLogic methodName="createAttrMappingCashCheckIn" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+
+var tourId;
+var warehouseId;
+var driver;
+var date;
+var amount;
+var currency;
+var difference;
+
+if(Utils.isDefined(tour)){
+  tourId = tour.getId();
+  attributes.add("TourId", tourId);
+}
+
+if (ref.getLoEtpWarehouse) {
+  ref.getLoEtpWarehouse().setFilter("pKey", ref.getEtpWarehousePKey());
+  var filteredItems = ref.getLoEtpWarehouse().getItemObjects();
+  if (filteredItems.length > 0) {
+    warehouseId = filteredItems[0].getText();
+    attributes.add("Warehouse", warehouseId);
+  }	
+}
+
+if(Utils.isDefined(tour)){
+  driver = tour.getDriverName();
+  attributes.add("Driver", driver);
+}
+var time;
+if (ref.getReleaseTime) {  
+  time = Localization.localize(ref.getReleaseTime(), "dateTime");
+}
+
+if (!Utils.isEmptyString(time)) {
+  attributes.add("Date", time);
+}
+
+if (ref.getCurrency) {  
+  currency = Utils.getToggleText("DomCurrency", ref.currency, false);
+}
+
+if (ref.getPaidAmount) {  
+  amount = Localization.localize(ref.getPaidAmount().toFixed(2), "number");
+
+}
+
+if (ref.getDifferenceAmount) {  
+  difference = Localization.localize(ref.getDifferenceAmount().toFixed(2), "number");
+}
+
+if (!Utils.isEmptyString(amount) && !Utils.isEmptyString(currency)) {
+  attributes.add("Amount", amount + " " + currency);
+}
+
+if (!Utils.isEmptyString(difference) && !Utils.isEmptyString(currency)) {
+  attributes.add("Difference", difference + " " + currency);
+}]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

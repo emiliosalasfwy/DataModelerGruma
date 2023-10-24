@@ -1,0 +1,14 @@
+<BusinessLogic methodName="resetDeliveryDate" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this; 
+if(me.getDocumentType() ==="Replenishment")
+{
+  if(me.getDeliveryDate() === "1800-01-01 00:00:00" || Utils.isEmptyString(me.getDeliveryDate()))
+  {
+    me.setDeliveryDate(null);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

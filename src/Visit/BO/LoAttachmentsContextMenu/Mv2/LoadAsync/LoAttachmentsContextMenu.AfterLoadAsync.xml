@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoAttachmentsContextMenu" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="{BOType}">
+    <Parameters>
+  <MethodInput name="result" type="Object" />
+  <MethodInput name="context" type="Object" />
+</Parameters>
+    <Code language="JavaScript">
+    <![CDATA[
+    var promise=when.resolve(result);
+		
+   ]]>
+  </Code>
+    <Return name="result" value="promise" />
+</BusinessLogic>

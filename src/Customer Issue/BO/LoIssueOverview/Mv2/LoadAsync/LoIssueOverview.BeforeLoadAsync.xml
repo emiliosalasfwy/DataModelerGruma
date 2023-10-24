@@ -1,0 +1,65 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoIssueOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Unwrap parameters
+var newParams = context.jsonQuery;
+var jsonParams = [];
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+
+context.jsonQuery.params = jsonParams;
+
+// If no customerPKey is passed, standalone overview with all customers related issues to current user should be displayed
+if (Utils.isDefined(newParams.customerPKey) && !Utils.isEmptyString(newParams.customerPKey)) {
+  context.jsonQuery.loadLoCustomerOverview = "'" + newParams.customerPKey + "'";
+} else {
+  // Put customer list into jsonQuery for LoIssueOverview
+  var loadLoCustomerOverviewObj = Facade.myProxy.getLoadStatement("LoCustomerOverview", {});
+  var customerSqlQuery = "SELECT pKey FROM ( " + loadLoCustomerOverviewObj.sql + " ) ";
+  jsonParams.push({"field" : "loadLoCustomerOverviewParams", "value" : loadLoCustomerOverviewObj.params});
+  context.jsonQuery.loadLoCustomerOverview = customerSqlQuery;
+}
+
+
+// Set appropriate advanced serach profile
+if (Utils.isDefined(context.jsonQuery.asoName)) {
+
+  if (Utils.isDefined(newParams.customerPKey) && !Utils.isEmptyString(newParams.customerPKey)) {
+    // Take provile for visit navigation, but consider supervisor
+
+    if (ApplicationContext.get('user').getIsSupervisor() == "1") {
+      context.jsonQuery.asoName = "AsoIssueCallSupervisor";
+    } else {
+      context.jsonQuery.asoName = "AsoIssueCall";
+    }
+  } else {
+    // Stand alone mode
+    if (ApplicationContext.get('user').getIsSupervisor() == "1") {
+      context.jsonQuery.asoName = "AsoIssueSupervisor";
+    } else {
+      context.jsonQuery.asoName = "AsoIssue";
+    }
+  }
+}
+
+var promise = me.addAsoInformation(context.jsonQuery).then(
+  function () {
+    return Facade.getListAsync("LoIssueOverview", context.jsonQuery);
+  }).then(
+  function(issue) {
+    for(var i = 0; i < issue.length; i++) {
+      if(issue[i].text.length > 25) {
+        issue[i].text= issue[i].text.substr(0, 25);
+        issue[i].text+= "...";
+      }
+    }
+    me.addItems(issue, context.jsonQuery.params);
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

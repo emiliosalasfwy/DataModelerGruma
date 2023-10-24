@@ -1,0 +1,25 @@
+<BusinessLogic methodName="filterRelevantAttachments" businessObjectClass="LoCallAttachments" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jDTPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(jDTPKey)){
+  var stateDeleted = STATE.DIRTY | STATE.DELETED;
+  var stateNew = STATE.NEW;
+  var stateUnmodified = STATE.PERSISTED;
+
+  me.setFilterArray([{"clbMainPKey": jDTPKey, "op": "EQ"},
+                     {"objectStatus" : stateDeleted + stateNew, "op" : "NE"},
+                     {"objectStatus" : stateDeleted + stateUnmodified, "op" : "NE"}]);
+}
+else{
+  me.resetFilter("clbMainPKey");
+}
+
+var listItems = me.getItems();
+for(var i = 0; i < listItems.length; i++) {
+  me.setIsTagged(listItems[i]);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

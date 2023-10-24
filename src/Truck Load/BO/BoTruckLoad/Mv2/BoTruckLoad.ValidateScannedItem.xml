@@ -1,0 +1,32 @@
+<BusinessLogic methodName="validateScannedItem" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PrdMainPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+
+jsonQuery.params = [{ "field" : "EtpWarehousePKey", "value" : me.getEtpWarehousePKey() }];
+
+var promise = BoFactory.loadListAsync("LoEtpWarehouseProducts", jsonQuery).then(
+  function (loEtpWarehouseProducts){
+    loEtpWarehouseProducts.setFilterArray([ {"prdProductPKey" : PrdMainPKey, "op" : "EQ"} ] );
+    var items = loEtpWarehouseProducts.getItemObjects();
+
+    //If returned array is empty, the product is not valid ,
+    if (items.length > 0){
+      return "valid";
+    } else {
+      var buttonValues = {};
+      buttonValues[Localization.resolve("OK")] = "ok";
+
+      return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"), Localization.resolve("TruckInvalidProductDuringBarcodeScan"), buttonValues).then(
+        function () {
+          return "notValid";
+        }
+      );
+    }
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

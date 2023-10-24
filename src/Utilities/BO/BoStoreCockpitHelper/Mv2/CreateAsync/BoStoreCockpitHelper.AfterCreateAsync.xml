@@ -1,0 +1,20 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoStoreCockpitHelper" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.mobilityUserGuidance = context.jsonQuery.mobilityUserGuidance;
+//visible items
+//Default:  5 items
+//Phone:    3 items
+//Note: more then 5 items are not allowed in the card list. So never set to value bigger 5
+me.numberOfListItems = 5;
+if(Utils.isPhone()) {
+  me.numberOfListItems = 3;
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

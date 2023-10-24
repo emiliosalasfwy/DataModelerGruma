@@ -1,0 +1,14 @@
+<BusinessLogic methodName="loadPayments" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync(LO_ORDERPAYMENTS, me.getQueryBy("sdoMainPKey", me.getPKey())).then(
+  function (loPayments) {
+    me.setLoPayments(loPayments);
+    var items = loPayments.getItemObjects();
+    for (var i = 0; i < items.length; i++) {
+      items[0].setObjectStatus(STATE.PERSISTED);
+    }
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

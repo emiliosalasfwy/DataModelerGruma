@@ -1,0 +1,18 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoLogisticUnit" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync(LO_LOGISTICUNIT, jsonParams)
+.then(function(items) {
+
+  var subItems = new Array(items.length);
+  for(var i=0; i < items.length; i++) {
+    subItems[i] = items[i].unitType;
+  }
+
+  return Utils.getToggleListObject("PrdLogisticUnit", subItems); 
+});]]>
+</Code>
+  <Return name="loLogisticUnit" value="promise" />
+</BusinessLogic>

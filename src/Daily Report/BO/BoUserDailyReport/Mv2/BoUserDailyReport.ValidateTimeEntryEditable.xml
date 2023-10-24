@@ -1,0 +1,20 @@
+<BusinessLogic methodName="validateTimeEntryEditable" businessObjectClass="BoUserDailyReport" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+//if selected time entry is work time entry show message
+if(Utils.isDefined(me.getLoUsrTimeEntry().getCurrent()) && (me.getLoUsrTimeEntry().getCurrent().getUsrTimeEntryMetaPKey() === me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey())){
+  var buttonValues = {};
+  buttonValues[Locale.translate("OK")] = "ok";
+  promise = MessageBox.displayMessage(Locale.translate("MessageBox_Title_Warning"), Locale.translate("BoDailyReport_UsrTimeEntryNotEditable"), buttonValues).then(
+    function(){
+      return "";
+    }
+  );
+}else{
+  promise = when.resolve("1");
+}]]>
+</Code>
+  <Return name="isEditable" value="promise" />
+</BusinessLogic>

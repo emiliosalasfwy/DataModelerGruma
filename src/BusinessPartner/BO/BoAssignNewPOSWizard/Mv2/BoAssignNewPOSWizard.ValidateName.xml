@@ -1,0 +1,36 @@
+<BusinessLogic methodName="validateName" businessObjectClass="BoAssignNewPOSWizard" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (Utils.isEmptyString(me.getName())){
+  newError = {
+    "level": "error",
+    "objectClass": "BoAssignNewPOSWizard",
+    "messageID": "CasBoAssignNewPOSWizardMessagesNameMustNotBeEmpty",
+    "messageParams": {}
+  };
+  messageCollector.add(newError);
+} else{
+  var params = [];
+  params.push({ "posName": me.getName(), "op": "EQ" });
+  params.push({ "posMetaPKey": me.getBpaPosMetaPKey(), "op": "EQ" });
+  params.push({ "objectStatus": STATE.DIRTY | STATE.DELETED, "op": "NCB" });
+
+  var posWithSameNameAndTemplate = me.getLoCustomerPOSRelation().getItemsByParamArray(params);
+
+  if(posWithSameNameAndTemplate.length > 0){
+    newError = {
+      "level": "error",
+      "objectClass": "BoPos",
+      "messageID": "CasBoPosNameMustBeUniquePerTemplate",
+      "messageParams": {}
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

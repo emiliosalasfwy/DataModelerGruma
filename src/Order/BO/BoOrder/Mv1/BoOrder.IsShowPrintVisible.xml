@@ -1,0 +1,9 @@
+<BusinessLogic methodName="isShowPrintVisible" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderPhase = (me.getPhase() === BLConstants.Order.PHASE_RELEASED || me.getPhase() === BLConstants.Order.PHASE_READY || me.getPhase() === BLConstants.Order.PHASE_FEEDBACK);
+var isPrintInvoiceAvailable = Utils.isDefined(me.getLoOrderAttachment()) && me.getLoOrderAttachment().containsItem({"usage" : "Printout"}, [{"fieldName": "usage"}]);
+var visible = orderPhase && isPrintInvoiceAvailable;]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

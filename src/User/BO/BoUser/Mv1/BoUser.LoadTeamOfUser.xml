@@ -1,0 +1,57 @@
+<BusinessLogic methodName="loadTeamOfUser" businessObjectClass="BoUser" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="includeCurrentUser" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var listTeamOfSupervisor = "";
+var jsonQuery = {};
+jsonQuery.params = [{ "field": "usrPKey", "operator": "EQ", "value": me.getPKey()}];
+
+var promise = BoFactory.loadListAsync(LO_TEAMOFSUPERVISOR, jsonQuery).then(
+  function (loTeamOfSupervisor) {
+    //#####################
+    //### fill team list
+    //#####################
+
+    //fill team list if user is supervisor
+    if (me.getIsSupervisor() == "1") {
+      me.setLoTeamOfSupervisor(loTeamOfSupervisor);
+
+      var users = loTeamOfSupervisor.getAllItems();
+      var firstEntry = true;
+
+      for (var idxUsers = 0; idxUsers < users.length; idxUsers++) {
+        //filter our current user
+        if (includeCurrentUser === "0" && users[idxUsers].getUsrPKey() === me.getPKey()) {
+          continue;
+        }
+
+        if (!firstEntry) {
+          listTeamOfSupervisor += ",";
+        }
+
+        listTeamOfSupervisor += "'" + users[idxUsers].getUsrPKey() + "'";
+        firstEntry = false;
+      }
+    }
+
+    //#####################
+    //### Add current user
+    //#####################
+    if (includeCurrentUser == "1") {
+      if (Utils.isEmptyString(listTeamOfSupervisor)) {
+        listTeamOfSupervisor += "'" + me.getPKey() + "' ";
+      }
+      else {
+        if (!Utils.isEmptyString(me.getPKey())) {
+          listTeamOfSupervisor += ", '" + me.getPKey() + "'";
+        }
+      }
+    }
+    me.setTeamList(listTeamOfSupervisor);
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="teamList" value="promise" />
+</BusinessLogic>

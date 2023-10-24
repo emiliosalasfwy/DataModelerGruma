@@ -1,0 +1,23 @@
+<BusinessLogic methodName="checkRecipientDriver" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if (this.getDocumentType() === "TruckIvcTransferOutward" && Utils.isEmptyString(this.getRecipientPKey())) { 
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoTruckLoad_EmptyRecipient")).then(
+    function() {
+      return "0";
+    }
+  );
+} else if (this.getDocumentType() === "TruckIvcTransferOutward" && (this.getRecipientPKey()===this.getSenderPKey())) { 
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoTruckLoad_DuplicateSender")).then(
+    function() {
+      return "0";
+    }
+  );
+} else {
+  promise = when.resolve("1");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,26 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoPayCttPayment" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync("LoPayCttPayment", context.jsonQuery)
+.then(function (paymentRequests) {
+	me.addItems(paymentRequests, context.jsonQuery);
+	me.orderBy({
+		"dateInitiation" : "DESC"
+	});
+
+	context.jsonQuery.params.push({
+		"field" : "asoName",
+		"value" : "AsoContractPaymentRequests"
+	});
+
+	return me.addAsoInformation(context.jsonQuery);
+})
+.then(
+  function (success) {
+    return me;
+});]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

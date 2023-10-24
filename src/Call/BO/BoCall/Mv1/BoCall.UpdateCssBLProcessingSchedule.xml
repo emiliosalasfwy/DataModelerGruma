@@ -1,0 +1,20 @@
+<BusinessLogic methodName="updateCssBLProcessingSchedule" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="callPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loProcessingSchedule = BoFactory.instantiate("LoCssBLProcessingSchedule");
+var liProcessingSchedule = {
+  "pKey" : PKey.next(),
+  "registerTime" : Utils.createDateNow(),
+  "workState" : "Initial",
+  "objectPKey" : callPKey,
+  "workerFunction" : "ClbWorker.CreateJobLogs",
+  "objectStatus": STATE.NEW | STATE.DIRTY 
+};
+
+loProcessingSchedule.addListItems([liProcessingSchedule]);
+me.setLoCssBLProcessingSchedule(loProcessingSchedule);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,42 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoOverdueCustomersContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var contextMenuItemList = [];
+var newParams  = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+} 
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "PlusGrey24",
+  "actionId" : "CreateVisit",
+  "processEvent" : "CreateVisit",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+
+if(ApplicationContext.get('user').hasRole('TourUser')) {
+
+  //check if no tour in context
+  if(!Utils.isDefined(ApplicationContext.get('currentTourPKey')) || Utils.isEmptyString(ApplicationContext.get('currentTourPKey'))) {
+    menuEntry0.actionEnabled = "0";
+  }
+
+  //check status of tour in context - if != Running -> false
+  else if(!Utils.isDefined(ApplicationContext.get('currentTourPKey')) || ApplicationContext.get('currentTourStatus') !== "Running") {
+    menuEntry0.actionEnabled = "0";
+  }
+}
+
+contextMenuItemList.push(menuEntry0);
+me.addItems(contextMenuItemList);
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

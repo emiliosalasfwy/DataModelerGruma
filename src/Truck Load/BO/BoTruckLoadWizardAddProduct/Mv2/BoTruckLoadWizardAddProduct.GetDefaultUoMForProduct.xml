@@ -1,0 +1,51 @@
+<BusinessLogic methodName="getDefaultUoMForProduct" businessObjectClass="BoTruckLoadWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="availableUnits" type="loLogisticUnit" />
+    <MethodInput name="itemTemplate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var item;
+var items = availableUnits.getAllItems();
+var numberOfUnits = items.length;
+var uom;
+var index;
+
+if (itemTemplate.getQuantityLogisticUnit() == "OrderUnit" ){
+  for(index = 0; index < numberOfUnits; index++){
+    item = items[index];
+    if(item.getIsOrderUnit() == "1"){
+      uom = item.getUnitType();
+      break;
+    }
+  }
+}
+else if (itemTemplate.getQuantityLogisticUnit() == "ConsumerUnit"){
+  for(index = 0; index < numberOfUnits; index++){
+    item = items[index];
+    if(item.getIsConsumerUnit() == "1"){
+      uom = item.getUnitType();
+      break;
+    }
+  }
+}
+else if (itemTemplate.getQuantityLogisticUnit() == "PriceUnit"){
+  for(index = 0; index < numberOfUnits; index++){
+    item = items[index];
+    if(item.getIsPriceUnit() == "1"){
+      uom = item.getUnitType();
+      break;
+    }
+  }
+}
+else{
+  for(index = 0; index < numberOfUnits; index++){
+    item = items[index];
+    if(item.isOrderUnit() == "1"){
+      uom = item.getUnitType();
+      break;
+    }
+  }
+}]]>
+</Code>
+  <Return name="result" value="uom" />
+</BusinessLogic>

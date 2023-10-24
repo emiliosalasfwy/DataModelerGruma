@@ -1,0 +1,48 @@
+<BusinessLogic methodName="resetCalculationResult" businessObjectClass="BoTruckLoad" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var itemsMain = me.getLoItems();
+
+if(Utils.isDefined(itemsMain))
+{
+  itemsMain.suspendListRefresh();
+
+  var items = itemsMain.getAllItems();
+  var index;
+
+  for (index = 0; index < items.length; index++)
+  {
+    var currentItem = items[index];
+
+    currentItem.beginEdit();
+    currentItem.setValue(0);
+    currentItem.setPrice(0);
+    currentItem.setBasePrice(0);
+    currentItem.setGrossValue(0);
+    currentItem.setPriceReceipt(0);
+    currentItem.setValueReceipt(0);
+    currentItem.setGrossValueReceipt(0);
+    currentItem.setBasePriceReceipt(0);
+    currentItem.endEdit();
+  }
+  
+  itemsMain.resumeListRefresh(true);
+
+  me.beginEdit();
+  me.setGrossTotalValue(0);
+  me.setGrossTotalValueReceipt(0);
+  me.setAmountDifference(0);
+  me.setMerchandiseValue(0);
+  me.setMerchandiseValueReceipt(0);
+  me.setTotalValue(0);
+  me.setTotalValueReceipt(0);
+  me.setPaidAmount(0); 
+  me.setAbsolutePaidAmount(0);
+  me.setPaidAmountReceipt(0);
+  me.setLoQuantitySums(BoFactory.instantiate("LoQuantitySums", {}));
+  me.endEdit();
+
+ }]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

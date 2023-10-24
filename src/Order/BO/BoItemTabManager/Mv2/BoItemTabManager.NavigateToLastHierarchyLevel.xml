@@ -1,0 +1,34 @@
+<BusinessLogic methodName="navigateToLastHierarchyLevel" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var values = this.getLastDisplayedHierarchyLevel().values;
+var lastHierarchyLevelValid = true;
+
+// Check whether the object is valid, i.e. has ids for all levels
+for (var i = 0; i < values.length; i++) {
+  if (Utils.isEmptyString(values[i])) {
+    lastHierarchyLevelValid = false;
+    break;
+  }
+}
+
+if ((this.getIsShowCategories() == "1") && (lastHierarchyLevelValid === true) && Utils.isDefined(this.getCurrentSelectedOrderItem())) {
+  // Copy object since the original object is modified during the navigation to the last hierarchy level
+  var hierarchyInformation = JSON.parse(JSON.stringify(this.getLastDisplayedHierarchyLevel()));
+
+  // Set AddProductResult to select the previously selected product (in case of switching tabs)
+  var addProductResult = {};
+  addProductResult.selectPKey = this.getCurrentSelectedOrderItem().getPKey();  
+  addProductResult.filterCountIncrements = [];
+   
+  this.setAddProductResult(addProductResult);
+
+  this.setAddProduct_HierarchyInformation(hierarchyInformation);
+  this.setResetCurrentItemFilterOnShowProducts("0");                    
+}
+
+// Return value for process context that enables/disables the navigate to last level after item selected event
+var navigateToLastLevelActive = "0";]]>
+</Code>
+  <Return name="result" value="navigateToLastLevelActive" />
+</BusinessLogic>

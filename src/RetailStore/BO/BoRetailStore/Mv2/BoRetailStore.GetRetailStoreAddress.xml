@@ -1,0 +1,23 @@
+<BusinessLogic methodName="getRetailStoreAddress" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var retailStoreAddress = {};
+if(!Utils.isEmptyString(me.getCity()) || !Utils.isEmptyString(me.getStreet()) || !Utils.isEmptyString(me.getState()) || !Utils.isEmptyString(me.getPostalCode())) {
+  retailStoreAddress.city = me.getCity();
+  retailStoreAddress.street = me.getStreet();
+  retailStoreAddress.state = me.getState();
+  retailStoreAddress.postalCode = me.getPostalCode();
+  retailStoreAddress.zipCodeAndCity = me.getPostalCode() + ' ' + me.getCity();
+  retailStoreAddress.latitudeAndLongitude = me.getLatitude() + ',' + me.getLongitude();
+} else {
+  retailStoreAddress.city = me.getLuLocation().getCity();
+  retailStoreAddress.state = me.getLuLocation().getState();
+  retailStoreAddress.postalCode = me.getLuLocation().getPostalCode();
+  retailStoreAddress.street = me.getLuLocation().getStreet();
+  retailStoreAddress.zipCodeAndCity = me.getLuLocation().getPostalCode() + ' ' + me.getLuLocation().getCity();
+  retailStoreAddress.latitudeAndLongitude = me.getLuLocation().getLatitude() + ',' + me.getLuLocation().getLongitude();
+}
+return retailStoreAddress;]]>
+</Code>
+  <Return name="RetailStoreAddress" value="retailStoreAddress" />
+</BusinessLogic>

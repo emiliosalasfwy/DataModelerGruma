@@ -1,0 +1,37 @@
+<BusinessLogic methodName="createInventoryForCashPayment" businessObjectClass="LoInventory" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="paymentItem" type="LiCheckInPaymentItem" />
+    <MethodInput name="ivcInformation" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var ivcMetaByPaymentMeta;
+var ivcMainPKey;
+var jsonIvcData = {};
+
+ivcMetaByPaymentMeta = ivcInformation.ivcMetaByPaymentMeta;
+
+// Consider only UserInventories
+if (Utils.isDefined(ivcMetaByPaymentMeta)) {
+  ivcMainPKey = PKey.next();
+  jsonIvcData = {};
+  jsonIvcData.pKey = ivcMainPKey;
+  jsonIvcData.id = ivcMainPKey;
+  jsonIvcData.ivcMetaPKey = ivcMetaByPaymentMeta.getIvcMetaPKey();
+  jsonIvcData.usrMainPKey = ivcMetaByPaymentMeta.getUsrMainPKey();
+  jsonIvcData.bpaMainPKey = ivcMetaByPaymentMeta.getBpaMainPKey();
+  jsonIvcData.prdMainPKey = " ";
+  jsonIvcData.phase = "Active";
+  jsonIvcData.validFrom = Utils.createDateToday();
+  jsonIvcData.validThru = Utils.getMaxDate();
+  jsonIvcData.invalid = "0";
+  jsonIvcData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+  jsonIvcData.tmgTourPKey = ivcMetaByPaymentMeta.getTmgTourPKey();
+  jsonIvcData.etpVehiclePKey = ivcMetaByPaymentMeta.getEtpVehiclePKey();
+  jsonIvcData.currency = paymentItem.getCurrency();
+
+  me.addItems([jsonIvcData]);
+  me.getItemByPKey(jsonIvcData.pKey).setObjectStatus(STATE.NEW | STATE.DIRTY);
+}]]>
+</Code>
+  <Return name="ivcMainPKey" value="ivcMainPKey" />
+</BusinessLogic>

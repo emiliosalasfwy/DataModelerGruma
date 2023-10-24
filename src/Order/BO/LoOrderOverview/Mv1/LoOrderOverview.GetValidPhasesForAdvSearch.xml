@@ -1,0 +1,19 @@
+<BusinessLogic methodName="getValidPhasesForAdvSearch" businessObjectClass="LoOrderOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var items = Utils.DomainRepository.getToggleListObject("SdoPhase").getAllItems();
+var allItems = [];
+
+for(var item in items){
+  if(items[item].getId() === "Initial" ||
+     items[item].getId() === "Released" ||
+     items[item].getId() === "Closed" ||
+     items[item].getId() === "Ready"  ||
+     items[item].getId() === "Feedback"  ||
+     items[item].getId() === "Canceled"){
+    allItems.push(items[item]);
+  }
+}]]>
+</Code>
+  <Return name="allItems" value="allItems" />
+</BusinessLogic>

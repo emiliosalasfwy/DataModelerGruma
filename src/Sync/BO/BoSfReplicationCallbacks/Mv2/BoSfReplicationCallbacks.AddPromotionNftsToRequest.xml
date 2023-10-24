@@ -1,0 +1,26 @@
+<BusinessLogic methodName="addPromotionNftsToRequest" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="request" type="Object" />
+    <MethodInput name="customerIds" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (typeof(customerIds) == 'string'){
+  customerIds = [customerIds];
+}
+
+customerIds = Utils.uniq(me.removeLocalIDs(customerIds));
+var customerIdListString = "'" + customerIds.join("','") + "'";
+
+request.addRequest('NFT_Promotion', customerIds);
+
+var promise = Facade.selectSQL("DsBoSfReplicationCallbacks", "CustomerSetsOfCustomers", { "accountId": customerIdListString })
+.then(function (accountSetIDs){
+  if(accountSetIDs.length > 0){
+    accountSetIDs = me.getPropertyValuesFromArray(accountSetIDs, "AccountSetID");
+    request.addRequest('NFT_Promotion_Account_Set', accountSetIDs);
+  }
+  return when.resolve(request);
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

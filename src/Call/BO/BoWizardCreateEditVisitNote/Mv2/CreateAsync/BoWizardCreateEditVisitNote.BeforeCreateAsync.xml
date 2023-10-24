@@ -1,0 +1,43 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoWizardCreateEditVisitNote" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!jsonQuery) {
+  jsonQuery = {};
+}
+var params = jsonQuery.params;
+if (Utils.isDefined(jsonQuery.jsonQuery)){
+  params = jsonQuery.jsonQuery.params;
+}
+var isReadOnly;
+var index = 0;
+for (index in params) {
+
+  switch (params[index].field) 
+  {                           
+    case "clbMainPKey":
+      me.clbMainPKey = params[index].value;
+      break;
+    case "pKey":
+      me.pKey = params[index].value;
+      break;
+	case "note":
+     me.note = params[index].value;
+      break;
+	case "isReadOnly":
+     isReadOnly = params[index].value;
+      break;
+  }				
+}
+
+if(me.clbMainPKey != me.pKey || isReadOnly === true){
+	me.getACL().removeRight(AclObjectType.PROPERTY, "note", AclPermission.EDIT);
+}
+else{
+	me.setIsCurrentNote(true);
+}
+var promise=when.resolve(me);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

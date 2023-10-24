@@ -1,0 +1,53 @@
+<BusinessLogic methodName="evaluateAvailabilityResult" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentResult" type="Object" />
+    <MethodInput name="value" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var getAvailability = function (currentAvailabilityState, availabilityState) {
+  var DATA_AVAILABLE = 1;
+  var DATA_LOADING = 2;
+  var DATA_MISSING = 0;
+  var result = currentAvailabilityState;
+  
+  switch(availabilityState) {
+    case DATA_MISSING:
+      result = DATA_MISSING;
+      break;
+    case DATA_AVAILABLE:
+      if(currentAvailabilityState === DATA_LOADING) {
+        result = DATA_LOADING;
+      }
+      break;
+    case DATA_LOADING:
+      if(currentAvailabilityState === DATA_AVAILABLE) {
+        result = DATA_LOADING;
+      }
+      break;
+    case false:
+      result = DATA_MISSING;
+      break;
+  }
+  return result;
+};
+
+var getAvailabilityForIds = function (totalAvailability, currentId) {
+  return getAvailability(totalAvailability, currentId.state); 
+};
+
+var getAvailabilityForNftResponse = function (totalAvailability, currentResponse) {
+  return currentResponse.ids.reduce(getAvailabilityForIds, totalAvailability);
+};
+
+var dataAvailable;
+if (value instanceof Array) {
+  dataAvailable = value.reduce(getAvailabilityForNftResponse, 1);
+}
+else {
+  dataAvailable = value;
+}
+
+var result = getAvailability(currentResult, dataAvailable);]]>
+</Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

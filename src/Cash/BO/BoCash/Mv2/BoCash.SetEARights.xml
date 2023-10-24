@@ -1,0 +1,52 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+var phase = me.getPhase();
+var aclWarehouse = me.getLuEtpWarehouse().getACL();
+
+acl.removeRight(AclObjectType.PROPERTY, "documentType", AclPermission.EDIT);
+acl.removeRight(AclObjectType.PROPERTY, "initiationDate", AclPermission.EDIT);
+
+if(phase !="Initial") {
+  acl.removeRight(AclObjectType.PROPERTY, "absolutePaidAmount", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "absoluteAmount", AclPermission.EDIT);
+  aclWarehouse.removeRight(AclObjectType.OBJECT, "luEtpWarehouse", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "loCheckInPayment", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "etpWarehousePKey", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "currency", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "differenceAmount", AclPermission.EDIT);
+  acl.removeRight(AclObjectType.PROPERTY, "expenseType", AclPermission.EDIT);
+}
+else {
+  acl.addRight(AclObjectType.PROPERTY, "absolutePaidAmount", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "absoluteAmount", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "loCheckInPayment", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "etpWarehousePKey", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "currency", AclPermission.EDIT);
+  acl.addRight(AclObjectType.PROPERTY, "differenceAmount", AclPermission.EDIT);
+
+  var multipleWarehousesAllowed = "0";
+  if(Utils.isDefined(ApplicationContext.get('currentTour'))) {
+    multipleWarehousesAllowed = ApplicationContext.get('currentTour').getConsiderMultipleWarehouses();
+  }
+
+  if(multipleWarehousesAllowed === "0") {
+    aclWarehouse.removeRight(AclObjectType.OBJECT, "luEtpWarehouse", AclPermission.EDIT);
+  }
+  else {
+    aclWarehouse.addRight(AclObjectType.OBJECT, "luEtpWarehouse", AclPermission.EDIT);
+  }
+}
+
+if(me.getDocumentType() === "Expenses") {
+  aclWarehouse.removeRight(AclObjectType.OBJECT, "luEtpWarehouse", AclPermission.VISIBLE);
+}
+else {
+  acl.removeRight(AclObjectType.PROPERTY, "expenseType", AclPermission.VISIBLE);
+}
+
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

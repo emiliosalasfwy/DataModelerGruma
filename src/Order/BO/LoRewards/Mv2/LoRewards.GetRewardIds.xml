@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getRewardIds" businessObjectClass="LoRewards" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var validRewards = me.getItems();
+var rewardIds = [];
+var itemPkey;
+validRewards.forEach(function (item) {
+  itemPkey = item.getPKey();
+  if (rewardIds.indexOf(itemPkey) == -1 && Utils.isEmptyString(item.getClassification())) {
+    rewardIds.push(Utils.convertForDBParam(itemPkey, 'DomPKey'));
+  }
+});]]>
+</Code>
+  <Return name="rewardIds" value="rewardIds" />
+</BusinessLogic>

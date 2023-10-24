@@ -1,0 +1,31 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoCashDocumentMetaType" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonParams = [];
+if (Utils.isDefined(context.jsonQuery.params)){
+  jsonParams = context.jsonQuery.params;
+}
+
+jsonParams.push({
+	"field" : "tmgMainPKey",
+	"operator" : "EQ",
+	"value" : ApplicationContext.get('currentTourPKey'),
+});
+jsonParams.push({
+	"field" : "used",
+	"operator" : "EQ",
+	"value" : "1",
+});
+jsonParams.push({
+	"field" : "notUsed",
+	"operator" : "EQ",
+	"value" : "0",
+});
+
+context.jsonQuery.params = jsonParams;
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

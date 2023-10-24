@@ -1,0 +1,405 @@
+<BusinessLogic methodName="prepareData" businessObjectClass="LoPromotionCalendar" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="callDate" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var index = 1;
+var xsRaw = {};
+var columnsRaw1 = [];
+var columnsRaw2 = [];
+var columnsRaw3 = [];
+var dataStrings = [];
+var namesFromData = {};
+var namesFromId = {};
+var yTicks = [];
+
+var dictPrmGroupToSeries = Utils.createDictionary();
+var gapsByGrouping = 0;
+
+var tooltips = {};
+var barColors = {};
+
+Date.prototype.getWeek = function () {
+  var date = new Date(this.getTime());
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+  // January 4 is always in week 1.
+  var week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                         - 3 + (week1.getDay() + 6) % 7) / 7);
+};
+
+// building the timeline
+var timeLine = [];
+
+var date = Utils.createDateToday();
+if (Utils.isDefined(callDate)) {
+  date = Utils.convertAnsiDate2Date(callDate);
+}
+
+var curYear = date.getFullYear();
+var curMonth = date.getMonth() + 1;
+
+var months = [
+  Localization.resolve("Report_PromotionStoreCalendar_ShortJanuary"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortFebruary"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortMarch"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortApril"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortMay"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortJune"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortJuly"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortAugust"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortSeptember"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortOctober"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortNovember"),
+  Localization.resolve("Report_PromotionStoreCalendar_ShortDecember"),
+];
+var monthNames = [];
+
+for (var i = 0; i < 7; i++) {
+  timeLine.push(
+    curYear.toString() +
+    "-" +
+    ("00" + curMonth.toString()).slice(-2) +
+    "-01"
+  );
+
+  var curYearString = Utils.isPhone()
+  ? curYear.toString().substr(2, 2)
+  : curYear.toString();
+  monthNames.push(months[curMonth - 1] + " " + curYearString);
+
+  curMonth++;
+  if (curMonth === 13) {
+    curYear++;
+    curMonth = 1;
+  }
+}
+
+var startDate = Utils.convertAnsiDate2Date(timeLine[0]);
+var endDate = Utils.convertAnsiDate2Date(timeLine[6]);
+endDate.setDate(endDate.getDate() + 4);
+
+//Shorten promotions array - 25 on tablet, 20 on phone
+var maxPromotions = 25;
+if (Utils.isPhone()) {
+  maxPromotions = 20;
+}
+
+var promotions = me.getAllItems(); 
+
+var promotionLengthCut = false;
+var totalNumberOfPromotions = promotions.length;
+var promotionInfoText = "";
+var numberOfDifferentPromotions = 0;
+var numberOfShownPromotions = 0;
+
+var showTooltip = true;
+if (totalNumberOfPromotions === 0) {
+  showTooltip = false;
+}
+
+// process the promotions
+var processPromotion = function (promotion) {
+  // Check for grouping promotion
+  var grouping_active = !Utils.isEmptyString(promotion.getPrmGroup());
+  var grouping_firstInGroup = !dictPrmGroupToSeries.containsKey(
+    promotion.getPromotionType() + promotion.getPrmGroup()
+  );
+  var group;
+
+  //cut after a certain amount of promotions
+  if (!grouping_active || grouping_firstInGroup) {
+    if (numberOfDifferentPromotions >= maxPromotions) {
+      promotionLengthCut = true;
+      return;
+    }
+    numberOfDifferentPromotions++;
+  }
+  numberOfShownPromotions++;
+
+  var dataString = "data" + index;
+  dataStrings.push(dataString);
+  var xString = "x" + index;
+
+  xsRaw[dataString] = xString;
+
+  // Grouping of promotions
+  if (grouping_active) {
+    if (grouping_firstInGroup) {
+      namesFromData[dataString] = promotion.getPrmGroup();
+      namesFromId[index - gapsByGrouping] = promotion.getPrmGroup();
+
+      var col3 = [
+        dataString,
+        (index - gapsByGrouping) * -1,
+        (index - gapsByGrouping) * -1,
+      ];
+      columnsRaw3.push(col3);
+
+      group = {
+        prmGroup: promotion.getPrmGroup(),
+        yValue: (index - gapsByGrouping) * -1,
+      };
+      dictPrmGroupToSeries.add(
+        promotion.getPromotionType() + promotion.getPrmGroup(),
+        group
+      );
+    } else {
+      group = dictPrmGroupToSeries.get(
+        promotion.getPromotionType() + promotion.getPrmGroup()
+      );
+
+      var col3 = [dataString, group.yValue, group.yValue];
+      columnsRaw3.push(col3);
+
+      gapsByGrouping = gapsByGrouping + 1;
+    }
+  } else {
+    namesFromData[dataString] = promotion.getSlogan();
+    namesFromId[index - gapsByGrouping] = promotion.getSlogan();
+
+    var col3 = [
+      dataString,
+      (index - gapsByGrouping) * -1,
+      (index - gapsByGrouping) * -1,
+    ];
+    columnsRaw3.push(col3);
+  }
+
+  var promStartDateD = Utils.convertAnsiDate2Date(promotion.getDateFrom());
+  var promStartDate = Utils.convertDate2Ansi(promStartDateD);
+  promStartDateD.setDate(promStartDateD.getDate() + 1);
+  var promStartDate2 = Utils.convertDate2Ansi(promStartDateD);
+  var promEndDateD = Utils.convertAnsiDate2Date(promotion.getDateThru());
+  var promEndDate = Utils.convertDate2Ansi(
+    endDate < promEndDateD ? endDate : promEndDateD
+  );
+
+  var col1 = [xString, promStartDate, promStartDate2];
+  columnsRaw1.push(col1);
+
+  // If a promotion is only valid for one day, display it as two day to be visible
+  if (promStartDate === promEndDate) {
+    promEndDate = Utils.addDays2AnsiDate(promEndDate, 1);
+  }
+
+  // Truncate promotion if it is outside the chart
+  if (promStartDate < startDate) {
+    promStartDate = startDate;
+  }
+
+  if (promEndDate > endDate) {
+    promEndDate = endDate;
+  }
+
+  var col2 = [xString, promStartDate, promEndDate];
+  columnsRaw2.push(col2);
+
+  // Generate tooltip
+  var tooltip = {};
+
+  // Shorten slogan if too long
+  var sloganLength = promotion.getSlogan().length;
+  var shortSlogan = promotion.getSlogan().substring(0, 37);
+  var shortSloganLength = shortSlogan.length;
+
+  tooltip["slogan"] =
+    sloganLength > shortSloganLength
+    ? shortSlogan + "... "
+  : promotion.getSlogan();
+  tooltip["type"] = promotion.getType();
+
+  tooltip["validTimeframe"] =
+    Localization.localize(promotion.getDateFrom(), "date") +
+    " - " +
+    Localization.localize(promotion.getDateThru(), "date") +
+    ", " +
+    Localization.resolve('Report_PromotionStoreCalendar_CalendarWeek') +
+    " " +
+    Utils.convertAnsiDate2Date(promotion.getDateFrom()).getWeek() +
+    " - " +
+    Utils.convertAnsiDate2Date(promotion.getDateThru()).getWeek();
+
+  if (
+    promotion.getOrderDateFrom() === Utils.getMinDate() &&
+    promotion.getOrderDateThru() === Utils.getMinDate()
+  ) {
+    tooltip["orderTimeframe"] = "-";
+  } else {
+    tooltip["orderTimeframe"] =
+      Localization.localize(promotion.getOrderDateFrom(), "date") +
+      " - " +
+      Localization.localize(promotion.getOrderDateThru(), "date") +
+      ", " +
+      Localization.resolve('Report_PromotionStoreCalendar_CalendarWeek') +
+      " " +
+      Utils.convertAnsiDate2Date(promotion.getOrderDateFrom()).getWeek() +
+      " - " +
+      Utils.convertAnsiDate2Date(promotion.getOrderDateThru()).getWeek();
+  }
+
+  if (
+    promotion.getPlacementDateFrom() === Utils.getMinDate() &&
+    promotion.getPlacementDateThru() === Utils.getMinDate()
+  ) {
+    tooltip["inStoreTimeframe"] = "-";
+  } else {
+    tooltip["inStoreTimeframe"] =
+      Localization.localize(promotion.getPlacementDateFrom(), "date") +
+      " - " +
+      Localization.localize(promotion.getPlacementDateThru(), "date") +
+      ", " +
+      Localization.resolve('Report_PromotionStoreCalendar_CalendarWeek') +
+      " " +
+      Utils.convertAnsiDate2Date(promotion.getPlacementDateFrom()).getWeek() +
+      " - " +
+      Utils.convertAnsiDate2Date(promotion.getPlacementDateThru()).getWeek();
+  }
+
+  tooltip["anchor"] = promotion.getAnchor();
+  tooltip["group"] = Utils.isEmptyString(promotion.getPrmGroup())
+    ? "-"
+  : promotion.getPrmGroup();
+  tooltips[dataString] = tooltip;
+
+  barColors[dataString] = "#" + promotion.getColor();
+
+  index++;
+};
+
+promotions.forEach(processPromotion);
+
+if (promotionLengthCut) {
+  promotionInfoText =
+    numberOfShownPromotions +
+    " " +
+    Localization.resolve('Report_PromotionStoreCalendar_Info1') +
+    " " +
+    totalNumberOfPromotions +
+    " " +
+    Localization.resolve('Report_PromotionStoreCalendar_Info2');
+}
+
+if (totalNumberOfPromotions === 0) {
+  var dataString = "data1";
+  dataStrings.push(dataString);
+  var xString = "x" + index;
+
+  xsRaw[dataString] = xString;
+
+  namesFromData[dataString] = " ";
+  namesFromId[index] = " ";
+
+  var col3 = [dataString, index, index];
+  columnsRaw3.push(col3);
+
+  var promStartDateD = Utils.createDateToday();
+  var promStartDate = Utils.convertDate2Ansi(promStartDateD);
+  promStartDateD.setDate(promStartDateD.getDate() + 1);
+  var promStartDate2 = Utils.convertDate2Ansi(promStartDateD);
+  var promEndDateD = Utils.createDateToday();
+  var promEndDate = Utils.convertDate2Ansi(
+    endDate < promEndDateD ? endDate : promEndDateD
+  );
+
+  var col1 = [xString, promStartDate, promStartDate2];
+  columnsRaw1.push(col1);
+
+  var col2 = [xString, promStartDate, promEndDate];
+  columnsRaw2.push(col2);
+
+  // Generate tooltip
+  var tooltip = {};
+}
+
+// compute the y ticks
+var length = index - 1 - gapsByGrouping;
+for (var i = 1; i <= length; i++) {
+  yTicks.push(i * -1);
+}
+
+// cw gridlines
+var gridLines = [];
+var cws = [];
+var startCW = startDate.getWeek();
+cws.push(startCW);
+var nextCW;
+
+var dummyDate = Utils.createDateByMilliSec(startDate.getTime());
+var numberOfDaysFirstWeek = 0;
+var numberOfDaysLastWeek = 0;
+
+for (var i = 1; i < 8; i++) {
+  dummyDate.setDate(startDate.getDate() + i);
+  nextCW = dummyDate.getWeek();
+  if (dummyDate.getWeek() != startCW) {
+    numberOfDaysFirstWeek = i;
+    startCW = nextCW;
+    cws.push(startCW);
+    gridLines.push({
+      value: Utils.convertDate2Ansi(dummyDate),
+      opacity: 10,
+    });
+    break;
+  }
+}
+
+while (true) {
+  dummyDate.setDate(dummyDate.getDate() + 7);
+
+  if (dummyDate > endDate) {
+    var timeDiff = Math.abs(endDate.getTime() - dummyDate.getTime());
+    var numberOfDaysLastWeek =
+        7 - (Math.ceil(timeDiff / (1000 * 3600 * 24)) - 1);
+    break;
+  }
+  nextCW = dummyDate.getWeek();
+  cws.push(nextCW);
+  gridLines.push({ value: Utils.convertDate2Ansi(dummyDate) });
+}
+
+var minXAxis = timeLine[0];
+var maxXAxis = Utils.convertDate2Ansi(endDate);
+
+var jsonData = {
+  data: {
+    labels: { show: false },
+
+    xs: xsRaw,
+    columns: columnsRaw2.concat(columnsRaw3),
+    columnsStart: columnsRaw1.concat(columnsRaw3),
+    names: namesFromData,
+  },
+  axis: {
+    x: {
+      tick: { values: timeLine },
+      min: minXAxis,
+      max: maxXAxis,
+    },
+    y: {
+      show: !Utils.isPhone(),
+      tick: { values: yTicks },
+    },
+  },
+  cws: cws,
+  gridLines: Utils.isPhone() ? undefined : gridLines,
+
+  numberOfDaysFirstWeek: numberOfDaysFirstWeek,
+  numberOfDaysLastWeek: numberOfDaysLastWeek,
+  namesFromIds: namesFromId,
+  tooltips: tooltips,
+  monthNames: monthNames,
+  isPhone: Utils.isPhone(),
+  barColors: barColors,
+  
+  count: numberOfDifferentPromotions,
+  
+  dataStrings: dataStrings,
+  showTooltip: showTooltip,
+  promotionLengthCut: promotionLengthCut,
+  promotionInfoText: promotionInfoText
+};]]></Code>
+  <Return name="jsonData" value="jsonData" />
+</BusinessLogic>

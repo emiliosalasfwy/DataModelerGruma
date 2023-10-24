@@ -1,0 +1,17 @@
+<BusinessLogic methodName="setVisible" businessObjectClass="LoSplittingGroupResult" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="visible" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(visible===true)
+{
+  this.getACL().addRight(AclObjectType.OBJECT, "LoSplittingGroupResult", AclPermission.VISIBLE);
+}
+else
+{
+  this.getACL().removeRight(AclObjectType.OBJECT, "LoSplittingGroupResult", AclPermission.VISIBLE);
+}
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

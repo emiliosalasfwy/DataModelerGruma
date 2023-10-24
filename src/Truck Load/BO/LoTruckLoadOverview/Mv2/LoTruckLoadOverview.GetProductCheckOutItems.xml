@@ -1,0 +1,11 @@
+<BusinessLogic methodName="getProductCheckOutItems" businessObjectClass="LoTruckLoadOverview" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="listobject">
+  <Parameters>
+    <MethodInput name="overviewList" type="LoTruckLoadOverview" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+     var parameters = {"documentType":"ProductCheckOut", "phase":"Initial"};	
+
+var checkOutItems = overviewList.getItemsByParam(parameters); 
+   ]]></Code>
+  <Return name="checkOutItems" value="checkOutItems" />
+</BusinessLogic>

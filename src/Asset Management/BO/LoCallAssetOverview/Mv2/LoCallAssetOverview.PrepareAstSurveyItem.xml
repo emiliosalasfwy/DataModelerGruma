@@ -1,0 +1,91 @@
+<BusinessLogic methodName="prepareAstSurveyItem" businessObjectClass="LoCallAssetOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bpaCustomerPKey" type="String" />
+    <MethodInput name="clbMainPKey" type="String" />
+    <MethodInput name="previousSurvey" type="LuPreviousSurvey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentUserPKey = ApplicationContext.get("user").getPKey();
+
+var oldItem = me.getCurrent();
+var currentItem = me.getCurrent();
+if (currentItem && Utils.isDefined(currentItem)) {
+  var status = currentItem.getObjectStatus();
+
+  //prevent the change handler from triggering
+  me.suspendListRefresh();
+
+  currentItem.beginEdit();
+
+  //Set historical d//ata
+  if (
+    currentItem.getAssetPKey() != " " &&
+    Utils.isDefined(previousSurvey) &&
+    !Utils.isEmptyString(previousSurvey.getPKey())
+  ) {
+    currentItem.setUsageHist(previousSurvey.getUsage());
+    currentItem.setLocationHist(previousSurvey.getLocation());
+    currentItem.setLocationRatingHist(previousSurvey.getLocationRating());
+    currentItem.setConditionHist(previousSurvey.getCondition());
+    currentItem.setNoteHist(previousSurvey.getNote());
+    currentItem.setMethod(previousSurvey.getMethod());
+  } else {
+    currentItem.setUsageHist(" ");
+    currentItem.setLocationHist(" ");
+    currentItem.setLocationRatingHist(" ");
+    currentItem.setConditionHist(" ");
+    currentItem.setNoteHist(" ");
+  }
+
+  //Resetting the original Status of the item.
+  currentItem.setObjectStatus(status);
+
+  //Check if survey has to be created
+  if (currentItem.getSurveyAvailable() === "0") {
+    //Get new PKey for the Survey whose record we are creating here.
+    // currentItem.setPKey(PKey.next());
+    currentItem.setSurveyAvailable("1");
+    currentItem.setClbMainPKey(clbMainPKey);
+    currentItem.setCreationDate(Utils.createAnsiDateTimeToday());
+    currentItem.setUsrUserPKey(currentUserPKey);
+    currentItem.setAstSurveySerialNumber(currentItem.getSerialNumber());
+    currentItem.setAstSurveyAstAssetPKey(currentItem.getAssetPKey());
+
+    //prepopulate with previous survey data
+    if (
+      currentItem.getAssetPKey() != " " &&
+      Utils.isDefined(previousSurvey) &&
+      !Utils.isEmptyString(previousSurvey.getPKey())
+    ) {
+      currentItem.setUsage(previousSurvey.getUsage());
+      currentItem.setLocation(previousSurvey.getLocation());
+      currentItem.setLocationRating(previousSurvey.getLocationRating());
+      currentItem.setCondition(previousSurvey.getCondition());
+    }
+
+    currentItem.setNote(" ");
+    currentItem.setBpaCustomerPKey(bpaCustomerPKey);
+    currentItem.setIsNewSurvey("1");
+
+    //set state to new (so that it is not saved until the user changes something)
+    if (currentItem.getPresent() == "1") {
+      currentItem.setObjectStatus(STATE.NEW | STATE.DIRTY);
+    } else {
+      currentItem.setObjectStatus(STATE.NEW);
+    }
+    //reorder the list when an unregistered asset is added
+    if (currentItem.getRegisteredAsset() == "0") {
+      me.orderBy({ registeredAsset: "DESC", astSurveySerialNumber: "ASC" });
+    }
+  }
+  currentItem.endEdit();
+
+  //prevent the change handler from triggering
+  me.resumeListRefresh(true);
+
+  //Highlight asset
+  me.setCurrent(currentItem);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

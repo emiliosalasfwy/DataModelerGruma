@@ -1,0 +1,41 @@
+<BusinessLogic methodName="createAttrMappingTruckInwardTransfer" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+
+var tourId;
+var warehouse;
+var sender;
+var recipient;
+var date;
+
+if (tour) {
+  tourId = tour.getId();
+}
+
+if (ref.getLuEtpWarehouse) {
+  warehouse = ref.getLuEtpWarehouse().getText();
+}
+
+if (ref.getSenderPKey) {  
+  sender = ref.getLuSender().getName();
+}
+
+if (ref.getRecipientPKey) {  
+  recipient = ref.getLuRecipientDriver().getName();
+}
+
+if (ref.getCommitDate) {  
+  date = Localization.localize(ref.getCommitDate(), "date");
+}
+
+attributes.add("TourId", tourId);
+attributes.add("Warehouse", warehouse);
+attributes.add("Sender", sender);
+attributes.add("Recipient", recipient);
+attributes.add("Date", date);]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

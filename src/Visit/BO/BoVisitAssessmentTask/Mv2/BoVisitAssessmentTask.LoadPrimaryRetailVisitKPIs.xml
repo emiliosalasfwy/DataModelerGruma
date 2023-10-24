@@ -1,0 +1,59 @@
+<BusinessLogic methodName="loadPrimaryRetailVisitKPI" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="primaryAssessmentIndicatorDefinition" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*
+Creates a list with primary retail visit KPIs 
+Used in the main list of KPIInventoryCheck UI
+**/
+
+var promise; 
+
+if(!Utils.isDefined(me.getLoPrimaryRetailVisitKPI()) && Utils.isDefined(primaryAssessmentIndicatorDefinition)) {
+
+  promise = BoFactory.createListAsync(LO_VISITRETAILVISITKPI, {}).then(
+    function (loPrimaryRetailVisitKPI) {
+
+      var retailVisitKPIItems = me.getLoRetailVisitKPI().getAllItems();
+      var dicProducts = Utils.createDictionary();
+
+      retailVisitKPIItems.forEach(function(item){
+
+        if(item.getAssessmentIndicatorDefinitionId() === primaryAssessmentIndicatorDefinition){
+          item.setIsPrimaryKPI("1");
+          var objectStatus = item.getObjectStatus();
+          item.setGroupText(Localization.resolve("PrimaryRetailVisitKPI_GroupText"));
+          item.setSortAttribute("AAA");
+          item.setObjectStatus(objectStatus);
+          dicProducts.add(item.getProductId()+item.getInStoreLocationName(), item.getData());
+        }else if (!dicProducts.containsKey(item.getProductId()+item.getInStoreLocationName())){
+          dicProducts.add(item.getProductId()+item.getInStoreLocationName(), item.getData());
+        }
+      });
+
+
+      var primaryItemsToAdd = [];
+      dicProducts.keys().forEach(function(key){
+        primaryItemsToAdd.push(dicProducts.get(key)); 
+      });
+
+      var primaryAIDItems = me.getLoRetailVisitKPI().getItemsByParamArray([{"assessmentIndicatorDefinitionId" : primaryAssessmentIndicatorDefinition, "op" : "EQ"}]);
+
+      var objectState = me.getObjectStatus();
+      loPrimaryRetailVisitKPI.addItems(primaryItemsToAdd);
+      loPrimaryRetailVisitKPI.orderBy({"primaryDisplayOrder" : "ASC", "displayOrder" : "ASC"});
+      me.setLoPrimaryRetailVisitKPI(loPrimaryRetailVisitKPI);
+      me.getLoPrimaryRetailVisitKPI().addItemChangedEventListener(me.onPrimaryKPIItemChanged,me,"loPrimaryRetailVisitKPI");
+      me.setObjectStatus(objectState);
+      
+      //initial tab is STORE --> set store filter
+      me.filterRetailVisitKPI("Store");
+    });
+}
+else{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

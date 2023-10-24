@@ -1,0 +1,14 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoBpaHistSurveyProduct" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync("LoBpaHistSurveyProduct", context.jsonQuery).then(
+  function(items) {
+    me.addItems(items, context);				
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

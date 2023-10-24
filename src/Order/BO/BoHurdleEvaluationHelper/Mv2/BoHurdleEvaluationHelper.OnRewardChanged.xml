@@ -1,0 +1,80 @@
+<BusinessLogic methodName="onRewardChanged" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var deferreds = [];
+var listItem = handlerParams.listItem;
+var modified = handlerParams.modified[0];
+
+if (modified === "isApplicable") {
+  if(listItem.getSelected() === "1") {
+    if (listItem.getRewardType() === "Special") {
+      promise = me.userExitForSpecialReward(listItem, false);
+    }
+    if (listItem.getRewardType() === "FreeItem") {
+      var isPerFactorChanged = false;
+      //Check the perfactor Value from stored Reward Info to know if any Ordered Item has become invalid on Reopen.
+      if(!Utils.isEmptyString(me.getOrderCache().getSelectedRewards())) {
+        var storedRewards = JSON.parse(me.getOrderCache().getSelectedRewards());
+        var rewardPromotion = listItem.getPromotionPKey();
+        var rewardGroupId = listItem.getRewardGroupId();
+        if(rewardPromotion in storedRewards) {
+          var rewardGroupFromJson = storedRewards[rewardPromotion].find(function(x){return x.id === rewardGroupId;});
+          if(Utils.isDefined(rewardGroupFromJson)) {
+            var rewardFromJson = rewardGroupFromJson.rewards.find(function(x){return x.id === listItem.getPKey();});
+            if(Utils.isDefined(rewardFromJson)) {
+              isPerFactorChanged = listItem.getPerFactor() >= 1 && listItem.getPerFactor() !== rewardFromJson.perFactor;
+            }
+          }
+        }
+      }
+      if (handlerParams.newValues.isApplicable === "1") {
+        isPerFactorChanged = true;
+      }
+      promise = me.getOrderCache().handleFreeItemsFromReward(listItem.getPKey(), isPerFactorChanged);
+    }
+    promise = promise.then(function(){
+      if (me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE ||
+          me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE) {
+        if (!["Special", "FreeItem"].includes(listItem.getRewardType())) {
+          CP.PricingHandler.getInstance().updateRewardCache(listItem.getPricingConditionTemplate(), listItem.getPKey(), handlerParams.newValues.isApplicable);
+        }
+        if(me.getOrderCache().getCalculationStatus() !== BLConstants.Order.CALCULATION_REQUIRED &&
+           me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE) {
+          me.getOrderCache().setCalculationStatus(BLConstants.Order.CALCULATION_REQUIRED);
+          return me.getOrderCache().resetCalculationResult();
+        }
+      }
+    });
+  }
+}
+
+if (modified === "selected") {
+  var rewardGroup = me.getLoRewardGroups().getItemByPKey(listItem.getRewardGroupId());
+  var multiplicity = rewardGroup.getMultiplicity();
+
+  //update reward selection flag on ui
+  me.getLoRewards().suspendListRefresh();
+  listItem.setIsSelectedOnUI(listItem.getSelected());
+  me.getLoRewards().resumeListRefresh(true);
+
+  promise = me.handleRewardSelection(listItem.getRewardGroupId(),multiplicity, listItem.getPKey()).then(function(){
+    if(me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE &&
+       me.getOrderCache().getCalculationStatus() === BLConstants.Order.CALCULATION_REQUIRED){
+      return me.getOrderCache().cpCalculate();
+    }
+  });
+}
+
+if (modified === "perFactor") {
+  if(listItem.getSelected() === "1" && listItem.getIsApplicable() === "1" && listItem.getPerFactor() >= 1) {
+    if (listItem.getRewardType() === "FreeItem") {
+      promise = me.getOrderCache().handleFreeItemsFromReward(listItem.getPKey(), true);
+    }
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

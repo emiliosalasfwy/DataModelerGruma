@@ -1,0 +1,47 @@
+<BusinessLogic methodName="synchronizeSurveyInfo" businessObjectClass="LoJobDefinitions" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loSurveyColumns" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//This function links the standard surveys maintained for an activity in backend with matrix in mobility
+var jobDefinitionsList = me.getAllItems();
+var jobDefinitionsLength = jobDefinitionsList.length;
+var surveyColumnsList = loSurveyColumns.getAllItems();
+var surveyColumnsLength = surveyColumnsList.length;
+
+for(var i = 0; i < jobDefinitionsLength; i++){
+  var currentJobDefinition = jobDefinitionsList[i];
+
+  if(currentJobDefinition.getJobMetaId() == "Survey"){
+    var currentJobDefJobDefMetaPKey = currentJobDefinition.getJobDefinitionMetaPKey();
+
+    if(currentJobDefinition.getJdlDescriptionInitialized() === "0" && Utils.isDefined(currentJobDefinition.getPromotionId()) && (!Utils.isEmptyString(currentJobDefinition.getPromotionId()))){
+      if(Utils.isDefined(currentJobDefinition.getPromotionSlogan()) &&  currentJobDefinition.getPromotionSlogan() !== null){
+        var promotionDateFrom = Localization.localize(currentJobDefinition.getPromotionDateFrom(), "date");
+        var promotionDateThru = Localization.localize(currentJobDefinition.getPromotionDateThru(), "date");
+        var displayText = currentJobDefinition.getJobDefinitionListText() + ' | ' + currentJobDefinition.getPromotionSlogan() + ' | ' + promotionDateFrom + ' - ' + promotionDateThru ;
+        currentJobDefinition.setJobDefinitionListText(displayText);
+        currentJobDefinition.setJdlDescriptionInitialized("1");
+      }
+    }
+
+    for(var j = 0; j < surveyColumnsLength; j++){
+      var currentSurveyColumn = surveyColumnsList[j];
+      var currentSurveyColJobDefMetaPKey = currentSurveyColumn.getJobDefinitionMetaPKey();
+
+      //Each JobDefinition that has same JobDefinitionMetaPKey as that of survey column is marked as matrix survey
+      //These matrix surveys are marked as hidden later in BoJobManager.getSurveys so that their data can be seen through matrix instead of their activities
+      if (currentSurveyColJobDefMetaPKey === currentJobDefJobDefMetaPKey) {
+        currentJobDefinition.setIsMatrixSurvey("1");
+        if (currentJobDefinition.getMandatory() == "1") {
+          currentSurveyColumn.setMandatory("1");
+        }
+        currentSurveyColumn.setPresetting(currentJobDefinition.getPresetting());
+        currentSurveyColumn.setJobDefListPKeys(currentSurveyColumn.getJobDefListPKeys() + "," + currentJobDefinition.getJobDefListPKey());
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

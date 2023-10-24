@@ -1,0 +1,36 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoQuestions" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(context);
+var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var boJobManager = params.boJobManager;
+
+
+if (boJobManager.getOriginalClbStatus() !== "Completed") {
+  var jsonParams = context.jsonQuery.params;
+  var jobDefPKeys = "";
+
+  //Determine relevant jobDefPKeys with lastValue Setting
+  var jdList = boJobManager.getLoJobDefinitions().getItemsByParamArray([
+    {"presetting": "LastValue", "op": "EQ"},
+    {"jobMetaId": "Question", "op": "EQ"}
+  ]);
+  var jdIdx = jdList.length;
+  var jd;
+  while (jdIdx--) {
+    jd = jdList[jdIdx];
+    jobDefPKeys += "'" + jd.getJobDefinitionPKey() + "', ";
+  }
+  //Remove last occurrence of ","
+  jobDefPKeys = jobDefPKeys.replace(/,(?=[^,]*$)/, '');
+  jsonParams.push({
+    "field" : "jobDefPKeys",
+    "operator" : "EQ",
+    "value" : jobDefPKeys
+  });
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

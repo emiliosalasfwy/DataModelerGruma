@@ -1,0 +1,26 @@
+<BusinessLogic methodName="addMissingUoMsForAllItems" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loItems" type="LoTruckLoadItems" />
+    <MethodInput name="items" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+// Build dictionary to store item metas information
+var itemMetaDict = Utils.createDictionary();
+
+var itemMetas = me.getBoOrderMeta().getLoOrderItemMetas().getAllItems();
+
+for(var j = 0; j < itemMetas.length; j++) {
+  itemMetaDict.add(itemMetas[j].getPKey(), itemMetas[j]);
+}
+
+for(var i = 0; i < items.length; i++) {
+  var itemMeta = itemMetaDict.get(items[i].getSdoItemMetaPKey());
+  deferreds.push(loItems.addMissingUoMsToItem(items[i], itemMeta, ""));
+}
+
+var promise = when.all(deferreds);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,14 @@
+<BusinessLogic methodName="cancel" businessObjectClass="BoOrder" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="reasonCode" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+                
+    if (Utils.isDefined(reasonCode)) {
+        this.setCancelReason(reasonCode);
+    }
+                
+    this.setPhase("Canceled");
+
+    ]]></Code>
+</BusinessLogic>

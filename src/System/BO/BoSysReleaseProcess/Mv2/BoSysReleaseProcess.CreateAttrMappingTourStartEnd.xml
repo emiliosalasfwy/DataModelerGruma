@@ -1,0 +1,34 @@
+<BusinessLogic methodName="createAttrMappingTourStartEnd" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = this.getReferenceObject();
+
+var tourId;
+var warehouse;
+var date;
+var vehicleId;
+
+if (ref.getId) {  
+  tourId = ref.getTourId();
+}
+
+if (ref.getLuEtpWarehouse) {
+  warehouse = ref.getLuEtpWarehouse().getText();
+}
+
+if (ref.getDateFrom) {  
+  date = Localization.localize(ref.getDateFrom(), "date");
+}
+
+if (ref.getLuTruck) {  
+  vehicleId = ref.getLuTruck().getTruckId();
+}
+
+attributes.add("TourId", tourId);
+attributes.add("Warehouse", warehouse);
+attributes.add("Date", date);
+attributes.add("VehicleId", vehicleId);]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

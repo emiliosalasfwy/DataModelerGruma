@@ -1,0 +1,94 @@
+<BusinessLogic methodName="userExitForSpecialReward" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reward" type="Object" />
+    <MethodInput name="forceReset" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var selectReward = reward.getIsApplicable() == "1" && reward.getSelected() == "1" && !forceReset;
+var loItems = me.getOrderCache().getLoItems().getItemsByParamArray([{"promotionPKey" : reward.getPromotionPKey(),"op":"EQ"}, {"parentType" : "Reward","op":"NE"}]);
+var items;
+
+me.getOrderCache().getLoItems().suspendListRefresh();
+
+if(reward.getUserExit() === "5PercentDiscount"){
+  var loRewardProducts = me.getLoRewardProducts().getItemsByParam({"promotionReward" : reward.getPKey()});
+  var loRewardProductIds = loRewardProducts.map(function(item){return item.getPrdId();});
+  items = loItems.filter(function(item){return loRewardProductIds.length === 0 || loRewardProductIds.find(id => id === item.getPrdMainPKey());});
+
+  if(selectReward){
+    //Set Order_Item__c.Pricing_Info_1__c to -5 for special reward products (if available), else for tactic products of current promotion
+    items.forEach(function(item){
+      item.setPricingInfo1(-5);
+    });
+
+    reward.setUserExitResult("Pricing_Info_1 : -5 for manual Discount");
+  } else{
+    //Reset Order_Item__c.Pricing_Info_1__c to 0 for special reward products (if available), else for tactic products of current promotion
+    items.forEach(function(item){
+      item.setPricingInfo1(0);
+    });
+
+    reward.setUserExitResult(" ");
+  }
+}
+if(!Utils.isEmptyString(reward.getClassification())){
+  items = loItems.filter(function (item){return item.productClassifications.includes(reward.classification);});
+
+  if(reward.getUserExit() === "PercentDiscountForClassification"){
+
+    if(selectReward){
+      //Add Reward.DefaultValue to Order_Item__c.Pricing_Info_2__c  for tactic products of current promotion/classification
+      var totalPercentDiscount;
+      items.forEach(function(item){
+        totalPercentDiscount = item.getPercentDiscount() + reward.getDefaultValue();
+        item.setPercentDiscount(totalPercentDiscount);
+
+        if(totalPercentDiscount > -100){
+          item.setPricingInfo2(totalPercentDiscount);
+        }
+        else{
+          item.setPricingInfo2(-100);
+        }
+      });
+    } else{
+      //Reset Order_Item__c.Pricing_Info_2__c to previous pricing value for tactic products of current promotion/classification
+      items.forEach(function(item){
+        item.setPercentDiscount(item.getPercentDiscount() - reward.getDefaultValue());
+        if(item.getPercentDiscount() > -100){
+          item.setPricingInfo2(item.getPercentDiscount());
+        }
+      });
+    }
+  }
+  if(reward.getUserExit() === "ClassificationBasedSpecialPriceDiscount"){
+    if(selectReward){
+      //Set Order_Item__c.Pricing_Info_3__c to Promoted Price for tactic products of current promotion/classification
+      var promotedPrice = 0;
+      items.forEach(function(item){
+        if(item.getIsOrderUnit() == "1"){
+          promotedPrice = item.getPromotedPrice();
+        }
+        else{
+          promotedPrice = (item.getPromotedPrice() * (item.getPiecesPerSmallestUnit() / item.getDefaultPiecesPerSmallestUnit()));
+        }
+        item.setPricingInfo3(promotedPrice);
+      });
+    } else{
+      //Reset Order_Item__c.Pricing_Info_3__c to 0 for tactic products of current promotion/classification
+      items.forEach(function(item){
+        item.setPricingInfo3(0);
+      });
+    }
+  }
+}
+
+if(forceReset){
+  me.getOrderCache().getLoItems().resumeListRefresh(true);
+}
+else {
+  me.getOrderCache().getLoItems().resumeListRefresh(false, true);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,23 @@
+<BusinessLogic methodName="deleteAdditionalWaypoints" businessObjectClass="LoCustomerOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="overviewList" type="Object" />
+    <MethodInput name="makePinVisible" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(makePinVisible) && makePinVisible == "1"){
+  var inVisiblePins = me.getItemsByParam({ "visibleInMap": "0" });
+  inVisiblePins.forEach(function(inVisiblePin) {
+    inVisiblePin.setVisibleInMap("1"); //Make Purple Pins Visible on date change/call cancel/del/complete.
+  });
+}
+
+var plannedVisits = overviewList.getItemsByParam({"clbStatus": 'Planned'});
+plannedVisits.forEach(function(plannedVisit) {
+  var plannedVisitPin = me.getItemByPKey(plannedVisit.bpaMainPKey);
+  if(Utils.isDefined(plannedVisitPin)){
+    plannedVisitPin.setVisibleInMap("0"); //Remove visibility of Purple Pins if there is a corresponding call Planned already.
+  }
+});]]>
+</Code>
+  <Return name="me" value="me" />
+</BusinessLogic>

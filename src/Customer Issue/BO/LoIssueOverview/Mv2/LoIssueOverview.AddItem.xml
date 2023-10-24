@@ -1,0 +1,75 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoIssueOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="newIssueDetail" type="BoIssue" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var resIcon;
+var substituteUserPKey;
+var status;
+
+var managementInfo = newIssueDetail.getLuCustomerManagementInfo();
+
+if (
+  managementInfo.getIsManaged() === "0" &&
+  managementInfo.getIsSubstituted() == "1"
+) {
+  resIcon = "UserSubstitute24";
+  substituteUserPKey = managementInfo.getReferenceUsrMainPKey();
+  if (managementInfo.getSubstitutedInLeadFollowUpTime() == "1") {
+    status = "Inactive_Substitute";
+  } else {
+    status = "Active_Substitute";
+  }
+} else if (
+  managementInfo.getIsManaged() === "0" &&
+  managementInfo.getHasSubstitute() == "1"
+) {
+  resIcon = "UserSubstituted24";
+  substituteUserPKey = managementInfo.getHasSubstituteUsrMainPKey();
+  if (managementInfo.getHasSubstituteInLeadFollowUpTime() == "1") {
+    status = "Active_Substituted";
+  } else {
+    status = "Inactive_Substituted";
+  }
+} else {
+  resIcon = "UserArrowDarkGrey16";
+}
+
+// Preset attributes
+var liSvcRequestIssue = {
+  pKey: newIssueDetail.getPKey(),
+  issuePhase: newIssueDetail.getIssuePhase(),
+  initiationDate: newIssueDetail.getInitiationDate(),
+  businessModified: Utils.createAnsiDateTimeNow(),
+  dueDate: newIssueDetail.getDueDate(),
+  priority: newIssueDetail.getPriority(),
+  responsiblePKey: newIssueDetail.getResponsiblePKey(),
+  responsibleName: newIssueDetail.getLuResponsible().getName(),
+  ownerPKey: newIssueDetail.getOwnerPKey(),
+  ownerName: newIssueDetail.getLuOwner().getName(),
+  text: newIssueDetail.getText(),
+  customerName: newIssueDetail.getLuCustomer().getName(),
+  ownerBpaMainPKey: newIssueDetail.getOwnerBpaMainPKey(),
+  initiatorPKey: newIssueDetail.getInitiatorPKey(),
+  svcMetaPKey: newIssueDetail.getSvcRequestMetaPKey(),
+  isPrivate: newIssueDetail.getBoSvcRequestMeta().getIsPrivate(),
+  wfeWorkflowPKey: newIssueDetail.getWfeWorkflowPKey(),
+  actualStatePKey: newIssueDetail.getActualStatePKey(),
+  isActive: newIssueDetail.getBoSvcRequestMeta().getActive(),
+  responsibleIcon: resIcon,
+  substituteUsrPKey: substituteUserPKey,
+  substitutionStatus: status,
+  priorityUIText:
+    Localization.resolve("IssueOverviewCallUI_PrioLabel") +
+    " " +
+    Utils.getToggleText("DomABC", newIssueDetail.getPriority()),
+};
+
+// Add new Item to ListObject
+me.addListItems([liSvcRequestIssue]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liSvcRequestIssue.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

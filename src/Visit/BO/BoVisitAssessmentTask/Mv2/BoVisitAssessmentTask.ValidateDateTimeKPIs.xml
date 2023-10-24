@@ -1,0 +1,46 @@
+<BusinessLogic methodName="validateDateTimeKPIs" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//select all time parts
+//if time part is not empty date part must be filled and not equal minDate
+var timeKPIsToCheck = me.getLoRetailVisitKPI().getItemsByParamArray([{"dataType" : "NullableString", "op" : "EQ"}, {"aidDataType" : "DateTime", "op" : "EQ"}]);
+
+var invalidDateTimeKPIs = [];
+timeKPIsToCheck.forEach(function(timeKPI){
+  if(Utils.isDefined(timeKPI.getActualValue())){
+    var datePart = me.getLoRetailVisitKPI().getItemsByParam({ "linkedRecordId" : timeKPI.getPKey() });
+    if(datePart.length === 0 || !Utils.isDefined(datePart[0].getActualValue())){
+      invalidDateTimeKPIs.push(timeKPI.getQuestion() +  " " + Localization.resolve("BoVisitAssessmentTask_TimeFormatValidationFor") + " " + timeKPI.getProductName() );
+    }
+  }
+
+});
+
+//select all date parts 
+//if date part is not min date time part must exist and must be filled
+var dateKPIsToCheck = me.getLoRetailVisitKPI().getItemsByParamArray([{"dataType" : "NullableDate", "op" : "EQ"}, {"aidDataType" : "DateTime", "op" : "EQ"}]);
+
+dateKPIsToCheck.forEach(function(dateKPI){
+  if(Utils.isDefined(dateKPI.getActualValue())){
+    var timePart = me.getLoRetailVisitKPI().getItemsByParam({ "linkedRecordId" : dateKPI.getPKey() });
+    if(timePart.length === 0 || Utils.isEmptyString(timePart[0].getActualValue())){
+      invalidDateTimeKPIs.push(dateKPI.getQuestion() +  " " + Localization.resolve("BoVisitAssessmentTask_TimeFormatValidationFor") + " " + dateKPI.getProductName());
+    }
+  }
+
+});
+
+
+if(invalidDateTimeKPIs.length > 0){
+  messageCollector.add({
+    "level" : "error",
+    "objectClass" : "BoVisitAssessmentTask",
+    "messageParams":{"invalidKPI":"\n" + invalidDateTimeKPIs.reverse().join("\n")},
+    "messageID" : "BoVisitAssessmentKPIInvalidDateTimeKPI"
+  }); 
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

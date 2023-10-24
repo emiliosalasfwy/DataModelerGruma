@@ -1,0 +1,19 @@
+<BusinessLogic methodName="handleIsPaymentCollectedChanged" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="oldValue" type="String" />
+    <MethodInput name="newValue" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(oldValue != newValue) {
+  //if payment is collected then create order payment else delete order payment
+  if(newValue === "1") {
+    promise = me.createPayments();
+  } else if(newValue === "0" && Utils.isDefined(me.getLoPayments())) {
+    me.getLoPayments().delete();
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

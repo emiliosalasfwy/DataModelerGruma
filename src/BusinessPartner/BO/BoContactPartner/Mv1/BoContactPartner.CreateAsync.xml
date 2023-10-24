@@ -1,0 +1,84 @@
+<BusinessLogic methodName="createAsync" businessObjectClass="BoContactPartner" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jParams;
+var jQuery;		
+var user = ApplicationContext.get('user');		
+
+if (!jsonQuery){jsonQuery={'params': []};}
+var pKey = PKey.next();
+me.setPKey(pKey);
+me.initSalutation();
+me.setName(" ");
+me.setFirstName(" ");
+me.setLastName(" ");
+me.setJobTitle(" ");
+me.initMainFunction();
+me.setPhone1(" ");
+me.setPhone2(" ");
+me.setEmail1(" ");
+me.setFax1(" ");
+me.setEmailEditable("1");
+
+me.updateProperties(jsonQuery);
+
+var promise = BoFactory.createListAsync(LO_CONTACTPARTNERADDRESS, {'params': []}).then(
+  function (object) {
+    me.setLoContactPartnerAddress(object);
+
+    //Add Main Address
+    me.getLoContactPartnerAddress().addItem(me.getPKey(),"1");	
+
+    //Set object status of Main Address
+    me.getLoContactPartnerAddress().setObjectStatus(STATE.NEW | STATE.DIRTY);
+
+    jParams = [];
+    jQuery = {};
+
+    // Prepare creation of BoBpaSales			
+    jParams.push({ "field" : "businessPartnerPKey", "value" : jsonQuery.customerPKey});
+    jParams.push({ "field" : "salesOrg", "value" : user.getBoUserSales().getSalesOrg()});			
+    jQuery.params = jParams;
+
+    return BoFactory.createObjectAsync(BO_BPASALES, jQuery);	
+  }).then(
+  function (object) {
+    me.setBoBpaSales(object);	
+
+    //Set object status of BoBpaSales to dirty since it will be not modified via GUI
+    me.getBoBpaSales().setObjectStatus(STATE.NEW | STATE.DIRTY);
+
+    return BoFactory.loadObjectByParamsAsync("LuBpaMeta", me.getQueryBy("id", "ContactPartner"));			
+  }).then(
+  function (lookupBpaMeta) {
+    if (Utils.isDefined(lookupBpaMeta))
+    {
+      me.setBpaMetaPKey(lookupBpaMeta.getPKey());				
+    }
+    me.setObjectStatus(STATE.NEW);
+    return BoFactory.createListAsync(LO_CUSTOMERCONTACTPARTNERRELATION, {'params': []});
+  }).then(
+  function (object) {
+    // Add Customer to ContactPartner relation
+    if(Utils.isSfBackend())
+    {
+      me.setAccount(jsonQuery.params[0].value);
+    }
+    else
+    {
+      object.addItem(jsonQuery.params[0].value, me.getPKey()); 
+    }
+    me.setLoContactPartnerCustomerRelation(object);
+    //Set object status of ContactPartner relation
+    me.getLoContactPartnerCustomerRelation().setObjectStatus(STATE.NEW | STATE.DIRTY);
+    me.setObjectStatus(STATE.NEW | STATE.DIRTY);
+    me.setEARights();
+
+    return me;
+  }
+);]]>
+</Code>
+  <Return name="BoContactPartner_CreateAsync" value="promise" />
+</BusinessLogic>

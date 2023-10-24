@@ -1,0 +1,65 @@
+<BusinessLogic methodName="prepareDataForCustomerRevenueReport" businessObjectClass="BoCustomerReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCustomerSalesRevenue" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var resultPrevYear = [0,0,0,0,0,0,0,0,0,0,0,0];
+var resultCurrYear = [0,0,0,0,0,0,0,0,0,0,0,0];
+var maxValue1 = 0;
+var maxValue2 = 0;
+var currentYear = parseInt(Utils.createDateToday().getUTCFullYear(), 10);
+var prevYear = currentYear - 1;
+
+if(Utils.isDefined(loCustomerSalesRevenue)) {
+  var items = loCustomerSalesRevenue.getAllItems();
+  var index = 0;
+  var length = items.length;
+  var itemIndex = 0;
+
+  for(;index<length;index++) {
+    var currentItem = items[index]; 
+    itemIndex = currentItem.getMonth() - 1;
+
+    if(currentItem.getYear() == currentYear) {
+      resultCurrYear[itemIndex] = currentItem.getNetSales();
+    }
+    else {
+      resultPrevYear[itemIndex] = currentItem.getNetSales();
+    }
+  }
+
+  //DEMO HACK BEGIN
+  //HIDE REST OF CURRENT YEAR
+  var monthIndex = Utils.createDateToday().getUTCMonth() + 1;
+  for( ;monthIndex<12;monthIndex++) {
+    resultCurrYear[monthIndex] = 0;
+  }
+  //DEMO HACK END
+
+  maxValue1 = resultPrevYear.reduce(function (p, v) {
+    return (p > v ? p : v);
+  });
+  maxValue2 = resultCurrYear.reduce(function (p, v) {
+    return (p > v ? p : v);
+  });
+}
+maxValue1 = Math.max(maxValue1, maxValue2);
+
+var axisMax = Math.max(Math.ceil(maxValue1 * 1.1), 1000);
+
+resultPrevYear = [prevYear].concat(resultPrevYear);
+resultCurrYear = [currentYear].concat(resultCurrYear);
+
+var jsonData = {
+  "data" : {
+    columns : [resultPrevYear, resultCurrYear]
+  },
+  "axisRange" : {
+    "max" : {
+      "y" : axisMax
+    }
+  }
+};]]>
+</Code>
+  <Return name="jsonData" value="jsonData" />
+</BusinessLogic>

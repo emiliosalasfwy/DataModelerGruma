@@ -1,0 +1,8 @@
+<BusinessLogic methodName="isSplittingEnabled" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var splittingRule = this.getSplittingRule();
+var split = this.getSplittingOption() == "1" && (Utils.isDefined(splittingRule) || !Utils.isEmptyString(splittingRule));]]>
+</Code>
+  <Return name="return" value="split" />
+</BusinessLogic>

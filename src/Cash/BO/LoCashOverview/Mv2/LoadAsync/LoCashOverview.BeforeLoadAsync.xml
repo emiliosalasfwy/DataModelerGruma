@@ -1,0 +1,21 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoCashOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var idxAso = -1;
+for (var index in context.jsonQuery.params)
+{              
+  if (context.jsonQuery.params[index].field === 'asoName') {
+    idxAso = index;
+  } 
+}
+
+if (idxAso > -1) {
+  context.jsonQuery.params[idxAso].value = 'AsoCashOverview';
+}
+
+var promise = when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

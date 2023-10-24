@@ -1,0 +1,55 @@
+<BusinessLogic methodName="getDSForCustomerAssortment" businessObjectClass="LoOrderItems" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="prdProposalItemMetaPosition" type="DomInteger" />
+    <MethodInput name="useAssortmentSdoItem" type="DomInteger" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+// Datasource name (required by merge engine)
+var LO_MECUSTOMERASSORTMENT = "LoMeCustomerAssortment";
+
+var dsParams = "";
+
+//Build datasource parameters (include restriction to item template if specified)
+if ((useAssortmentSdoItem == "1") && (Utils.isDefined(prdProposalItemMetaPosition)) && (prdProposalItemMetaPosition > 0) && (prdProposalItemMetaPosition < 13)) {
+	var itemMetaRestriction = " AND PrdProposalCustomerAssortmentPrdRel.SdoItemMeta" + prdProposalItemMetaPosition + " = '1' ";
+
+	dsParams = {
+		"params" : [{
+				"field" : "customerPKey",
+				"value" : customerPKey
+			}, {
+				"field" : "addCond_SdoItemMetaRestriction",
+				"value" : itemMetaRestriction
+			}
+		]
+	};
+} else {
+	dsParams = {
+		"params" : [{
+				"field" : "customerPKey",
+				"value" : customerPKey
+			}
+		]
+	};
+}
+
+var datasourceDefiniton = {
+	"boName" : LO_MECUSTOMERASSORTMENT,
+	"dsParams" : dsParams,
+	"matchingColumn" : "prdMainPKey",
+	"dataSourceColumns" : [{
+			"name" : "customerAssortment",
+			"alias" : "customerAssortment",
+			"default" : "0"
+		}
+	],
+	"mergeProperty" : mergeProperty,
+	"lookupDataSource" : "false"
+};
+
+    ]]></Code>
+  <Return name="dsForCustomerAssortment" value="datasourceDefiniton" />
+</BusinessLogic>

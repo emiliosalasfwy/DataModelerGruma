@@ -1,0 +1,20 @@
+<BusinessLogic methodName="creationAllowed" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var creationAllowed = "1";
+
+if(ApplicationContext.get('user').hasRole('TourUser')){
+  if(!Utils.isDefined(ApplicationContext.get('currentTourPKey')) ||
+     Utils.isEmptyString(ApplicationContext.get('currentTourPKey'))){
+    //check if no tour in context
+    creationAllowed = "0";
+  }
+  else if(!Utils.isDefined(ApplicationContext.get('currentTourPKey')) ||
+          ApplicationContext.get('currentTourStatus') !== "Running"){
+    //check status of tour in context - if != Running -> false
+    creationAllowed = "0";
+  }
+}]]>
+</Code>
+  <Return name="creationAllowed" value="creationAllowed" />
+</BusinessLogic>

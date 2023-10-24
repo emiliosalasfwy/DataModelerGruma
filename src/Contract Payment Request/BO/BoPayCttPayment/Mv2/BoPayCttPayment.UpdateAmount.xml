@@ -1,0 +1,19 @@
+<BusinessLogic methodName="updateAmount" businessObjectClass="BoPayCttPayment" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loTactics = me.getLoPayTactics().getAllItems();
+var amount = parseInt(me.getPaidAmount(), 10);
+
+for(var idxTct = 0;idxTct<loTactics.length;idxTct++){
+  var liTactic = loTactics[idxTct];
+
+  if(Utils.isDefined(liTactic.getTacticApproved())){
+    if(liTactic.getTacticApproved() == 'True'){
+      amount += parseInt(liTactic.getActualCosts(), 10);
+    }
+  }
+}
+me.setPaidAmount(amount);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

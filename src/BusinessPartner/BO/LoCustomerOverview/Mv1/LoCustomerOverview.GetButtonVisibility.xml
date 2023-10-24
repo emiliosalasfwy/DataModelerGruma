@@ -1,0 +1,13 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="LoCustomerOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = false;
+
+var isButtonVisible = me.getItemsByParam({"isButtonVisible": "1"}).length > 0;
+
+if (isButtonVisible){
+  visible = true;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

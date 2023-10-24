@@ -1,0 +1,81 @@
+<BusinessLogic methodName="getChartData" businessObjectClass="LoCustomerSalesRevenueForCard" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="user" type="DomPKey" />
+    <MethodInput name="numberOfYears" type="Integer" />
+    <MethodInput name="numberOfMonths" type="Integer" />
+    <MethodInput name="currentDate" type="Date" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var years = "";
+var months = "";
+numberOfYears = parseInt(numberOfYears, 10);
+numberOfMonths = parseInt(numberOfMonths, 10);
+
+if(!Utils.isDefined(currentDate)) {
+  currentDate = Utils.createAnsiDateTimeToday();
+}
+
+var now = Utils.createDateByString(currentDate);
+var currentYear = now.getUTCFullYear();
+var currentMonth = now.getUTCMonth();
+// set to 1st of month because getMonth method is returning wrong month for few dates
+now.setDate(1);
+var date = currentDate;
+var keys = [];
+
+for(var i = 0; i < numberOfYears; i++) {
+  if(i !== 0) {
+    now.setMonth(currentMonth);
+    now.setYear(currentYear - i);
+  }
+
+  //ToDo: change loop from currentMonth-3 to current Month so that current month is at the botttom of the chart
+  for(var j = 0; j < numberOfMonths; j++) {
+    if(j !== 0) {
+      now.setMonth(now.getMonth() - 1);
+    }
+    keys.push("'" + (now.getUTCMonth()+1).toString() + "_" + now.getUTCFullYear().toString() + "'");
+  }
+}
+
+var newKey = [keys[2], keys[1], keys[0], keys[5], keys[4], keys[3]];
+newKey = newKey.join(",");
+
+var jsonQuery = {};
+var jsonParams = [];
+
+jsonParams.push({
+  "field" : "user",
+  "operator" : "EQ",
+  "value" : user
+});
+jsonParams.push({
+  "field" : "date",
+  "operator" : "EQ",
+  "value" : date
+});
+jsonParams.push({
+  "field" : "keys",
+  "operator" : "EQ",
+  "value" : newKey
+});
+jsonQuery.params = jsonParams;
+
+me.searchKeys = newKey;
+
+var promise = Facade.getListAsync("LoCustomerSalesRevenueForCard", jsonQuery)
+.then(function(data) {
+  //needed because function is called in entry action of cockpit. After coming back from maximized Report function is called again
+  me.removeAllItems();
+  if(data.length === 0) {
+    data.push({searchKeys:  me.searchKeys.replace(/'/g, '')});
+  }
+  else {
+    data[0].searchKeys = me.searchKeys.replace(/'/g, '');
+  }
+  me.addItems(data);
+  return true;
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

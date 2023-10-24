@@ -1,0 +1,85 @@
+<BusinessLogic methodName="checkUserRelatedDocument" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="UsrRelatedDocReminderRule" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Execution of Doc Expiration Reminder Rule
+var CheckUsrDocExpirationReminderRule = function(documentType){
+  return BoFactory.loadObjectByParamsAsync("LoUserRelatedDocExpirationRule", [{"userPKey" : me.getPKey(),"documentType" : documentType}]).then(
+    function(loUserRelatedDocExpirationRule){
+      if(Utils.isDefined(loUserRelatedDocExpirationRule)){
+        var liUserRelatedDocExpirationRule = loUserRelatedDocExpirationRule.getAllItems();
+        if(liUserRelatedDocExpirationRule.length > 0){
+
+          for (var i = 0; i < liUserRelatedDocExpirationRule.length; i++){
+            if(liUserRelatedDocExpirationRule[i].getDuration() !== 0){
+              var currentDateTime = Utils.createAnsiToday();
+              var expirationDateTime = Utils.convertDate2Ansi(liUserRelatedDocExpirationRule[i].getExpirationDate()); 
+              var startTimeOffset = liUserRelatedDocExpirationRule[i].getStartTimeOffset();
+              var duration = liUserRelatedDocExpirationRule[i].getDuration();
+              var startReminderDateTime = Utils.addDays2AnsiDate(expirationDateTime, startTimeOffset);
+              var endReminderDateTime = Utils.addDays2AnsiDate(startReminderDateTime, duration);
+
+              //Check on Current date
+              if((currentDateTime == startReminderDateTime || currentDateTime == endReminderDateTime) || (currentDateTime > startReminderDateTime && currentDateTime < endReminderDateTime)){
+                var buttonValues = {};
+                buttonValues[Localization.resolve("OK")] = "ok";
+                var messageContent = liUserRelatedDocExpirationRule[i].getMessageContent() + "<br>" + "Expiration Date : " + Localization.localize(liUserRelatedDocExpirationRule[i].getExpirationDate(), "date");
+                return MessageBox.displayMessage(liUserRelatedDocExpirationRule[i].getMessageTitle(), messageContent, buttonValues);
+              }
+            }
+          }
+        }
+      }
+    }
+  );
+};
+
+
+// Execution of Doc Missing Reminder Rule
+var CheckUsrDocMissingReminderRule = function(documentType){
+  return BoFactory.loadObjectByParamsAsync("LuUserRelatedDocumentCount", [{"userPKey" : me.getPKey(),"documentType" : documentType}]).then(
+    function(luUserRelatedDocumentCount){
+      if(Utils.isDefined(luUserRelatedDocumentCount) && luUserRelatedDocumentCount.getUserRelatedDocsCount() === 0){  
+        // get Document Missing reminder Rule Text      
+        return BoFactory.loadObjectByParamsAsync("LuUserDocMissingReminderText", [{"userPKey" : me.getPKey(),"documentType" : documentType}]);
+      }
+    }).then(
+    function (luUserDocMissingReminderText){
+      if(Utils.isDefined(luUserDocMissingReminderText)){
+        var buttonValues = {};
+        buttonValues[Localization.resolve("OK")] = "ok";
+        return MessageBox.displayMessage(luUserDocMissingReminderText.getMessageTitle(), luUserDocMissingReminderText.getMessageContent(), buttonValues);
+      }           
+    }
+  );
+};
+
+// Get All User Related Documents Reminder Rules.
+var promise = BoFactory.loadObjectByParamsAsync("LoUserRelatedDocReminderRule", [{"userPKey" : me.getPKey()}]).then(
+  function(loUserRelatedDocReminderRule) {
+    var deferreds = [];
+
+    if(Utils.isDefined(loUserRelatedDocReminderRule)) {
+      var liUserRelatedDocReminderRule = loUserRelatedDocReminderRule.getAllItems();
+      if(liUserRelatedDocReminderRule.length > 0) {
+
+        for (var i = 0; i < liUserRelatedDocReminderRule.length; i++){
+          //Check for Doc Expiration Reminder Rule
+          if(liUserRelatedDocReminderRule[i].getReminderRuleType() == "DocumentExpiration") {
+            deferreds.push(CheckUsrDocExpirationReminderRule(liUserRelatedDocReminderRule[i].getDocumentType()));
+          }
+          //Check for Doc Missing Reminder Rule
+          if(liUserRelatedDocReminderRule[i].getReminderRuleType() == "DocumentMissing") {
+            deferreds.push(CheckUsrDocMissingReminderRule(liUserRelatedDocReminderRule[i].getDocumentType()));
+          }
+        } 
+      }
+    }
+
+    return when.all(deferreds);
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

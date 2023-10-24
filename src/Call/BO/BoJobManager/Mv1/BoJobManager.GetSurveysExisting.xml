@@ -1,0 +1,135 @@
+<BusinessLogic methodName="getSurveysExisting" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="String" />
+    <MethodInput name="prdMainPKey" type="String" />
+    <MethodInput name="jobProductPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(prdMainPKey)) {
+  var loCurrentPOS = me.getLoPOS().getItemsByParam({"posId" : posId});
+
+  if (loCurrentPOS.length > 0) {
+    var liCurrentPOS = loCurrentPOS[0];
+    var loCurrentProduct = liCurrentPOS.getSurveyProducts().getItemsByParam({"pKey" : jobProductPKey});
+
+    if (loCurrentProduct.length > 0 && loCurrentProduct[0].getSurveysInitialized() !== "1") {
+      var liSurveyProduct = loCurrentProduct[0];
+      var loSurveys = liCurrentPOS.getSurveys();
+
+      var existingJobMainSurveys = loSurveys.getItemsByParamArray([{"prdMainPKey" : liSurveyProduct.getPrdMainPKey()}],
+                                                                  [{"jobDefinitionMetaPKey" : "ASC"}]);
+
+      var currentPOSColumnSurveys = me.getLoSurveyColumns().getItemsByParamArray([{"measureType" : ((posId === " ") ? "Store" : "POS")}],
+                                                                                 [{"jobDefinitionMetaPKey" : "ASC"}]);
+
+      var continueWhile = true;
+      var idxMatrixColumn = 0;
+      var idxJobMain = 0;
+      var currentJobMainJobDefMetaPKey;
+      var currentMatrixSurveyJobDefMetaPKey;
+      var dicMatrixJobDefs = Utils.createDictionary();
+      var idxJobSurvey;
+
+      //Show all the existing suverys
+      for (idxJobSurvey = 0; idxJobSurvey < existingJobMainSurveys.length; idxJobSurvey++) {
+        existingJobMainSurveys[idxJobSurvey].setHide("0");
+      }
+
+
+      if (idxJobMain < existingJobMainSurveys.length && idxMatrixColumn < currentPOSColumnSurveys.length) {
+        currentJobMainJobDefMetaPKey = existingJobMainSurveys[idxJobMain].getJobDefinitionMetaPKey();
+        currentMatrixSurveyJobDefMetaPKey = currentPOSColumnSurveys[idxMatrixColumn].getJobDefinitionMetaPKey();
+        while (continueWhile) {
+          if (currentJobMainJobDefMetaPKey > currentMatrixSurveyJobDefMetaPKey) {
+            idxMatrixColumn += 1;
+            if (idxMatrixColumn >= currentPOSColumnSurveys.length) {
+              continueWhile = false;
+            } else {
+              currentMatrixSurveyJobDefMetaPKey = currentPOSColumnSurveys[idxMatrixColumn].getJobDefinitionMetaPKey();
+            }
+          } else {
+
+            if (currentJobMainJobDefMetaPKey === currentMatrixSurveyJobDefMetaPKey) {
+              dicMatrixJobDefs.add(currentMatrixSurveyJobDefMetaPKey);
+              existingJobMainSurveys[idxJobMain].setHide("1");
+            }
+
+            idxJobMain += 1;
+            if (idxJobMain >= existingJobMainSurveys.length) {
+              continueWhile = false;
+            } else {
+              currentJobMainJobDefMetaPKey = existingJobMainSurveys[idxJobMain].getJobDefinitionMetaPKey();
+            }
+          }
+        }
+      }
+
+      var surveylist = [];
+      var bpaMainPKey = me.getBpaMainPKey();
+      var clbMainPKey = me.getClbMainPKey();
+
+      //Add Matrix Surveys
+      var currentPOSColumnSurvey;
+      var idxColumn;
+
+      var sProductPrefix = Localization.resolve('surveyDetailProductPrefix');
+      if (Utils.isEmptyString(sProductPrefix)) {
+        sProductPrefix = "";
+      }
+
+      for (idxColumn = 0; idxColumn < currentPOSColumnSurveys.length; idxColumn++) {
+        currentPOSColumnSurvey = currentPOSColumnSurveys[idxColumn];
+
+        if (dicMatrixJobDefs.containsKey(currentPOSColumnSurvey.getJobDefinitionMetaPKey())) {
+          var newLiColumnSurvey = {
+            "pKey" : PKey.next(),
+            "prdMainPKey" : prdMainPKey,
+            "posId" : posId,
+            "surveyText" : currentPOSColumnSurvey.getJobDefinitionMetaText(),
+            "jobDefinitionListText" : sProductPrefix + liSurveyProduct.getShortText(),
+            "dataType" : currentPOSColumnSurvey.getDataType(),
+            "dataLength" : currentPOSColumnSurvey.getDataLength(),
+            "toggleId" : currentPOSColumnSurvey.getToggleId(),
+            "bpaMainPKey" : bpaMainPKey,
+            "clbMainPKey" : clbMainPKey,
+            "done" : "0",
+            "jobActionSuccess" : " ",
+            "jobDefinitionMetaPKey" : currentPOSColumnSurvey.getJobDefinitionMetaPKey(),
+            "jobDefinitionPKey" : " ",
+            "jobMetaPKey" : currentPOSColumnSurvey.getJobMetaPKey(),
+            "jobListPKey" : " ",
+            "mandatory" : currentPOSColumnSurvey.getMandatory(),
+            "mandatoryImageId" : (currentPOSColumnSurvey.getMandatory() == "1") ? "Mandatory" : "EmptyImage",
+            "manual" : "0",
+            "sort" : "" + currentPOSColumnSurvey.getDisplayColumnIndex(),
+            "clbPOSCheckPKey" : posId,
+            "pOS" : ((currentPOSColumnSurvey.getMeasureType() === "Store") ? "0" : "1"),
+            "defaultValue" : " ",
+            "lastValue" : " ",
+            "history" : " ",
+            "targetValue" : " ",
+            "thresholdViolation" : "No",
+            "dataWareHouseKey" : currentPOSColumnSurvey.getDataWareHouseKey(),
+            "groupSort" : " ",
+            "hide" : "0",
+            "value" : liSurveyProduct["get" + currentPOSColumnSurvey.getDisplayColumnNameCapitalized()](),
+            "objectStatus": STATE.NEW
+          };
+
+          if(newLiColumnSurvey.toggleId == "DomPrdDistributed" && (Utils.isEmptyString(newLiColumnSurvey.value) || newLiColumnSurvey.value == "0")) {
+            newLiColumnSurvey.value= 'Distributed';
+          }
+          surveylist.push(newLiColumnSurvey);
+        }
+      }
+
+      if (surveylist.length > 0) {
+        loSurveys.addItems(surveylist);
+      }
+      liSurveyProduct.setSurveysInitialized("1");
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

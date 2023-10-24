@@ -1,0 +1,33 @@
+<BusinessLogic methodName="validateProducts" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+var prdPolicy = me.getLuPrmMeta().getPrdPolicy();
+var loProducts = me.getLoPrmCttProducts().getItemsByParamArray([{"objectStatus" : STATE.DELETED, "op" : "NCB"}]);
+var containsProduct = false;
+
+for(var idxPrd = 0; idxPrd < loProducts.length; idxPrd++){
+  var liProduct = loProducts[idxPrd];
+  if(liProduct.getPrdMetaType() === "Product"){
+    containsProduct = true;
+    break;
+  }
+}
+
+if (prdPolicy === "No" && containsProduct){
+  newError = {"level": "error",
+              "objectClass": "BoPrmContract",
+              "messageID": "CasPrmCttNoProductsAllowed"};
+  messageCollector.add(newError);
+}
+else if (prdPolicy === "OneOrMore" && !containsProduct){
+  newError = {"level": "error",
+              "objectClass": "BoPrmContract",
+              "messageID": "CasPrmCttAtLeastOneProductRequired"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

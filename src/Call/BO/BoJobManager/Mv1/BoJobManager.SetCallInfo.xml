@@ -1,0 +1,27 @@
+<BusinessLogic methodName="setCallInfo" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="clbMainPKey" type="String" />
+    <MethodInput name="clbMetaPKey" type="String" />
+    <MethodInput name="clbStatus" type="String" />
+    <MethodInput name="bpaMainPKey" type="String" />
+    <MethodInput name="referenceDate" type="String" />
+    <MethodInput name="timeFrom" type="String" />
+    <MethodInput name="bpaName" type="String" />
+    <MethodInput name="considerPOSCheck" type="String" />
+    <MethodInput name="considerTargetValues" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[this.beginEdit();
+this.setClbMainPKey(clbMainPKey);                   
+this.setClbMetaPKey(clbMetaPKey);       
+this.setClbStatus(clbStatus);   
+this.setBpaMainPKey(bpaMainPKey); 
+this.setReferenceDate(referenceDate);          
+this.setTimeFrom(timeFrom);    
+this.setBpaName(bpaName);
+this.setConsiderPOSCheck(considerPOSCheck);
+this.setConsiderTargetValues(considerTargetValues);
+this.endEdit();]]>
+</Code>
+  <Return name="returnName" value="true" />
+</BusinessLogic>

@@ -1,0 +1,53 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoJobProductsContextMenu" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Build context menu list
+var contextMenuItemList = [];
+var newParams = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery)) {
+  newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+  context.jsonQuery = newParams;
+}
+
+var menuEntry1 = {
+  "id" : "0000002",
+  "actionImg" : "HistoryDarkGrey24",
+  "actionId" : "DeleteFromHistory",
+  "processEvent" : "DeleteFromHistory",
+  "actionVisible" : "0",
+  "actionEnabled" : "0"
+};
+var menuEntry2 = {
+  "id" : "0000003",
+  "actionImg" : "HistoryDarkGrey24",
+  "actionId" : "DeleteFromPOSHistory",
+  "processEvent" : "DeleteFromPOSHistory",
+  "actionVisible" : "0",
+  "actionEnabled" : "0"
+};
+
+// Check the conditions
+if (context.jsonQuery.boClbMain.getLuCallMeta().getHistoricalProducts() !== "No" && context.jsonQuery.boClbMain.isReadOnly() === false) {
+  if (context.jsonQuery.historical == "1") {
+    if (context.jsonQuery.posId === " ") {
+      //Delete From History Visible
+      menuEntry1.actionVisible = "1";
+      menuEntry1.actionEnabled = "1";
+    } else {
+      // Delete From POS history visible
+      menuEntry2.actionVisible = "1";
+      menuEntry2.actionEnabled = "1";
+    }
+  }
+}
+
+contextMenuItemList.push(menuEntry1);
+contextMenuItemList.push(menuEntry2);
+me.addItems(contextMenuItemList);
+var promise=when.resolve(me);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

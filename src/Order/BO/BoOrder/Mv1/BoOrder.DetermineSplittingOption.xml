@@ -1,0 +1,23 @@
+<BusinessLogic methodName="determineSplittingOption" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bpaSplittingOption" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+// if customer splitting option is not given then return
+if(Utils.isDefined(bpaSplittingOption) && !Utils.isEmptyString(me.getBoOrderMeta().getPKey()))
+{
+  // if the customer splitting option is yes or the sales document splitting option is yes, set the splitting option for document to true
+  if(bpaSplittingOption === "Yes" || (bpaSplittingOption === "FromSalesDoc" && me.getBoOrderMeta().getSplittingOption() === "Yes"))
+  {
+    me.setSplittingOption("1");
+  }
+  else
+  {
+    me.setSplittingOption("0");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

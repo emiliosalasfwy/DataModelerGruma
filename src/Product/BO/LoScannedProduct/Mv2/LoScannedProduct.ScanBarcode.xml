@@ -1,0 +1,19 @@
+<BusinessLogic methodName="scanBarcode" businessObjectClass="LoScannedProduct" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getBarCodeScannerDataAsync().then(
+  function (result) {
+    Utils.hideEventLoadMask();
+    if (!result.cancelled) {
+      if (Utils.isEmptyString(result.text)) {
+        result.text = "cancelled";
+      }
+      return result.text;
+    }
+    else {
+      return "cancelled";
+    }
+  });]]>
+</Code>
+  <Return name="value" value="promise" />
+</BusinessLogic>

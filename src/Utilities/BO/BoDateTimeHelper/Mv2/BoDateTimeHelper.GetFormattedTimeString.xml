@@ -1,0 +1,16 @@
+<BusinessLogic methodName="getFormattedTimeString" businessObjectClass="BoDateTimeHelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Parameters>
+    <MethodInput name="totalDurationInMinutes" type="Integer" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[//example:   121 --> 02:01
+//           -1  --> 00:00
+
+var formattedTimeString = "00:00";
+
+if(Utils.isDefined(totalDurationInMinutes) && totalDurationInMinutes > 0){
+    var durationHours = Math.floor(totalDurationInMinutes/60) > 9 ?  Math.floor(totalDurationInMinutes/60) : "0" + Math.floor(totalDurationInMinutes/60);
+    var durationMinutes = totalDurationInMinutes%60 > 9 ? totalDurationInMinutes%60 : "0" + totalDurationInMinutes%60;
+    formattedTimeString = durationHours + ":" + durationMinutes;
+}]]></Code>
+  <Return name="formattedTimeString" value="formattedTimeString" />
+</BusinessLogic>

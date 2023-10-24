@@ -1,0 +1,131 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var user = ApplicationContext.get('user');
+var bAnnotationAdded = false;
+
+//#########################
+//### Load Daily Report ###
+//#########################
+
+var promise = Facade.getObjectAsync(BO_USERDAILYREPORT, context.jsonQuery).then(
+  function (boUserDailyReport) {
+    me.setProperties(boUserDailyReport);
+
+    //##########################
+    //### Load User Doc Meta ###
+    //##########################
+    return BoFactory.loadObjectByParamsAsync(BO_USERDOCMETA, me.getQueryBy("pKey", me.getUsrDocMetaPKey()));
+  }).then(
+  function (boUserDocMeta) {
+    me.setBoUserDocMeta(boUserDocMeta);
+
+    if(Utils.isEmptyString(me.getWorkTimeFrom())){me.setWorkTimeFrom("00:00");}
+    if(Utils.isEmptyString(me.getWorkTimeThru())){me.setWorkTimeThru("00:00");}
+
+    var wfejsonQuery = {};
+    wfejsonQuery.params = [{ "field":"pKey", "value" : me.getWfeWorkflowPKey() }];
+
+    //########################
+    //### Load Workflow BO ###
+    //########################
+    return BoFactory.loadObjectByParamsAsync(BO_WORKFLOW, wfejsonQuery);
+  }).then(
+  function (boWorkflow) {
+    me.setBoWorkflow(boWorkflow);
+
+    //#############################
+    //### Load Responsible Name ###
+    //#############################
+    return BoFactory.loadObjectByParamsAsync(LU_USER, me.getQueryBy("pKey", me.getResponsiblePKey()));
+  }).then(
+  function (luUser){
+    me.setResponsible(luUser.getName());
+    me.setUser(luUser.getName());
+
+    //##########################
+    //### Load UsrAnnotation ###
+    //########################## 
+    return BoFactory.loadObjectByParamsAsync(BO_USERDRANNOTATION,  me.getQueryBy("usrDocPKey", me.getPKey()));
+  }).then(
+  function (boUserAnnotation) {
+
+    //if no Annotation was loaded create one
+    if(Utils.isEmptyString(boUserAnnotation.getPKey())){
+      bAnnotationAdded = true;
+      boUserAnnotation.setPKey(PKey.next());
+      boUserAnnotation.setLanguage(user.getLanguageSpoken());
+      boUserAnnotation.initText();
+      boUserAnnotation.setUsage("Doc");
+      boUserAnnotation.setReferencePKey(me.getPKey());
+    }
+    me.setBoUserDRAnnotation(boUserAnnotation);
+
+    //#############################
+    //### Load UsrDocActivities ###
+    //############################# 
+    return BoFactory.loadListAsync(LO_USRDRACTIVITY,  me.getQueryBy("usrDocPKey", me.getPKey()));
+  }).then(
+  function (loUserDocActivity) {
+    me.setLoUsrDRActivity(loUserDocActivity);
+    me.addItemChangedEventListener('loUsrDRActivity', me.onDRActivityItemChanged);
+
+    //################################################
+    //### Create Recent State for workflow history ###
+    //################################################
+    return BoFactory.createObjectAsync(LO_USERDRRECENTSTATE, {});
+  }).then(
+  function (loUserDRRecentState){
+
+    me.setLoUserDRRecentState(loUserDRRecentState);
+
+    return BoFactory.loadListAsync(LO_USRTIMEENTRYBYVISITTYPE,  me.getQueryBy("UsrDailyReportPKey", me.getPKey()));
+  }).then(
+  function (loUsrTimeEntryByVisitType) {
+
+    me.setLoUsrTimeEntryByVisitType(loUsrTimeEntryByVisitType);                
+    return BoFactory.loadListAsync(LO_USRTIMEENTRY,  me.getQueryBy("usrDailyReportPKey", me.getPKey()));
+  }).then(
+  function (loUsrTimeEntry){                        
+    me.setLoUsrTimeEntry(loUsrTimeEntry);
+    //Calculate Duration
+    me.calculateTotalActivityDuration();
+  }).then(
+  function(){
+
+    //Lookup for Owner only if Owner <> Repsonsible
+    if(me.getResponsiblePKey() !== me.getOwnerUsrMainPKey()){
+      return BoFactory.loadObjectByParamsAsync(LU_USER, me.getQueryBy("pKey", me.getOwnerUsrMainPKey())).then(
+        function (luUser){
+          me.setUser(luUser.getName());
+
+          if (!bAnnotationAdded){
+            //Reset dirty flag
+            me.setObjectStatus(me.self.STATE_UNMODIFIED); 
+          }
+
+          //set edit and access rights
+          me.setEARights();
+
+          return me;
+        }
+      );  
+    }else{
+      if (!bAnnotationAdded){
+        //Reset dirty flag
+        me.setObjectStatus(me.self.STATE_UNMODIFIED); 
+      }
+
+      //set edit and access rights
+      me.setEARights();
+
+      return me;
+    }  
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

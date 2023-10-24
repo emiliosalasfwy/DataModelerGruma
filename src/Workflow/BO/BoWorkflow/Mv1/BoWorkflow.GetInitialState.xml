@@ -1,0 +1,37 @@
+<BusinessLogic methodName="getInitialState" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var initialStateJson = {};     
+
+// SF/CASDIF: General Dif
+// IN SF Phase and Workflow State are mapped 1:1
+// There exists objects like Contract which mapped Phase: "Planning"      -->  WorkflowState: "initial"
+// In SF this is changed to                        Phase: "Planning"      -->  WorkflowState: "Planning"
+// That means in this case the workflow has no starting state initial. The starting state is "Planning".
+if (Utils.isSfBackend()){
+  me.getLoWfeState().setFilter("initialState", "1"); 
+}else{
+  me.getLoWfeState().setFilter("stateType", "initial");  
+}
+
+
+var wfeStates = me.getLoWfeState().getItemObjects();
+
+if (wfeStates.length> 0) {
+  initialStateJson.toStatePKey = wfeStates[0].getPKey();
+  initialStateJson.stateType = wfeStates[0].getStateType();
+} else {
+  initialStateJson.toStatePKey = " ";
+  initialStateJson.stateType = " ";
+}
+
+if (!Utils.isSfBackend()){
+  // Return state type starting with a capital letter to match DomSdoPhase 
+  // (Differs for the state "initial" from DomWfeStateType)
+  initialStateJson.stateType = "Initial";
+}
+
+me.getLoWfeState().resetAllFilters();]]>
+</Code>
+  <Return name="initialState" value="initialStateJson" />
+</BusinessLogic>

@@ -1,0 +1,8 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoContactPartnerAddress" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//Save LoContactPartnerAddress
+var promise = Facade.saveListAsync(this);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

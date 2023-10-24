@@ -1,0 +1,22 @@
+<BusinessLogic methodName="setEARightsByItem" businessObjectClass="LoCheckInPaymentItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="currentItem" type="LiCheckInPaymentItems" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var me = currentItem;
+var acl = me.getACL();
+
+if(me.getLevel() === "main"){
+  acl.addRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+  acl.addRight(AclObjectType.PROPERTY, "difference", AclPermission.VISIBLE);
+}else{
+  acl.removeRight(AclObjectType.PROPERTY, "modReason", AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, "difference", AclPermission.VISIBLE);
+  
+  if(me.getDocumentType() === "Delivery"){
+    acl.addRight(AclObjectType.PROPERTY, "customerName", AclPermission.VISIBLE);
+    acl.addRight(AclObjectType.PROPERTY, "invoiceId", AclPermission.VISIBLE);
+  }
+}
+BindingUtils.refreshEARights();]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

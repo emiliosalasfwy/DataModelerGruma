@@ -1,0 +1,24 @@
+<BusinessLogic methodName="onPropertyChanged" businessObjectClass="BoWizardRescheduleCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (handlerParams.oldValue != handlerParams.newValue){
+  if(handlerParams.simpleProperty === "timeFrom"){
+ 
+    var updatedTimeThru = Utils.convertAnsiTime2Time(handlerParams.newValue);
+    updatedTimeThru.setMinutes(updatedTimeThru.getMinutes() + me.getDuration());
+
+    me.setTimeFromChanged("1");
+    me.setTimeThru(Utils.convertTime2Ansi(updatedTimeThru)); 
+    me.setTimeFromChanged("0");
+  }
+  if(handlerParams.simpleProperty === "timeThru" && me.getTimeFromChanged() == "0"){
+
+    var offset = me.callBo.getCallDuration(me.getDateFrom(),me.getTimeFrom(),me.getDateFrom(),handlerParams.newValue);
+    me.setDuration(offset);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

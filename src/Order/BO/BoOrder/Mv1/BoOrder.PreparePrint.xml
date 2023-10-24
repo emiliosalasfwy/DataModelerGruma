@@ -1,0 +1,172 @@
+<BusinessLogic methodName="preparePrint" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loCpConditionTemplateText" type="LoCpConditionTemplateText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var cndCpMetaPKeyForEmpties = "00100000007hnjlk"; //hard coded to Empties Total as discussed with PO
+
+var buildSdoConditions = function(pricingInfoJson, orderItem) {
+  var conditions = [];
+  for (var i = 0; i < pricingInfoJson.length; i++) {
+    var currentPricingInfo = pricingInfoJson[i];
+    var isOptimisedPricingInfo = Utils.isDefined(currentPricingInfo.v) && currentPricingInfo.v === "2";
+    var isPrintRelevant = isOptimisedPricingInfo ? currentPricingInfo.print : currentPricingInfo.cpIsPrintRelevant;
+
+    if (isPrintRelevant == "1") {
+      var sdoCondition = {};
+      sdoCondition.pKey = PKey.next();
+      sdoCondition.sdoMainPKey = me.getPKey();
+      sdoCondition.sdoItemPKey = orderItem ? orderItem.getPKey() : " ";
+      sdoCondition.prdMainPKey = orderItem ? orderItem.getPrdMainPKey() : " ";
+      sdoCondition.currency = me.getCurrency();
+      sdoCondition.currencyConversionRate = "1";
+
+      if (sdoCondition.sdoItemPKey) {
+        //Set ErpID to order item pkey as it is needed because printout correlates via ErpID
+        if (Utils.isDefined(orderItem)) {
+          if(Utils.isEmptyString(orderItem.getErpId())){
+            orderItem.setErpId(orderItem.getPKey());
+          }
+          sdoCondition.sdoItemErpId = orderItem.getErpId();
+        }
+      }
+
+      if(isOptimisedPricingInfo){
+
+        //The pricing condition template texts are only used in printouts. Because of that the texts were removed from the optimised JSON structure.
+        //Pricing condition template texts are handed over from the calling process (Advantage: No need to have loop over SdoConditions twice or doing DB requests in this loop).
+        //The texts for all templates can be loaded in the process because we expect max 100 records. (committed by PMs). If this number is getting higher
+        //in the future we should think about the concept again.
+        sdoCondition.text1 = loCpConditionTemplateText.getItemByPKey(currentPricingInfo.met).getText();
+
+        sdoCondition.cndCpCalculationPosition = currentPricingInfo.clcPos;
+        sdoCondition.cndCpSearchStrategyKTRelPos = currentPricingInfo.searchPos;
+        sdoCondition.conditionBaseValue = currentPricingInfo.nBase;
+        sdoCondition.conditionValue = currentPricingInfo.value;
+        sdoCondition.conditionUnit = currentPricingInfo.unit;
+        sdoCondition.unitFactor = currentPricingInfo.factor;
+        sdoCondition.convertedConditionValue = currentPricingInfo.cnvValue;
+        sdoCondition.conditionResult = currentPricingInfo.result;
+        sdoCondition.cndCpMetaPKey = currentPricingInfo.met;
+        sdoCondition.cpIsPrintRelevant = currentPricingInfo.print;
+      } else{
+        sdoCondition.text1 = currentPricingInfo.text1;
+        sdoCondition.cndCpCalculationPosition = currentPricingInfo.cndCpCalculationPosition;
+        sdoCondition.cndCpSearchStrategyKTRelPos = currentPricingInfo.cndCpSearchStrategyKTRelPos;
+        sdoCondition.conditionBaseValue = currentPricingInfo.conditionBaseValue;
+        sdoCondition.conditionValue = currentPricingInfo.conditionValue;
+        sdoCondition.conditionUnit = currentPricingInfo.conditionUnit;
+        sdoCondition.unitFactor = currentPricingInfo.unitFactor;
+        sdoCondition.convertedConditionValue = currentPricingInfo.convertedConditionValue;
+        sdoCondition.conditionResult = currentPricingInfo.conditionResult;
+        sdoCondition.cndCpMetaPKey = currentPricingInfo.cndCpMetaPKey;
+        sdoCondition.cpIsPrintRelevant = currentPricingInfo.cpIsPrintRelevant;
+      }
+
+      conditions.push(sdoCondition);
+    }
+  }
+  return conditions;
+};
+
+var promise = when.resolve();
+if (me.getValidateForRelease() == "1") {
+  me.setPhaseText(BLConstants.Order.PHASE_RELEASED);
+} else {
+  me.setPhaseText(me.getPhase());
+}
+
+if (Utils.isDefined(this.getLoSdoConditions())) {
+  if(Utils.isSfBackend()) {
+    this.getLoSdoConditions().removeAllItems();
+  }
+}
+
+// Set balance after calculating total value in receipt and the value amount paid
+if (me.getPaidAmountReceipt() === 0) {
+  me.setPaymentMethodText(" ");
+  me.setTotalPaidAmount(" ");
+} else {
+  me.setPaymentMethodText(Utils.getToggleText("DomPaymentMethod", me.getPaymentMethod()));
+  me.setTotalPaidAmount(me.getPaidAmountReceipt());
+}
+me.setBalance(me.getGrossTotalValueReceipt() - me.getPaidAmountReceipt());
+
+if ((me.getBoOrderMeta().getComputePrice() == BLConstants.Order.BUTTON_MODE) || (me.getBoOrderMeta().getComputePrice() == BLConstants.Order.EDIT_MODE)) {
+
+  var conditionsQuery = {};
+  conditionsQuery.sdoMainPKey = me.getPKey();
+  conditionsQuery.addCond_PrintRelevant = " AND SdoCondition.CpIsPrintRelevant = '1' ";
+
+  promise = BoFactory.loadObjectByParamsAsync("LoSdoConditions", conditionsQuery)
+    .then(function (loSdoCondition) {
+
+    // SF/CASDIF: General Dif
+    // In CGCloud case no SdoCondition records are stored in DB
+    // The info is directly stored in Order/OrderItem (Pricing_Information__c)
+    //Load pricing information from Order/OrderItem and create SdoConditions out of it
+    if (Utils.isSfBackend()) {
+      if (!Utils.isEmptyString(me.getPricingInformation())) {
+        var pricingInfoJson = [];
+        pricingInfoJson = JSON.parse(me.getPricingInformation());
+
+        var orderConditions = [];
+        if (Utils.isDefined(pricingInfoJson)) {
+          orderConditions = buildSdoConditions(pricingInfoJson);  
+          loSdoCondition.addItems(orderConditions);
+        }
+
+        var orderItems = me.getLoItems().getAllItems();
+        for(var j = 0; j < orderItems.length; j++) {
+          var currentItem = orderItems[j];
+          if (!Utils.isEmptyString(currentItem.getPricingInformation())) {
+            pricingInfoJson = JSON.parse(currentItem.getPricingInformation());
+            var orderItemConditions = [];
+            orderItemConditions = buildSdoConditions(pricingInfoJson, currentItem);
+            loSdoCondition.addItems(orderItemConditions);
+          }
+        }
+      }
+
+      // Create dummy condition if no conditions exist
+      if (loSdoCondition.getAllItemsCount() === 0) {
+
+        var liSdoCondition = {
+          "cpIsPrintRelevant" : "1",
+          "sdoItemPKey" : PKey.next()
+        };
+        loSdoCondition.addListItems([liSdoCondition]);
+      }
+      me.setLoSdoConditions(loSdoCondition);
+
+      //set total amount of empties
+      var loHeaderConditionAmountOfEmpties = loSdoCondition.getItemsByParamArray([{
+        "cndCpMetaPKey" : cndCpMetaPKeyForEmpties,
+        "op" : "EQ"
+      }]);
+
+      if (loHeaderConditionAmountOfEmpties.length > 0) {
+        me.setEmptiesTotalText(loHeaderConditionAmountOfEmpties[0].getText1());
+        me.setEmptiesTotalAmount(parseFloat(loHeaderConditionAmountOfEmpties[0].getConditionResult()).toFixed(2).toString());
+        me.setEmptiesTotalCurrency(me.getData().currency.getShortText());
+      } else {
+        me.setEmptiesTotalText("");
+        me.setEmptiesTotalAmount("");
+        me.setEmptiesTotalCurrency("");
+      }
+    }
+  });
+} 
+else {
+  // Create dummy LoSdoCondition if complex pricing is not enabled to avoid "NULL" values in Printout
+  var loSdoCondition = BoFactory.instantiate("LoSdoConditions");
+  var liSdoCondition = {
+    "cpIsPrintRelevant" : "1",
+    "sdoItemPKey" : PKey.next()
+  };
+  loSdoCondition.addListItems([liSdoCondition]);
+  me.setLoSdoConditions(loSdoCondition);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

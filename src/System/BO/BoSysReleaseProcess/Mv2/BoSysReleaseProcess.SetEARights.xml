@@ -1,0 +1,54 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// ---------------------------------------------------------------------------------------------------
+// Set EA-Rights for Signature Name Controls and Signature Capturing Controls (SysReleaseProcessSteps)
+// ---------------------------------------------------------------------------------------------------
+var acl = me.getACL();
+var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+var authentication = "";
+var i;
+
+// Set EA-Rights of visible signature groups
+for(i = 1; i <= stepItems.length; i++){
+  authentication = stepItems[i-1].getAuthentication();
+
+  if ((authentication == "NameOptional") || (authentication == "NameRequired")) {
+    acl.addRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.VISIBLE);
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureCode' + i, AclPermission.VISIBLE);
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureId' + i, AclPermission.VISIBLE);
+  }
+  else if ((authentication == "LoginWithPIN") || (authentication == "LoginPINBarcode")) {
+    if(me.getReadOnlyMode() == "1"){
+      acl.addRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.VISIBLE);
+      acl.removeRight(AclObjectType.PROPERTY, 'signatureCode' + i, AclPermission.VISIBLE);
+      acl.removeRight(AclObjectType.PROPERTY, 'signatureId' + i, AclPermission.VISIBLE);
+    }else{
+      acl.removeRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.EDIT);
+      acl.addRight(AclObjectType.PROPERTY, 'signatureCode' + i, AclPermission.VISIBLE);
+      acl.addRight(AclObjectType.PROPERTY, 'signatureId' + i, AclPermission.VISIBLE);
+    }
+  }
+  else {
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.VISIBLE);
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureCode' + i, AclPermission.VISIBLE);
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureId' + i, AclPermission.VISIBLE);
+  }
+  if(me.getReadOnlyMode() == "1"){
+    acl.removeRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.EDIT);
+  }
+}
+
+// Hide controls of not used signature groups
+for(i = stepItems.length + 1; i <= 4; i++){
+  acl.removeRight(AclObjectType.PROPERTY, 'signatureName' + i, AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, 'signatureCode' + i, AclPermission.VISIBLE);
+  acl.removeRight(AclObjectType.PROPERTY, 'signatureId' + i, AclPermission.VISIBLE);
+}
+
+if(me.getReadOnlyMode() == "1"){
+  acl.removeRight(AclObjectType.OBJECT, "BoSysReleaseProcess", AclPermission.EDIT);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,30 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoCustomerOpeningTime" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CustomerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Create empty ListItem
+var liCustomerOpeningTime = {
+  "pKey" : PKey.next(),
+  "customerPKey" : CustomerPKey,
+  "timeFrom" : "00:00",
+  "timeThru" : "00:00",
+  "monday" : "0",
+  "tuesday" : "0",
+  "wednesday" : "0",
+  "thursday" : "0",
+  "friday" : "0",
+  "saturday" : "0",
+  "sunday" : "0",
+  "isNew" : "1",
+  "objectStatus" : STATE.NEW
+};
+
+// Add new Item to ListObject
+me.addListItems([liCustomerOpeningTime]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liCustomerOpeningTime.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

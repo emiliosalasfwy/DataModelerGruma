@@ -1,0 +1,40 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoTodoAttachments" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mediaPath" type="String" />
+    <MethodInput name="svcTodoPkey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Not possible to achieve desired result by replacing it with Utils Function
+//returns datetime without space ("20201124145732" )
+var fileName =
+  "img" +
+  Utils.createDateNow()
+    .toISOString()
+    .slice(0, 19)
+    .replace(/-/g, "")
+    .replace(/:/g, "")
+    .replace(/T/g, "");
+var creationDate = Utils.createAnsiDateTimeToday();
+var type = Utils.getFileExtensionFromMediaPath(mediaPath);
+
+var liNewAttachment = {
+  pKey: PKey.next(),
+  svcTodoPKey: svcTodoPkey,
+  creationDate: creationDate,
+  fileName: fileName,
+  type: type,
+  attachmentTextPKey: PKey.next(),
+  description: fileName,
+  attachmentBlobPKey: PKey.next(),
+  mediaPath: mediaPath,
+  objectStatus: STATE.NEW | STATE.DIRTY,
+};
+
+me.addListItems([liNewAttachment]);
+me.orderBy({
+  creationDate: "DESC",
+  fileName: "DESC",
+});]]>
+</Code>
+  <Return name="LiTodoAttachments" value="liNewAttachment" />
+</BusinessLogic>

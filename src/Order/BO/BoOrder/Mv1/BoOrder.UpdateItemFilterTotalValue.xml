@@ -1,0 +1,15 @@
+<BusinessLogic methodName="updateItemFilterTotalValue" businessObjectClass="BoOrder" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var params = { "filterCode": "Basket" };
+var itemFilter = me.getLoItemFilter();
+
+if (Utils.isDefined(itemFilter)){
+  var filter =  itemFilter.getItemsByParam(params);
+  if (filter.length > 0) {
+    var data = filter[0].getCount();
+    var dataItems = data.toString().split("/");
+    filter[0].setCount(dataItems[0] + "/" + me.getTotalValue().toFixed(2));
+  }
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

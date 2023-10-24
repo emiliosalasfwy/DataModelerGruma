@@ -1,0 +1,22 @@
+<BusinessLogic methodName="incrementQuantityByScan" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="item" type="LiOrderItem" />
+    <MethodInput name="scanIncrementQuantity" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+var deferreds = [];
+
+if(Utils.isDefined(item)) {
+  deferreds.push(item.setQuantity(parseInt(item.getQuantity(), 10) + scanIncrementQuantity));
+
+  if(item.getQuantity() > 0){
+    me.suspendListRefresh();
+    item.setShowInBasket("1");
+    me.resumeListRefresh(true);
+  }
+}
+promise = when.all(deferreds);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

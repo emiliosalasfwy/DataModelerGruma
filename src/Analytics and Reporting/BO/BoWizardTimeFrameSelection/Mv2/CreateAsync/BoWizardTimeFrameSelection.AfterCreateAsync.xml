@@ -1,0 +1,24 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWizardTimeFrameSelection" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(result);
+
+var dToday = Utils.createDateToday();
+dToday.setHours(0, 0, 0, 0);
+this.setStartDate(dToday);
+this.setEndDate(dToday);
+
+var user = (ApplicationContext.get('user'));
+var isSV = user.getIsSupervisor();
+var name = user.getLastName() + ", " + user.getFirstName();
+var pkey = user.getPKey();
+
+this.setIsSV(isSV);
+this.setUserName(name);
+this.setUserPKey(pkey);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

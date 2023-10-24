@@ -1,0 +1,12 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LuTripList" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(context.jsonQuery.params[0]) && !Utils.isDefined(context.jsonQuery.params[0].value)) {
+  context.jsonQuery.params[0].value = ' ';
+}
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

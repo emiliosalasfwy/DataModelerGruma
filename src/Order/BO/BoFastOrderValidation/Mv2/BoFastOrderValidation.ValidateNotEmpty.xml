@@ -1,0 +1,13 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoFastOrderValidation" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var newError;
+if (me.getLoFastOrderProducts().getItems().length > 0){
+  newError = {"level": "error", 
+              "objectClass": "BoFastOrderValidation", 
+              "messageID": "CasBoFastOrderChanges"};
+  messageCollector.add(newError);
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

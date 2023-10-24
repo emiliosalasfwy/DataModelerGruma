@@ -1,0 +1,31 @@
+<BusinessLogic methodName="navigate" businessObjectClass="LoVisitCockpitMap" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(me.getAllItemsCount() > 0){
+
+  var li = me.getAllItems()[0];
+
+  var latitude = li.getLatitude();
+  var longitude = li.getLongitude();
+  var address = li.getAddress();
+
+  if(latitude === 0 && longitude === 0 && address === ", "){
+    var buttonValues = {};
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbNoGeoLocation"), buttonValues);
+  } else {
+    promise = BoFactory.createObjectAsync("BoGeoHelper", {})
+      .then(
+      function(geoHelper)
+      {
+        return geoHelper.startNavigation(latitude, longitude, address, "", "", "" );
+      }
+    );
+  }
+
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

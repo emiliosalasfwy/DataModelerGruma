@@ -1,0 +1,29 @@
+<BusinessLogic methodName="validateScannedUoM" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CurrentUoM" type="DomPrdLogisticUnit" />
+    <MethodInput name="AvailableUoM" type="LoLogisticUnit" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+// Check the current UoM against the available UoM for the product
+var items = AvailableUoM.getAllItems();
+var isAvailable = items.some(function(item){
+  return item.getUnitType() === CurrentUoM;
+});
+
+if(isAvailable){
+  promise = when.resolve("valid");
+}else{
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"), Localization.resolve("OrderInvalidUoMDuringBarcodeScan"), buttonValues).then(
+    function () {
+      return "notValid";
+    }
+  );
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

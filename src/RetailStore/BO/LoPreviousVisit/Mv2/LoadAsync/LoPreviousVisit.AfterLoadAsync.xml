@@ -1,0 +1,22 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoPreviousVisit" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//format times
+
+var items = me.getAllItems();
+
+me.suspendListRefresh();
+
+for (var i = 0; i < items.length; i++) {
+  items[i].plannedStartTime = Localization.localize(items[i].plannedStartTime.substring(0,8),"time");
+}
+
+me.resumeListRefresh(true);
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

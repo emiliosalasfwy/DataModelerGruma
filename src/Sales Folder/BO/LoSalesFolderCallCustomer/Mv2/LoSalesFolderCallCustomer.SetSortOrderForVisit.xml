@@ -1,0 +1,15 @@
+<BusinessLogic methodName="setSortOrderForVisit" businessObjectClass="LoSalesFolderCallCustomer" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="orderBy" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[if(orderBy==="Customer")   
+{
+  this.orderBy({"customerName": "ASC"});	
+}
+else if(orderBy==="Type"){
+  this.orderBy({"metaText": "ASC", "customerName": "DESC"});
+}
+
+]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

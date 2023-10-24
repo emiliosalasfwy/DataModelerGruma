@@ -1,0 +1,15 @@
+<BusinessLogic methodName="validateIfZeroDuration" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (me.getAllDay() === "0" && me.getDateFrom() === me.getDateThru() && me.getTimeFrom() === me.getTimeThru()) {
+  messageCollector.add({
+    "level": "error",
+    "objectClass": "BoCall",
+    "messageID": "CasClbCannotCreateCallWithZeroCallDuration"
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

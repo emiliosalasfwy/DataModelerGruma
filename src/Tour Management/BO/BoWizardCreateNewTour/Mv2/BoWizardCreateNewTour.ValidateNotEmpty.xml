@@ -1,0 +1,15 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoWizardCreateNewTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getLuTemplate().getPKey()) || Utils.isEmptyString(me.getLuWarehouse().getPKey())) {
+  var newError = {"level": "error",
+                  "objectClass": "BoWizardCreateNewTour",
+                  "messageID": "CasSdoFillInAllValues"};
+  messageCollector.add(newError);
+}
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

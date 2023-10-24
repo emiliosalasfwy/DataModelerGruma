@@ -1,0 +1,48 @@
+<BusinessLogic methodName="getDSForCustomerAssortment" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="addCond_ProductPKeys" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// OBSOLETE!! - No longer called by core - Data is retrieved via datasource from temp table containing the merge result
+
+// Datasource name (required by merge engine)
+    var LO_MECUSTOMERASSORTMENT = "LoMeCustomerAssortment";
+
+    var dsParams = "";
+    var dsParams_array = [];
+
+    dsParams_array.push({ "field": "customerPKey", "value": customerPKey });
+    
+    // Add additional conditions for restricting products, e.g. invalid product check (called from LoOrderItems.processInvalidItems());  
+    if (!Utils.isEmptyString(addCond_ProductPKeys)) {
+        dsParams_array.push({ "field": "addCond_productPKeys", "value": " AND PrdMainPKey IN (" + addCond_ProductPKeys + ") " });
+    }
+    
+    dsParams = { "params": dsParams_array };
+
+    var datasourceDefiniton = {
+        "boName": LO_MECUSTOMERASSORTMENT,
+        "dsParams": dsParams,
+        "matchingColumn": "prdMainPKey",
+        "dataSourceColumns": [
+          { "name": "sdoItemMeta1", "alias": "sdoItemMeta1" },
+          { "name": "sdoItemMeta2", "alias": "sdoItemMeta2" },
+          { "name": "sdoItemMeta3", "alias": "sdoItemMeta3" },
+          { "name": "sdoItemMeta4", "alias": "sdoItemMeta4" },
+          { "name": "sdoItemMeta5", "alias": "sdoItemMeta5" },
+          { "name": "sdoItemMeta6", "alias": "sdoItemMeta6" },
+          { "name": "sdoItemMeta7", "alias": "sdoItemMeta7" },
+          { "name": "sdoItemMeta8", "alias": "sdoItemMeta8" },
+          { "name": "sdoItemMeta9", "alias": "sdoItemMeta9" },
+          { "name": "sdoItemMeta10", "alias": "sdoItemMeta10" },
+          { "name": "sdoItemMeta11", "alias": "sdoItemMeta11" },
+          { "name": "sdoItemMeta12", "alias": "sdoItemMeta12" }
+        ],
+        "mergeProperty": mergeProperty,
+        "lookupDataSource": "false"
+    };]]>
+</Code>
+  <Return name="dsForCustomerAssortment" value="datasourceDefiniton" />
+</BusinessLogic>

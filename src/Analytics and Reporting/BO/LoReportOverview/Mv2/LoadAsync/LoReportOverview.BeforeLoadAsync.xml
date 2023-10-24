@@ -1,0 +1,28 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoReportOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[// Build report list
+var reportList = [];
+
+reportList.push({
+  "reportName" : Localization.resolve("Report_ReportOverviewList_CustomerSales"),
+  "reportId" : "CustomerRevenueReport",
+  "grouping" : Localization.resolve("Report_ReportOverviewList_Customer"),
+  "groupSort" : 1
+});
+
+reportList.push({
+  "reportName" : Localization.resolve("Report_ReportOverviewList_PromotionCalendar"),
+  "reportId" : "PromotionStoreCalendarReport",
+  "grouping" : Localization.resolve("Report_ReportOverviewList_Customer"),
+  "groupSort" : 2
+});
+
+// Add items to list
+me.addItems(reportList);
+me.orderBy({ "groupSort" : "ASC" });
+
+var promise=when.resolve(context);]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,7 @@
+<BusinessLogic methodName="releaseButtonVisible" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var isValidPhase = me.getPhase() !== "Released" && me.getPhase() !== "Canceled";
+var hasOrderMetaWorkflow = !Utils.isEmptyString(me.getBoOrderMeta().getWfeWorkflowPKey());
+var visible = isValidPhase && hasOrderMetaWorkflow && me.getIsNextStateRelease() == '1';]]></Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

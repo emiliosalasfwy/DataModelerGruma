@@ -1,0 +1,11 @@
+<BusinessLogic methodName="isOpenTourForToday" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var tmgStatusLowerCase = me.getTmgStatus().toLowerCase();
+// strip the time from the date
+var dateFrom = me.getDateFrom();
+ 
+var openTourToday = (tmgStatusLowerCase === "initial" || tmgStatusLowerCase === "open") && Utils.createAnsiDateToday() === dateFrom;]]>
+</Code>
+  <Return name="openTourToday" value="openTourToday" />
+</BusinessLogic>

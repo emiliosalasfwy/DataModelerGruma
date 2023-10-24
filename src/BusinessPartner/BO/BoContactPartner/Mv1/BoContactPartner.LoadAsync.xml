@@ -1,0 +1,48 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="BoContactPartner" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (!jsonQuery){
+  jsonQuery={};
+}
+
+var promise = Facade.getObjectAsync(BO_CONTACTPARTNER, jsonQuery).then(
+  function (selfJson) {
+    me.setProperties(selfJson);
+    return BoFactory.loadListAsync("LoContactPartnerAddress", me.getQueryBy("referencePKey", me.getPKey()));
+  }).then(
+  function (loBpaAddressJson) {
+    me.setLoContactPartnerAddress(loBpaAddressJson);
+    return BoFactory.loadListAsync(LO_CUSTOMERCONTACTPARTNERRELATION, me.getQueryBy("toPKey", me.getPKey()));
+  }).then(
+  function (loContactPartnerCustomerRelationJson) {
+    var newParams = Utils.convertDsParamsOldToNew(jsonQuery);
+    if(Utils.isDefined(newParams.customerPKey)){
+      // Add Customer to ContactPartner relation
+      if(Utils.isSfBackend()){
+        me.setAccount(newParams.customerPKey);
+      }
+      else{
+        loContactPartnerCustomerRelationJson.addItem(newParams.customerPKey, me.getPKey());
+      }
+    }
+    
+    // Due to differences regarding the validation of emails on the mobile device compared to the salesforce backend,
+    // we are checking whether an email is valid as per the mobile device validation upon load.
+    // If the email is NOT valid as per the mobile device validation, it will be set to readonly and cannot be changed.
+    var email1 = me.getEmail1();  
+    var isValidEmail = '1';
+    if (!Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1)) {
+      isValidEmail = '0';
+    }     
+    me.setEmailEditable(isValidEmail);
+    
+    me.setLoContactPartnerCustomerRelation(loContactPartnerCustomerRelationJson);
+    me.setObjectStatus(STATE.PERSISTED);
+    me.setEARights();
+    return me;
+  });]]>
+</Code>
+  <Return name="BoContactPartner_LoadAsync" value="promise" />
+</BusinessLogic>

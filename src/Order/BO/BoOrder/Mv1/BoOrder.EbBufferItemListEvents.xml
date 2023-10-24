@@ -1,0 +1,45 @@
+<BusinessLogic methodName="ebBufferItemListEvents" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//*************************************************************************************************************
+// New Event Handling with Buffering
+// 
+// Events are buffered in ebBufferItemListEvents(), a timer is started
+// When the timer is finished ebFireItemListEvents() is called, here the handling of the buffered events starts
+// The handling itself is done in ebHandleItemListEvents()
+// ebForceItemListEvents() can be called (should be called from a process) to force the clearance of the buffer
+//*************************************************************************************************************
+
+
+var me = this;
+
+if(!Utils.isDefined(me.getItemListEventBuffer()))
+{
+  me.setItemListEventBuffer([]);
+  me.setItemListEventBufferingActive("1");
+}
+
+var buffer = me.getItemListEventBuffer();
+buffer.push(handlerParams);
+
+if(me.getItemListEventBufferingActive() == "1")
+{
+  var eventTimer = me.getEventTimer();
+  if(Utils.isDefined(eventTimer))
+  {
+    clearTimeout(eventTimer);
+  }
+  eventTimer = setTimeout(
+    function()
+    {
+      me.ebFireItemListEvents();
+    },
+    750
+  );
+  me.setEventTimer(eventTimer);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

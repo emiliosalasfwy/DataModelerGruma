@@ -1,0 +1,17 @@
+<BusinessLogic methodName="loadTripListLookup" businessObjectClass="BoWizardTripList" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="tripListPKey" type="String" />
+    <MethodInput name="tripListMode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setTplMainPKey(tripListPKey);
+
+var promise = BoFactory.loadObjectByParamsAsync("LuTripList", me.getQueryBy("pKey", tripListPKey)).then(
+  function (lookup) {
+    me.setTripListLookup(lookup);
+    me.setEARights(tripListMode);
+    me.setObjectStatus(STATE.NEW);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

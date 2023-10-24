@@ -1,0 +1,10 @@
+<BusinessLogic methodName="processSmsSending" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="phoneNumber" type="String" />
+    <MethodInput name="message" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.sendSMS(phoneNumber,message);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

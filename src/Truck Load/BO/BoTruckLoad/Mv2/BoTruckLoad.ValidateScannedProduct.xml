@@ -1,0 +1,24 @@
+<BusinessLogic methodName="validateScannedProduct" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="PrdMainPKey" type="DomPKey" />
+    <MethodInput name="CurrentUoM" type="DomPrdLogisticUnit" />
+    <MethodInput name="AvailableUoM" type="LoLogisticUnit" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [me.validateScannedItem(PrdMainPKey), me.validateScannedUoM(CurrentUoM, AvailableUoM)];
+
+var promise = when.all(deferreds).then(
+  function (promises) {
+    
+    var isValid = !promises.some(
+      function(item) {
+        return item === "notValid";
+      }
+    );
+
+    return isValid ? "valid" : "notValid";
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

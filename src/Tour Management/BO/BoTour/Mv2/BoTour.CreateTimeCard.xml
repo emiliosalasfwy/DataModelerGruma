@@ -1,0 +1,43 @@
+<BusinessLogic methodName="createTimeCard" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+//time card template defined in tour   
+if (Utils.isDefined(me.getUsrDocMetaPKey()) && !Utils.isEmptyString(me.getUsrDocMetaPKey())) {
+  promise = BoFactory.createObjectAsync("BoUserDailyReport", { "usrDocMetaPKey": me.getUsrDocMetaPKey(), "dateFrom": Utils.createAnsiToday() }).then(
+    function (result) {
+      me.setBoUserDailyReport(result);
+    }
+  );
+}
+else if (Utils.isDefined(ApplicationContext.get('user').getUsrDocMetaPKey()) && !Utils.isEmptyString(ApplicationContext.get('user').getUsrDocMetaPKey())) {
+  //time card template defined in user
+  // create Time card..  
+  promise = BoFactory.createObjectAsync("BoUserDailyReport", { "usrDocMetaPKey": ApplicationContext.get('user').getUsrDocMetaPKey(), "dateFrom": Utils.createAnsiToday()}).then(
+    function (result) {
+      me.setBoUserDailyReport(result);
+    }
+  );
+}
+
+promise = promise.then(
+  function () {
+    if (Utils.isDefined(me.getBoUserDailyReport())) {
+      return me.getBoUserDailyReport().createTimeEntry(me.getBoUserDailyReport().getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey(), null, me.getPKey(), " ", undefined, undefined, me.getTimeFrom()).then(
+        function (timeEntryPKey) {
+          if (me.getBoUserDailyReport().getObjectStatus() !== (STATE.NEW | STATE.DIRTY)) {
+            me.getBoUserDailyReport().setObjectStatus(STATE.DIRTY);
+          }
+          return me;
+        });    
+    }
+    else {
+      return me;
+    }
+  }
+);
+]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

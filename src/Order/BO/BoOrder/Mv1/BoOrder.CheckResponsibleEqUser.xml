@@ -1,0 +1,15 @@
+<BusinessLogic methodName="checkResponsibleEqUser" businessObjectClass="BoOrder" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="usrMainPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+       
+      var result = "0";
+      
+      if (this.getResponsiblePKey() == usrMainPKey) {
+        result = "1";
+      }
+     	     
+    ]]></Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

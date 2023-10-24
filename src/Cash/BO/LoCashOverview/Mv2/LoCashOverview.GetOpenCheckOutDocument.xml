@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getOpenCheckOutDocument" businessObjectClass="LoCashOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var items = me.getAllItems();
+var cashPKey = "";
+
+for(var i=0; i < items.length; i++) {
+  var item = items[i];
+  if(item.getDocumentType() ==="CashCheckOut" && item.getPhase() === "Initial") {
+    cashPKey = item.getPKey();
+  }
+}]]>
+</Code>
+  <Return name="cashPKey" value="cashPKey" />
+</BusinessLogic>

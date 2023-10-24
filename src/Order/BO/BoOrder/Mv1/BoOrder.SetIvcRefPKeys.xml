@@ -1,0 +1,111 @@
+<BusinessLogic methodName="setIvcRefPKeys" businessObjectClass="BoOrder" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[//Get user from application context
+var currentUsrPKey = ApplicationContext.get('user').getPKey();
+var luRunningTour = ApplicationContext.get('currentTour');
+
+//Determine user for default user via IvcTAReceiver
+var taReceiverUsrPKey = " ";
+
+//Set taReceiverPKey
+if (Utils.isSfBackend()){
+  taReceiverUsrPKey = me.getInitiatorPKey();
+}
+else{
+  if (me.getBoOrderMeta().getIvcTAReceiver() == "Initiator") {
+    taReceiverUsrPKey = me.getInitiatorPKey();
+  } else {
+    taReceiverUsrPKey = me.getOwnerPKey();
+  }
+}
+
+//Determine tour pkey and vehicle pkeys
+var tmgTourPKey = " ";
+var defaultEtpVehiclePKey = " ";
+var etpVehiclePKey = " ";
+
+if (Utils.isDefined(luRunningTour) && !Utils.isEmptyString(luRunningTour.getPKey())) {
+  tmgTourPKey = luRunningTour.getPKey();
+  defaultEtpVehiclePKey = luRunningTour.getDefaultEtpVehicleTruckPKey();
+  etpVehiclePKey = luRunningTour.getEtpVehicleTruckPKey();
+}
+
+// Set IvcRefPKeys
+if (me.getBoOrderMeta().getIvcRefPKey1Usage() == "DefaultUsr") {
+  me.setIvcRef1PKey(taReceiverUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey1Usage() == "ActualUsr") {
+  me.setIvcRef1PKey(currentUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey1Usage() == "Tour") {
+  me.setIvcRef1PKey(tmgTourPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey1Usage() == "DefaultVehicle") {
+  me.setIvcRef1PKey(defaultEtpVehiclePKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey1Usage() == "ActualVehicle") {
+  me.setIvcRef1PKey(etpVehiclePKey);
+} else {
+  //For NGM, all other values are not supported at the moment
+  me.setIvcRef1PKey(" ");
+}
+
+if (me.getBoOrderMeta().getIvcRefPKey2Usage() == "DefaultUsr") {
+  me.setIvcRef2PKey(taReceiverUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey2Usage() == "ActualUsr") {
+  me.setIvcRef2PKey(currentUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey2Usage() == "Tour") {
+  me.setIvcRef2PKey(tmgTourPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey2Usage() == "DefaultVehicle") {
+  me.setIvcRef2PKey(defaultEtpVehiclePKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey2Usage() == "ActualVehicle") {
+  me.setIvcRef2PKey(etpVehiclePKey);  
+} else {
+  //For NGM, all other values are not supported at the moment
+  me.setIvcRef2PKey(" ");
+}
+
+if (me.getBoOrderMeta().getIvcRefPKey3Usage() == "DefaultUsr") {
+  me.setIvcRef3PKey(taReceiverUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey3Usage() == "ActualUsr") {
+  me.setIvcRef3PKey(currentUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey3Usage() == "Tour") {
+  me.setIvcRef3PKey(tmgTourPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey3Usage() == "DefaultVehicle") {
+  me.setIvcRef3PKey(defaultEtpVehiclePKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey3Usage() == "ActualVehicle") {
+  me.setIvcRef3PKey(etpVehiclePKey);  
+} else {
+  //For NGM, all other values are not supported at the moment
+  me.setIvcRef3PKey(" ");
+}
+
+if (me.getBoOrderMeta().getIvcRefPKey4Usage() == "DefaultUsr") {
+  me.setIvcRef4PKey(taReceiverUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey4Usage() == "ActualUsr") {
+  me.setIvcRef4PKey(currentUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey4Usage() == "Tour") {
+  me.setIvcRef4PKey(tmgTourPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey4Usage() == "DefaultVehicle") {
+  me.setIvcRef4PKey(defaultEtpVehiclePKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey4Usage() == "ActualVehicle") {
+  me.setIvcRef4PKey(etpVehiclePKey);  
+} else {
+  //For NGM, all other values are not supported at the moment
+  me.setIvcRef4PKey(" ");
+}
+
+if (me.getBoOrderMeta().getIvcRefPKey5Usage() == "DefaultUsr") {
+  me.setIvcRef5PKey(taReceiverUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey5Usage() == "ActualUsr") {
+  me.setIvcRef5PKey(currentUsrPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey5Usage() == "Tour") {
+  me.setIvcRef5PKey(tmgTourPKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey5Usage() == "DefaultVehicle") {
+  me.setIvcRef5PKey(defaultEtpVehiclePKey);
+} else if (me.getBoOrderMeta().getIvcRefPKey5Usage() == "ActualVehicle") {
+  me.setIvcRef5PKey(etpVehiclePKey);  
+} else {
+  //For NGM, all other values are not supported at the moment
+  me.setIvcRef5PKey(" ");
+}
+
+me.endEdit();]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

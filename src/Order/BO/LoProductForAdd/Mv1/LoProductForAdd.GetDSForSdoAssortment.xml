@@ -1,0 +1,37 @@
+<BusinessLogic methodName="getDSForSdoAssortment" businessObjectClass="LoProductForAdd" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="sdoMetaPKey" type="DomPKey" />
+    <MethodInput name="commitDate" type="DomDate" />
+    <MethodInput name="addCond_ProductPKeys" type="String" />
+  </Parameters>
+  <Code language="JavaScript">
+  <![CDATA[// OBSOLETE!! - No longer called by core - Data is retrieved via datasource from temp table containing the merge result
+
+// Datasource name (required by merge engine)
+    var LO_MESDOASSORTMENT = "LoMeSdoAssortment";
+    
+    var dsParams = "";
+    var dsParams_array = [];
+
+    dsParams_array.push({ "field": "sdoMetaPKey", "value": sdoMetaPKey });
+    dsParams_array.push({ "field": "commitDate", "value": commitDate });
+    
+    // Add additional conditions for restricting products, e.g. invalid product check (called from LoOrderItems.processInvalidItems());  
+    if (!Utils.isEmptyString(addCond_ProductPKeys)) {
+        dsParams_array.push({ "field": "addCond_productPKeys", "value": " AND PrdMainPKey IN (" + addCond_ProductPKeys + ") " });
+    }
+    
+    dsParams = { "params": dsParams_array };
+
+    var datasourceDefiniton = {
+        "boName": LO_MESDOASSORTMENT,
+        "dsParams": dsParams,
+        "matchingColumn": "prdMainPKey",
+        "dataSourceColumns": [],
+        "mergeProperty": mergeProperty,
+        "lookupDataSource": "false"
+    };]]>
+  </Code>
+  <Return name="dsForSdoAssortment" value="datasourceDefiniton" />
+</BusinessLogic>

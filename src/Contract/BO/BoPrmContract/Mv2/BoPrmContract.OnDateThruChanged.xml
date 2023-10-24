@@ -1,0 +1,21 @@
+<BusinessLogic methodName="onDateThruChanged" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(me.getLoPrmCttTactics())){
+  var endDate = me.getDateThru();
+  var idxProduct;
+  var listPrmTacttics = me.getLoPrmCttTactics();
+  var items = listPrmTacttics.getAllItems();
+
+  for(idxProduct = 0; idxProduct < items.length; idxProduct++){
+    var currentprmTacttic = items[idxProduct];
+    currentprmTacttic.setDateThru(endDate);
+  }
+}
+
+var promise = Facade.saveObjectAsync(me);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

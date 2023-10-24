@@ -1,0 +1,10 @@
+<BusinessLogic methodName="filterSelectablePromotionItems" businessObjectClass="BoItemTabManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="promotionPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.getBoOrder().getLoItems().setFilter("promotionPKey", promotionPKey, "EQ");
+me.getBoOrder().getLoItems().orderByDefaultOrder();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

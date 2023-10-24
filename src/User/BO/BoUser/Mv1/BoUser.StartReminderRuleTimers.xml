@@ -1,0 +1,35 @@
+<BusinessLogic methodName="startReminderRuleTimers" businessObjectClass="BoUser" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LoUsrReminderRule", [{"userPKey" : me.getPKey()}]).then(
+  function(result){  
+    if(Utils.isDefined(result)) {
+      //create timer for all matching rules
+      var rules = result.getItemObjects();
+      var timerThreshold;
+
+      for(var i = 0; i< rules.length; i++) {
+
+        //check if timer is already available (persisted timer restored via TM.launch)
+        if(!TM.hasTimer(rules[i].getId())) {
+          //get timer threshold
+          timerThreshold = rules[i].getTimerThreshold();
+          if (Utils.isDefined(rules[i].getTimerUserExitId()) && !Utils.isEmptyString(rules[i].getTimerUserExitId())) {
+            timerThreshold = me.getReminderRuleTimerThreshold(rules[i].getTimerUserExitId(), rules[i].getTimerThreshold());
+          }
+          if(timerThreshold === 0) {
+            timerThreshold = 1;
+          }
+
+          TM.createCallbackTimer(rules[i].getId(), true, timerThreshold, "BoUsrReminderRuleExecution", "executeTimeCallback");
+          TM.stopTimer(rules[i].getId());
+          //group timer with ConditionActivityType (TimeEntryMeta.Id)
+          TM.setGroupId(rules[i].getId(), rules[i].getTimerActivityType());
+        }
+      }
+    }  
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

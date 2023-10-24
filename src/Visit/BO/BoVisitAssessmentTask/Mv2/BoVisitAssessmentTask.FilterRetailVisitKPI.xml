@@ -1,0 +1,61 @@
+<BusinessLogic methodName="filterRetailVisitKPI" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="locationName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(locationName) && !Utils.isEmptyString(locationName)){
+
+  var reapplyFilters = true;
+
+  //Handling clicking in same in-store location twice withour reapply the same filter
+  if(me.getLoRetailVisitKPI()._filters.length > 0){
+    me.getLoRetailVisitKPI()._filters.forEach(function(filter) {
+      if(Utils.isDefined(filter.inStoreLocationName) && filter.inStoreLocationName.toLowerCase() === locationName.toLowerCase()) reapplyFilters = false;
+    });
+  }
+
+  if(reapplyFilters){
+    //STORE case: Store is Default tab which shows non inStoreLocation related KPIs
+    if(locationName.toLowerCase() === "store"){
+      me.setLocationFilter(locationName);
+
+      if(Utils.isDefined(me.getLoPrimaryRetailVisitKPI())){
+        me.getLoPrimaryRetailVisitKPI().resetAllFilters();
+      }
+
+      var filterArray = [];
+      filterArray.push({"inStoreLocationName": locationName , "op": "EQ"});
+
+      if(Utils.isDefined(me.getCategoryFilter()) && !Utils.isEmptyString(me.getCategoryFilter())){
+        filterArray.push({"productCategoryName": me.getCategoryFilter() , "op": "EQ"});
+      } 
+
+      if(Utils.isDefined(me.getLoPrimaryRetailVisitKPI())){
+        me.getLoPrimaryRetailVisitKPI().setFilterArray(filterArray);
+      }
+
+      me.getLoRetailVisitKPI().resetFilter("inStoreLocationName");
+      me.getLoRetailVisitKPI().setFilter("inStoreLocationName", locationName , "EQ");
+
+    }else{
+
+      me.setLocationFilter(locationName);
+
+      if(Utils.isDefined(me.getLoPrimaryRetailVisitKPI())){  
+        me.getLoPrimaryRetailVisitKPI().resetAllFilters();
+        var filterArray = [];
+        if(Utils.isDefined(me.getCategoryFilter())&& !Utils.isEmptyString(me.getCategoryFilter()))  filterArray.push({"productCategoryName": me.getCategoryFilter(), "op": "EQ"});
+        filterArray.push({"inStoreLocationName": locationName , "op": "EQ"});
+        me.getLoPrimaryRetailVisitKPI().setFilterArray(filterArray);
+      }
+
+      me.getLoRetailVisitKPI().resetFilter("inStoreLocationName");
+      me.getLoRetailVisitKPI().setFilter("inStoreLocationName", locationName , "EQ");
+
+    }
+  }
+
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

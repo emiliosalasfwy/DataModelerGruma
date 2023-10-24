@@ -1,0 +1,32 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoWizardCreateNewIssue" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+
+if (Utils.isEmptyString(me.getLuCustomer().getPKey())) {
+  newError = {"level": "error",
+              "objectClass": "BoWizardCreateNewIssue",
+              "messageID": "CasBoIssueCustomerEmpty"};
+  messageCollector.add(newError);
+}
+
+if(Utils.isEmptyString(me.getLuSvcRequestMeta().getPKey())) {
+  newError = {"level": "error",
+              "objectClass": "BoWizardCreateNewIssue",
+              "messageID": "CasSdoFillInAllValues"};
+  messageCollector.add(newError);
+}
+
+if (Utils.isEmptyString(me.getText())){
+  newError = {"level": "error",
+              "objectClass": "BoWizardCreateNewIssue",
+              "messageID": "CasBoIssueDescriptionEmpty"};
+  messageCollector.add(newError);
+}
+
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

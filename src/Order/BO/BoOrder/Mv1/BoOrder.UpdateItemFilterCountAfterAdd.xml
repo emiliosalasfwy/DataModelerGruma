@@ -1,0 +1,47 @@
+<BusinessLogic methodName="updateItemFilterCountAfterAdd" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="addProductResult" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var filterCountIncrements = addProductResult ? addProductResult.filterCountIncrements : undefined;
+var loItemFilter = me.getLoItemFilter();
+var liItemFilter;
+var count = 0;
+var index = 0;
+var params;
+var allOrderItems;
+var orderItem;
+var alreadyCountedItem = {};
+
+if (Utils.isDefined(filterCountIncrements)) { 
+  for (index in filterCountIncrements) {
+    params = { "filterCode" : filterCountIncrements[index].key };
+    liItemFilter = loItemFilter.getItemsByParam(params);
+    if (liItemFilter.length > 0) {
+      liItemFilter = liItemFilter[0];
+      count = liItemFilter.getCount();
+      count = parseInt(count, 10);
+      liItemFilter.setCount(count + filterCountIncrements[index].value);
+    } 
+  }
+}
+else {
+  //Update All Filter counter on FreeItems update
+  params = { "filterCode" : "All" };
+  liItemFilter = loItemFilter.getItemsByParam(params);
+  if (liItemFilter.length > 0) {  
+    allOrderItems = me.getLoItems().getAllItems();
+    liItemFilter = liItemFilter[0];
+    for (var i = 0; i < allOrderItems.length; i++) {
+      orderItem = allOrderItems[i];
+      if ((orderItem.getQuantity() > 0 || Utils.isEmptyString(orderItem.getPromotionPKey())) && !Utils.isDefined(alreadyCountedItem[orderItem.getRefPKey()])) {
+        count++;
+        alreadyCountedItem[orderItem.getRefPKey()] = "";
+      }
+    }
+    liItemFilter.setCount(parseInt(count, 10));
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

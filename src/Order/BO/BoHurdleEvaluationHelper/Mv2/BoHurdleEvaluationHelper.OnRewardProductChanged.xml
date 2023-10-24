@@ -1,0 +1,14 @@
+<BusinessLogic methodName="onRewardProductChanged" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = me.getOrderCache().handleFreeItemsFromReward(handlerParams.listItem.getPromotionReward(), false)
+.then(function() {
+  if (me.getOrderCache().getBoOrderMeta().getComputePrice() === "4" || (me.getOrderCache().getBoOrderMeta().getComputePrice() === "5" && me.getOrderCache().getDocTaType() !== "NonValuatedDeliveryNote")) {
+    return me.getOrderCache().cpCalculate();
+  } 
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

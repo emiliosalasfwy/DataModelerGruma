@@ -1,0 +1,87 @@
+<BusinessLogic methodName="refreshDurationsAndWorkingTime" businessObjectClass="BoUserDailyReport" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var currentTimeEntry;
+var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+
+//take current if pkey is empty
+if (Utils.isEmptyString(timeEntryPKey)) {
+  currentTimeEntry = me.getLoUsrTimeEntry().getCurrent();
+} else {
+  //get updated or inserted time entry list item
+  var listOfTimeEntries = me.getLoUsrTimeEntry().getAllItems();
+  for (var idxTE = 0; idxTE < listOfTimeEntries.length; idxTE++) {
+    if (listOfTimeEntries[idxTE].getPKey() === timeEntryPKey) {
+      currentTimeEntry = listOfTimeEntries[idxTE];
+      break;
+    }
+  }
+}
+
+if (Utils.isDefined(currentTimeEntry)) {
+
+  promise = BoFactory.loadObjectByParamsAsync("LuTimeEntryType", me.getQueryBy("pKey", currentTimeEntry.getUsrTimeEntryMetaPKey())).then(
+    function (luTimeEntryType) {
+
+      // Refresh total durations
+      if (Utils.isDefined(luTimeEntryType) && luTimeEntryType.getShowAggregation() == "1") {
+        var listTimeEntryByVisitType = me.getLoUsrTimeEntryByVisitType().getItemObjects();
+        var timeEntryFound = false;
+
+        // check if time entry type is already in list
+        var liBreakTimeEntry;
+        var listTimeEntries;
+
+        for (var i = 0; i < listTimeEntryByVisitType.length; i++) {
+
+          //if type already in list
+          if (listTimeEntryByVisitType[i].getPKey() === currentTimeEntry.getUsrTimeEntryMetaPKey() || listTimeEntryByVisitType[i].getText() === currentTimeEntry.getUsrTimeEntryMetaText()){
+
+            // refresh duration of matching time entry type
+            var newTimeEntryTypeDuration = 0;
+            listTimeEntries = me.getLoUsrTimeEntry().getItemObjects();
+            for (var j = 0; j < listTimeEntries.length; j++) {
+              if (listTimeEntries[j].getUsrTimeEntryMetaPKey() === currentTimeEntry.getUsrTimeEntryMetaPKey()) {							
+                newTimeEntryTypeDuration += listTimeEntries[j].getDuration();
+                timeEntryFound = true;
+              }
+            }
+            listTimeEntryByVisitType[i].setDuration(dateTimeHelper.getFormattedTimeString(newTimeEntryTypeDuration));
+            break;
+          }
+        }//end update time entry type
+
+        //add new time entry type if type was not found
+        if (!timeEntryFound) {
+          listTimeEntries = me.getLoUsrTimeEntry().getItemObjects();
+          for (var k = 0; k < listTimeEntries.length; k++) {
+            if (listTimeEntries[k].getPKey() === currentTimeEntry.getPKey()) {
+
+              var newLiDuration = listTimeEntries[k].getDuration();
+              var newliUsrTimeEntryType = {
+                "pKey": luTimeEntryType.getPKey(),
+                "text": luTimeEntryType.getText(),
+                "duration": dateTimeHelper.getFormattedTimeString(newLiDuration),
+                "objectStatus": STATE.NEW
+              };
+              me.getLoUsrTimeEntryByVisitType().addListItems([newliUsrTimeEntryType]);
+              break;
+            }
+          }
+        }//end add time entry type
+      }
+      // Refresh total working time
+      me.calculateTotalActivityDuration();
+    }
+  );
+} else {
+  // Refresh total working time
+  me.calculateTotalActivityDuration();
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

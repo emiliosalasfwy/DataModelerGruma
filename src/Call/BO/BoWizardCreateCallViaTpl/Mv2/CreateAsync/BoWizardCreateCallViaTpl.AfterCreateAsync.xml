@@ -1,0 +1,54 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWizardCreateCallViaTpl" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = {};
+var jsonParams = [];
+jsonQuery.params = jsonParams;
+jsonQuery.referenceDateFrom = result.getSelectedDate();
+jsonQuery.referenceDateThru = result.getSelectedDate();
+
+if (Utils.isSfBackend()) {
+  jsonParams.push({'field' : 'referenceDateFrom', 'value' : Utils.convertForDBParam(jsonQuery.referenceDateFrom, 'DomDate')});
+  jsonParams.push({'field' : 'referenceDateThru', 'value' : Utils.convertForDBParam(jsonQuery.referenceDateFrom, 'DomDate')});
+}
+jsonQuery.responsiblePKey = result.getResponsiblePKey();
+
+if (result.getMode() === 'DragAndDrop' && !Utils.isSfBackend()) {
+  jsonQuery.cond = ' AND TplMain.PKey = #tplMainPKey# ';
+}
+else {
+  jsonQuery.cond = ' AND Trip_List__c.Id = #tplMainPKey# ';
+}
+jsonParams.push({'field' : 'tplMainPKey', 'value' : result.getTplMainPKey()});
+
+var promise = BoFactory.loadListAsync('LoTripList', jsonQuery)
+.then(function (loTripList) {
+  result.setLoTripList(loTripList);
+  var tripListItems = result.getLoTripList().getAllItems();
+  if (tripListItems.length === 0) {
+    result.setTplMainPKey(' ');
+  }
+  else {
+    if (result.getMode() === 'DragAndDrop') {
+      result.getLoTripList().setCurrent(tripListItems[0]);
+    }
+  }
+  return result.getDefaultCallTemplate();
+})
+.then(function () {
+  return result.getDefaultWorkBegins();
+})
+.then(function() {
+  return result.loadCallMetaLookup(result.getCallMetaPKey());
+})
+.then(function () {
+  result.setEARights();
+  result.setObjectStatus(STATE.NEW);
+  return result;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

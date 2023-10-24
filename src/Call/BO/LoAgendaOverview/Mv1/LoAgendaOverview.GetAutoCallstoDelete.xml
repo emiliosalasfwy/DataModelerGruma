@@ -1,0 +1,26 @@
+<BusinessLogic methodName="getAutoCallstoDelete" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var visits = me.getAllItems();
+var iDeletedCount = 0 ;
+var currentUsrMainPKey = ApplicationContext.get('user').getPKey();
+
+if(Utils.isDefined(visits)){
+  for(var index = 0; index < visits.length; index++){
+    if(visits[index].getClbStatus() === "Planned" && visits[index].getCreationMode() === "Automatically" && visits[index].initiatorPKey === currentUsrMainPKey){
+      iDeletedCount++;
+    }}
+    var buttonValues = {};
+    buttonValues[Localization.resolve("Yes")] = "yes";
+    buttonValues[Localization.resolve("No")] = "no";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"),Localization.resolve("CallAutomaticPlanningUI_DeleteWarningFirstPart") + iDeletedCount + Localization.resolve("CallAutomaticPlanningUI_DeleteWarningLastPart"), buttonValues)
+      .then(function(result)
+            {
+      return result;    
+    });
+}]]>
+</Code>
+  <Return name="validationResult" value="promise" />
+</BusinessLogic>

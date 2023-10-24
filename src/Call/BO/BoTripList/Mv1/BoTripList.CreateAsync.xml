@@ -1,0 +1,29 @@
+<BusinessLogic methodName="createAsync" businessObjectClass="BoTripList" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise = when.resolve();
+
+var selectedDay = jsonQuery.dayOfWeek;
+var overviewList = jsonQuery.agendaOverviewList;
+
+me.setPKey(PKey.next());
+me.setMetaType(jsonQuery.type);
+me.setDescription(jsonQuery.description);
+me.setTripListName(jsonQuery.description);
+me.setValidFrom(jsonQuery.validFrom);
+me.setValidThru(jsonQuery.validThru);
+me.setResponsiblePKey(jsonQuery.responsiblePKey);
+me.setOwnerPKey(jsonQuery.responsiblePKey);
+me.setSalesOrg(ApplicationContext.get('user').getBoUserSales().getSalesOrg());
+
+promise = BoFactory.createListAsync(LO_TRIPLISTBPAREL, {'params': []})
+  .then(function (object) {
+  me.setLoTripListBpaRel(object);
+  //Logic to determine the customer assignment for Weekly and Daily trip list
+  me.getLoTripListBpaRel().assignTripListCustomers(me.getPKey(), me.getMetaType(), me.getValidFrom(), me.getValidThru(), selectedDay, overviewList);           
+  me.setObjectStatus(this.self.STATE_NEW_DIRTY);
+  return me;          
+});]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

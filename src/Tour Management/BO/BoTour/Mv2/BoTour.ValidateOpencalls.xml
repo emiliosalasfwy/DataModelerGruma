@@ -1,0 +1,30 @@
+<BusinessLogic methodName="validateOpencalls" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+//check only required if status transition to completed:
+if (me.getTmgStatus() === "Running") {
+  promise = BoFactory.loadObjectByParamsAsync("LuTourOpenCalls", { "TmgMainPKey" : me.getPKey() }).then(
+    function(luTourOpenCalls){
+      if(Utils.isDefined(luTourOpenCalls) && !Utils.isEmptyString(luTourOpenCalls.getOpenCallsCount())) {
+        var openCallsCount = luTourOpenCalls.getOpenCallsCount();
+        // check open calls
+        if(openCallsCount !== 0 && openCallsCount > 0) {
+          messageCollector.add({
+            "level" : "error",
+            "objectClass" : "BoTour",
+            "messageID" : "CasBoOpenCalls"
+          });
+        }
+      }
+    }
+  );
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,7 @@
+<BusinessLogic methodName="clearState" businessObjectClass="BoIssue" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.setObjectStatus(this.self.STATE_UNMODIFIED);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

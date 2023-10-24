@@ -1,0 +1,31 @@
+<BusinessLogic methodName="saveTrackedObject" businessObjectClass="BoSfHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bo" type="Object" />
+    <MethodInput name="additionalMappings" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+var objectStatus = bo.getObjectStatus();
+  
+// prevent saving of new deleted objects because they are not in the DB
+var stateNewDeleted = STATE.NEW | STATE.DELETED;
+if ((objectStatus & stateNewDeleted) == stateNewDeleted)
+{
+  bo.setObjectStatus(STATE.PERSISTED);
+  promise = when.resolve(false);
+}
+else
+{
+  var datasource = AppManager.getDataSource(bo.$type);
+
+  promise = me.saveTrackedObjectWithMapping(bo,{
+    tableName: datasource.objectName,
+    idColumn: datasource.idAttribute,
+    idProperty: datasource.idProperty,
+    columnMapping: Utils.clone(datasource.attributeToColumnMapping)
+  }, additionalMappings);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

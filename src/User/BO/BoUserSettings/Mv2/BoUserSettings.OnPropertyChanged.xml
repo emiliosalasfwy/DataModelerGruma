@@ -1,0 +1,34 @@
+<BusinessLogic methodName="onPropertyChanged" businessObjectClass="BoUserSettings" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var boolEnable = true;
+var aclBoUserSettings = me.getACL();
+
+if ((handlerParams.oldValue != handlerParams.newValue) && (Utils.isDefined(handlerParams.newValue))) {
+
+	if (handlerParams.newValue == boolEnable) {
+		//set EA rights of related element to visible
+
+		switch (handlerParams.simpleProperty) {
+		case "enableSync":
+			aclBoUserSettings.addRight(AclObjectType.PROPERTY, "syncTimeIntervall", AclPermission.VISIBLE);
+			break;
+		}
+	} else {
+		
+		//set EA rights of related element to invisible
+		switch (handlerParams.simpleProperty) {
+		case "enableSync":
+			me.setSyncTimeIntervall(0);
+			aclBoUserSettings.removeRight(AclObjectType.PROPERTY, "syncTimeIntervall", AclPermission.VISIBLE);
+			break;
+		}
+	}
+	//refresh UI on new EA rights
+	BindingUtils.refreshEARights();
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

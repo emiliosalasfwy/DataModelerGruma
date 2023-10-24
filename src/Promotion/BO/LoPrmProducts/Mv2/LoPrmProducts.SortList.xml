@@ -1,0 +1,53 @@
+<BusinessLogic methodName="sortList" businessObjectClass="LoPrmProducts" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+    <Parameters />
+    <Code language="JavaScript">
+<![CDATA[var sGroupPKeys = "";
+var groups = me.getItemsByParam({ prdMetaType : "PrdGroup" });
+var products = me.getItemsByParam({ prdMetaType : "Product" });
+var item;
+var idx;
+var listlength	;
+var oldObjectStatus;
+
+me.suspendListRefresh();
+
+for (idx = 0, listlength = groups.length; idx < listlength; idx++) {
+	item = groups[idx];
+	oldObjectStatus = item.getObjectStatus();
+	item.setGroupFlag("ArrowExpandGrey24");
+	item.setSortId(item.getText());
+	item.setObjectStatus(oldObjectStatus);
+
+	sGroupPKeys += item.getReferencePKey() + ",";
+}
+
+for (idx = 0, listlength = products.length; idx < listlength; idx++) {
+	item = products[idx];
+	if (sGroupPKeys.indexOf(item.getClusterGroupReferencePKey()) !== -1) {
+		//Has Group Reference
+		oldObjectStatus = item.getObjectStatus();
+		item.setGroupFlag("DotsSubGrey24");
+
+		if (item.getIncluded() !== "1") {
+			item.setGroupFlag("NotIncluded16");
+			item.setSortId(item.getPrdProductGroupName() + item.getText());
+		} else {
+			item.setSortId(item.getPrdProductGroupName() + "   " + item.getText());
+		}
+
+		item.setObjectStatus(oldObjectStatus);
+
+	} else {
+		//Has no Group Reference
+		oldObjectStatus = item.getObjectStatus();
+		item.setGroupFlag(" ");
+		item.setSortId("   " + item.getText());
+		item.setObjectStatus(oldObjectStatus);
+	}
+}
+
+me.resumeListRefresh();
+]]>
+    </Code>
+  <Return name="" value="" />
+</BusinessLogic>

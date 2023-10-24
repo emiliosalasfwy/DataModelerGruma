@@ -1,0 +1,38 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoContactPartner" businessObjectType="" asynchronous="FALSE" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+    <MethodInput name="salutation" type="DomBpaSalutation" />
+    <MethodInput name="lastName" type="DomText" />
+    <MethodInput name="firstName" type="DomText" />
+    <MethodInput name="phone1" type="DomDial" />
+    <MethodInput name="phone2" type="DomDial" />
+    <MethodInput name="cpPKey" type="String" />
+    <MethodInput name="mainFunctionText" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var existingContacts = me.getItemsByParam({bpaContactPartnerPKey: cpPKey});
+
+salutation = Utils.getToggleText("BpaSalutation", salutation);
+mainFunctionText = Utils.getToggleText("DomBpaFunction", mainFunctionText);
+
+if (!Utils.isDefined(existingContacts) || existingContacts.length === 0) {
+  me.addItems([ {
+    "pKey" : pKey,
+    "salutation" : salutation,
+    "firstName" : firstName,
+    "lastName" : lastName,
+    "name" : lastName + ", " + firstName,
+    "phone1" : phone1,
+    "phone2" : phone2,
+    "bpaContactPartnerPKey" : cpPKey,
+    "text" : mainFunctionText,
+    "emailEditable" : "1"
+  } ]);
+}
+else {
+  existingContacts[0].setObjectStatus(existingContacts[0].getObjectStatus() & ~STATE.DELETED);
+  me.setFilter("objectStatus", STATE.DIRTY | STATE.DELETED , "NCB");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

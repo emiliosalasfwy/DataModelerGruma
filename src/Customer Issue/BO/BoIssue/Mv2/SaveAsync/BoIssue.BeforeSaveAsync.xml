@@ -1,0 +1,75 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/***************************************************
+*  1 CGCloud table / 2 onPrem tables                  *
+*                                                  *
+*  CGCloud:    -Note is stored in Account_Task__c     *
+*  onPrem:  -Note is stored in a separate table    *
+****************************************************/
+
+var promise;
+
+// SF/CASDIF: General Dif
+if (Utils.isSfBackend()) {
+  promise = BoFactory.createObjectAsync("BoSfHelper", {}).then(
+    function (helper) {
+      return helper.saveTrackedObject(me, [{name: "text", dsColumn: "Description_" + ApplicationContext.get('user').sfLanguagePostfix + "__c", value: me.getText()}]);
+    });
+}
+else {
+  if (Utils.isDefined(me.getDueDate()) && Utils.getMinDateAnsi() == me.getDueDate()) {
+    me.setDueDate(Utils.convertDateTime2Ansi(Utils.convertAnsiDate2Date(me.dueDate)));
+  }
+  promise = Facade.saveObjectAsync(me).then(
+    function () {
+      return when.resolve(true);
+    });
+}
+
+//Resolve all promisises - Workaround for TQ Save.
+promise = promise.then(
+  function(boWasSaved) {
+    var promises = [];
+
+    if (boWasSaved) {
+      if (Utils.isDefined(me.getBoIssueNote())) {
+        promises.push(me.getBoIssueNote().saveAsync());
+      }
+
+      if (Utils.isDefined(me.getLoIssueAttachments())) {
+        promises.push(me.getLoIssueAttachments().saveAsync());
+      }
+
+      //Recent state and Atm Attachment not supported
+      if (!Utils.isSfBackend()) {
+        if (Utils.isDefined(me.getLoRecentState())) {
+          promises.push(me.getLoRecentState().saveAsync());
+        }
+
+        if (Utils.isDefined(me.getLoAtmAttachment())) {
+          promises.push(me.getLoAtmAttachment().saveAsync());
+        }
+      }
+    }
+
+    return when.all(promises).then(
+      function () {
+        //Reset object status for all to prevent multiple saves
+        me.traverse(function(node){
+          node.setObjectStatus(STATE.PERSISTED);
+          if(node.isList) {
+            node.getAllItems().forEach(function (item){
+              item.setObjectStatus(STATE.PERSISTED);
+            });
+          }
+        },function (a, b, c){});
+      }
+    );
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

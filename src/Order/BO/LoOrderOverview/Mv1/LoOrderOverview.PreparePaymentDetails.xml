@@ -1,0 +1,24 @@
+<BusinessLogic methodName="preparePaymentDetails" businessObjectClass="LoOrderOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var currentDate = Utils.createAnsiDateToday();
+var orderItems = me.getAllItems(); 
+
+orderItems.forEach(function(item) {
+  var hasValidPayerRole = item.getPayerValidFrom() <= currentDate && item.getPayerValidThru() >= currentDate;
+  var hasValidPhase = item.getPhase() === "Released" || item.getPhase() === "Ready";
+  var hasValidDocumentTransactionType = (item.getDocTaType() === "CashOrder" || item.getDocTaType() === "CreditOrder" ||
+                                         item.getDocTaType() === "InvoiceCashInvoice" || item.getDocTaType() === "InvoiceCreditInvoice");
+  if (hasValidPhase && hasValidPayerRole && hasValidDocumentTransactionType) {
+    var paidAmount = Utils.round(item.getPaidAmount(), 2, 1).toFixed(2).toString();
+    item.setPaymentMethodText(Utils.getToggleText("DomPaymentMethod", item.getPaymentMethod()));
+    item.setPaidAmountText(Localization.localize(paidAmount, "number"));
+  }
+  else {
+    item.setPaymentMethodText(" ");
+    item.setPaidAmountText(" ");
+  }
+});]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

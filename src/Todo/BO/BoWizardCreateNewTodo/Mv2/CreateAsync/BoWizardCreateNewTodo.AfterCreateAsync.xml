@@ -1,0 +1,38 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoWizardCreateNewTodo" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var pKey = PKey.next();
+me.setPKey(pKey);
+if (me.getLuSvcRequestMeta().getIsPrivate() == '0') {
+  me.getLuUser().getACL().addRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+}
+else {                    
+  me.getLuUser().getACL().removeRight(AclObjectType.PROPERTY, "name", AclPermission.VISIBLE);
+}
+me.getLuUser().setName(ApplicationContext.get('user').getName());
+me.getLuUser().setPKey(ApplicationContext.get('user').getPKey());
+if (Utils.isDefined(context.jsonQuery.cardDate)) {
+  //Creating new task from user cockpit
+  var dCardDate = Utils.convertAnsiDate2Date(context.jsonQuery.cardDate);
+  dCardDate.setHours(0, 0, 0, 0);
+  me.setDueDate(dCardDate);
+} else{
+  //Creating new task through dashboard
+  var dToday = Utils.createDateToday();
+  dToday.setHours(0, 0, 0, 0);
+  me.setDueDate(dToday);
+}
+if(Utils.isDefined(context.jsonQuery.copy) && context.jsonQuery.copy) {
+  me.setText(context.jsonQuery.originalObject.getText());
+}
+else {
+  me.setText("");
+}
+me.setObjectStatus(STATE.NEW);
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

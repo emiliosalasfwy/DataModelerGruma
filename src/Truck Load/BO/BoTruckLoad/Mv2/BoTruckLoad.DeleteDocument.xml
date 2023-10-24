@@ -1,0 +1,8 @@
+<BusinessLogic methodName="deleteDocument" businessObjectClass="BoTruckLoad" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+  <Code language="JavaScript"><![CDATA[
+
+	this.getLoItems().delete();
+	this.delete();
+		
+   ]]></Code>
+</BusinessLogic>

@@ -1,0 +1,87 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/* #########################################################
+       NGM Customer Main - If the respective customer template is not Mobility Relevant, the user can not edit any customer data. Only display.
+       ######################################################### */
+var acl = me.getACL();
+if (me.getBoBpaMeta().getMobilityRelevant() === "0") {
+  acl.setAce({
+    "objectType" : AclObjectType.OBJECT,
+    "objectName" : "BoCustomer",
+    "rights" : AclPermission.EDIT,
+    "grant" : false
+  });
+}
+
+// make email readonly if necessary
+if(me.getEmailEditable() === '0') {
+  acl.removeRight(AclObjectType.PROPERTY, "email1", AclPermission.EDIT);
+}
+
+if(me.getDeleted() == "1") {
+  acl.removeRight(AclObjectType.OBJECT, "BoCustomer", AclPermission.EDIT);
+}
+
+switch (mode) {
+
+    //####################################
+    //### Set EARights for Roles Tab   ###
+    //### Called after roles tab click ###
+    //####################################
+  case "roles":
+    var roles = me.getLoBpaRole().getAllItems();
+    var hasOrdererRole = false;
+    var hasCustomerRole = false;
+    var hasPayerRole = false;
+
+    for (var i = 0; i < roles.length; i++) {
+      switch (roles[i].getCategory()) {
+        case "order":
+          hasOrdererRole = true;
+          break;
+        case "customer":
+          hasCustomerRole = true;
+          break;
+        case "payer":
+          hasPayerRole = true;
+          break;
+      }
+    }
+
+    if (!hasOrdererRole) {
+      var aclBoOrderRole = me.getBoOrderRole().getACL();
+      aclBoOrderRole.removeRight(AclObjectType.PROPERTY, "ordererType", AclPermission.VISIBLE);
+      aclBoOrderRole.removeRight(AclObjectType.PROPERTY, "sdoMetaBlocked", AclPermission.VISIBLE);
+    }
+
+    if (!hasCustomerRole) {
+      var aclBoCustomerRole = me.getBoCustomerRole().getACL();
+      aclBoCustomerRole.removeRight(AclObjectType.PROPERTY, "customerNumber", AclPermission.VISIBLE);
+      aclBoCustomerRole.removeRight(AclObjectType.PROPERTY, "priceType", AclPermission.VISIBLE);
+      aclBoCustomerRole.removeRight(AclObjectType.PROPERTY, "priceListType", AclPermission.VISIBLE);
+    }
+
+    if (!hasPayerRole) {
+      var aclBoPayerRole = me.getBoPayerRole().getACL();
+      aclBoPayerRole.removeRight(AclObjectType.PROPERTY, "overallCreditLimit", AclPermission.VISIBLE);
+      aclBoPayerRole.removeRight(AclObjectType.PROPERTY, "creditRating", AclPermission.VISIBLE);
+      aclBoPayerRole.removeRight(AclObjectType.PROPERTY, "creditBlock", AclPermission.VISIBLE);
+    }
+
+    //Refreshing EA rights after reload of customer roles date
+    //--> triggers UI refresh
+    BindingUtils.refreshEARights();
+    break;
+}
+
+//SF houseNumber is not available and must be written in the same field as the street
+if (Utils.isSfBackend() && Utils.isDefined(me.getLoCustomerAddress()) && Utils.isDefined(me.getLoCustomerAddress().getCurrent())) {
+  var aclLoCustomerAddress = me.getLoCustomerAddress().getCurrent().getACL();
+  aclLoCustomerAddress.removeRight(AclObjectType.PROPERTY, "houseNumber", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

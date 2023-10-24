@@ -1,0 +1,104 @@
+<BusinessLogic methodName="getNotesForCard" businessObjectClass="LoCallNotes" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="numberOfListItems" type="DomInteger" />
+    <MethodInput name="clbMainPKey" type="DomPKey" />
+    <MethodInput name="loNotes" type="Object" />
+    <MethodInput name="callDate" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var i;
+var numberVisibleCalls;
+if(!Utils.isDefined(numberOfListItems)) {
+  if(Utils.isPhone()) {
+    numberVisibleCalls = 3;
+  }
+  else {
+    numberVisibleCalls = 5;
+  }
+}
+else {
+  numberVisibleCalls = numberOfListItems;
+}
+//Refresh notes card logic starts
+var currentNoteExists = false;
+var counter = 0;
+var notesList = [];
+var notes = loNotes.getAllItems();
+var loCallnote = BoFactory.instantiate("LoCallNotes");
+
+for(i=0;i<notes.length;i++){
+  if(notes[i].pKey === clbMainPKey && Utils.isEmptyString(notes[i].text)){
+    currentNoteExists = true;
+  }
+  var liCallnote = {
+    "pKey": notes[i].pKey,
+    "bpaMainPKey": notes[i].bpaMainPKey,
+    "noteDate": notes[i].noteDate,
+    "text": notes[i].text,
+    "shortText": notes[i].shortText,
+    "responsiblePKey": notes[i].responsiblePKey,
+    "responsibleName": notes[i].responsibleName,
+    "noteSubText": notes[i].noteSubText
+  };
+  loCallnote.addListItems([liCallnote]);
+}
+
+//Refresh notes card logic ends
+notesList = loCallnote.getAllItems();
+notesList.sort(function(a,b){return (a.noteDate === b.noteDate) ? 0 : ((a.noteDate > b.noteDate) ? -1 : 1);});
+if(currentNoteExists) {
+  me.cardItemCount = notesList.length-1;
+  numberOfListItems += 1;
+}
+else {
+  me.cardItemCount = notesList.length;
+}
+notesList = notesList.splice(0, numberOfListItems);
+
+for(i=0;i<notesList.length;i++) {
+  if(!Utils.isPhone()) {
+    if(notesList[i].shortText.length > 75) {
+      notesList[i].shortText= notesList[i].shortText.substr(0, 75);
+      notesList[i].shortText+= "...";
+    }
+  }
+  else {
+    if(notesList[i].shortText.length > 70) {
+      notesList[i].shortText= notesList[i].shortText.substr(0, 70);
+      notesList[i].shortText+= "...";
+    }
+  }
+  var currentDate = Utils.convertDate2Ansi(Utils.createDateToday());
+  notesList[i].noteSubText = Localization.localize(notesList[i].noteDate, "date");
+
+  if (Localization.localize(currentDate, "date") === Localization.localize(callDate, "date")) {
+    if(Localization.localize(notesList[i].noteDate, "date") === Localization.localize(currentDate, "date")) {
+      notesList[i].noteSubText = Localization.resolve("CardVisitNotes_CreatedToday");
+    }
+    else if(Localization.localize(notesList[i].noteDate, "date") === Localization.localize(Utils.addDays2AnsiFullDate(currentDate, -1), "date")) {
+      notesList[i].noteSubText = Localization.resolve("CardVisitNotes_CreatedYesterday");
+    }
+    else if(Localization.localize(notesList[i].noteDate, "date") === Localization.localize(Utils.addDays2AnsiFullDate(currentDate, 1), "date")) {
+      notesList[i].noteSubText = Localization.resolve("CardVisitNotes_DueTommorrow");
+    }
+  }
+
+  if(ApplicationContext.get('user').getPKey() == notesList[i].responsiblePKey) {
+    notesList[i].noteSubText = notesList[i].noteSubText + " - You";
+  }
+  else {
+    notesList[i].noteSubText = notesList[i].noteSubText + " - " + notesList[i].responsibleName;
+  }
+}
+me.removeAllItems();
+me.addItems(notesList);
+me.resetFilter("pKey");
+
+if(currentNoteExists) {
+  me.setFilter("pKey", clbMainPKey, "NE");
+}
+
+me.setObjectStatus(STATE.PERSISTED);]]>
+</Code>
+  <Return name="me" value="me" />
+</BusinessLogic>

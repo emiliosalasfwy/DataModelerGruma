@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateLength" businessObjectClass="BoFlyoutRegisterAsset" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(me.getSerialNumber())) {
+  if (me.getSerialNumber().length > 50) {
+    var newError = {"level": "error",
+                    "objectClass": "BoFlyoutRegisterAsset",
+                    "messageID": "CasAstRegisterSerialNumberTooLong"};
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

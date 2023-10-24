@@ -1,0 +1,62 @@
+<BusinessLogic methodName="esGetMainDocHeaderAttributes" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var mainDocData = me.getData();
+
+var jsonQuery = {};
+var jsonParams = [];
+
+//simple properties alphabetically
+jsonParams.push({"field" : "actualStatePKey","value" : mainDocData.actualStatePKey});
+jsonParams.push({"field" : "asn","value" : mainDocData.asn});
+jsonParams.push({"field" : "billToCustomerPKey","value" : mainDocData.billToCustomerPKey});
+jsonParams.push({"field" : "brokerCustomerPKey","value" : mainDocData.brokerCustomerPKey});
+jsonParams.push({"field" : "calculationStatus","value" : mainDocData.calculationStatus});
+jsonParams.push({"field" : "calculationTime","value" : mainDocData.calculationTime});
+jsonParams.push({"field" : "cancelReason","value" : mainDocData.cancelReason});
+jsonParams.push({"field" : "clbMainPKey","value" : mainDocData.clbMainPKey});
+jsonParams.push({"field" : "cndCpCalculationSchemaPKey","value" : mainDocData.cndCpCalculationSchemaPKey});
+jsonParams.push({"field" : "commitDate","value" : mainDocData.commitDate});
+jsonParams.push({"field" : "currency","value" : mainDocData.currency});
+jsonParams.push({"field" : "customerOrderId","value" : mainDocData.customerOrderId});
+jsonParams.push({"field" : "debitCredit","value" : mainDocData.debitCredit});
+jsonParams.push({"field" : "deliveryDate","value" : mainDocData.deliveryDate});
+jsonParams.push({"field" : "deliveryRecipientPKey","value" : mainDocData.deliveryRecipientPKey});
+jsonParams.push({"field" : "distribChannel","value" : mainDocData.distribChannel});
+jsonParams.push({"field" : "division","value" : mainDocData.division});
+jsonParams.push({"field" : "docTaType","value" : mainDocData.docTaType});
+jsonParams.push({"field" : "documentType","value" : mainDocData.documentType});
+jsonParams.push({"field" : "headerDiscount","value" : mainDocData.headerDiscount});
+jsonParams.push({"field" : "initiationDate","value" : mainDocData.initiationDate});
+jsonParams.push({"field" : "initiatorPKey","value" : mainDocData.initiatorPKey});
+jsonParams.push({"field" : "ivcRef1PKey","value" : mainDocData.ivcRef1PKey});
+jsonParams.push({"field" : "ivcRef2PKey","value" : mainDocData.ivcRef2PKey});
+jsonParams.push({"field" : "ivcRef3PKey","value" : mainDocData.ivcRef3PKey});
+jsonParams.push({"field" : "ivcRef4PKey","value" : mainDocData.ivcRef4PKey});
+jsonParams.push({"field" : "ivcRef5PKey","value" : mainDocData.ivcRef5PKey});
+jsonParams.push({"field" : "message","value" : mainDocData.message});
+jsonParams.push({"field" : "nextStatePKey","value" : mainDocData.nextStatePKey});
+jsonParams.push({"field" : "ordererPKey","value" : mainDocData.ordererPKey});
+jsonParams.push({"field" : "ownerPKey","value" : mainDocData.ownerPKey});
+jsonParams.push({"field" : "payerCustomerPKey","value" : mainDocData.payerCustomerPKey});
+jsonParams.push({"field" : "paymentMethod","value" : mainDocData.paymentMethod});
+jsonParams.push({"field" : "paymentReason","value" : mainDocData.paymentReason});
+jsonParams.push({"field" : "pricingDate","value" : mainDocData.pricingDate});
+jsonParams.push({"field" : "releaseTime","value" : mainDocData.releaseTime});
+jsonParams.push({"field" : "responsiblePKey","value" : mainDocData.responsiblePKey});
+jsonParams.push({"field" : "salesOrg","value" : mainDocData.responsiblePKey});
+jsonParams.push({"field" : "sdoMetaPKey","value" : mainDocData.sdoMetaPKey});
+jsonParams.push({"field" : "tmgMainPKey","value" : mainDocData.tmgMainPKey});
+jsonParams.push({"field" : "wfeWorkflowPKey","value" : mainDocData.wfeWorkflowPKey});
+
+//Lo's and Lu's BOs
+jsonParams.push({"field" : "luDeliveryRecipient","value" : mainDocData.luDeliveryRecipient});
+
+//nested BOs
+jsonParams.push({"field" : "boOrderMeta","value" : mainDocData.boOrderMeta});
+jsonParams.push({"field" : "boWorkflow","value" : mainDocData.boWorkflow});
+
+jsonQuery.params = jsonParams;]]>
+</Code>
+  <Return name="result" value="jsonQuery" />
+</BusinessLogic>

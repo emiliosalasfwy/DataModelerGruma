@@ -1,0 +1,18 @@
+<BusinessLogic methodName="getValidPhasesForAdvSearch" businessObjectClass="LoUsrDailyReportOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var items = Utils.DomainRepository.getToggleListObject("UsrDocPhase").getAllItems();
+var allItems = [];
+
+for(var item in items){
+  if (Utils.isSfBackend() &&
+      (items[item].id === "initial" || items[item].id === "Released" || items[item].id === "Approved" || items[item].id === "Correction")){
+    allItems.push(items[item]);
+  }
+  else if(items[item].id === "Initial" || items[item].id === "Released" || items[item].id === "Approved" || items[item].id === "Correction"){
+    allItems.push(items[item]);
+  }
+}]]>
+</Code>
+  <Return name="allItems" value="allItems" />
+</BusinessLogic>

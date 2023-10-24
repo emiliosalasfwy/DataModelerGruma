@@ -1,0 +1,14 @@
+<BusinessLogic methodName="hasHoldBackState" businessObjectClass="BoWorkflow" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+          
+    	var result = false;
+       
+      var wfeStates = this.getLoWfeState().getItemsByParam({ "stateType" : "HoldBack" });
+        
+      if (wfeStates.length > 0) {    
+        result = true;
+      }
+          
+    ]]></Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

@@ -1,0 +1,150 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+var aclTruck;
+var aclStartWarehouse;
+var aclTrailer1;
+var aclTrailer2;
+var aclEndWarehouse;
+var liTourCheckItems;
+var liTourCheckItem;
+var i;
+
+if (me.getTmgStatus().toLowerCase() === "completed" || me.getTmgStatus().toLowerCase() === "canceled" ) {
+  acl.removeRight(AclObjectType.OBJECT, "BoTour", AclPermission.EDIT);
+}
+else{
+  if (me.getTmgStatus().toLowerCase() === "initial" || me.getTmgStatus().toLowerCase() === "open"){
+    acl.addRight(AclObjectType.OBJECT, "BoTour", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"dateThru", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"timeThru", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"timeFrom", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"dateFrom", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"vehicleOKEnd", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"vehicleStatusEnd", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"mileageEnd", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"mileageStart", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"vehicleOKStart", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"vehicleStatusStart", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY, "message", AclPermission.EDIT);
+
+    aclTruck = me.getLuTruck().getACL();
+    aclTruck.removeRight(AclObjectType.OBJECT,"luTruck", AclPermission.EDIT);
+
+    if(me.getConsiderMileage().toLowerCase() === "no"){
+      acl.removeRight(AclObjectType.PROPERTY,"mileageStart", AclPermission.EDIT);
+    }
+    if(me.getConsiderVehicleStatus().toLowerCase() === "no"){
+      acl.removeRight(AclObjectType.PROPERTY,"vehicleOKStart", AclPermission.EDIT);
+    }
+    if(me.getConsiderVehicleStatus().toLowerCase() !== "statusreason" || me.getVehicleOKStart() == "1"){
+      acl.removeRight(AclObjectType.PROPERTY,"vehicleStatusStart", AclPermission.EDIT);
+    }
+
+    aclStartWarehouse = me.getLuEtpWarehouse().getACL();
+    aclStartWarehouse.addRight(AclObjectType.OBJECT,"luEtpWarehouse", AclPermission.EDIT);
+
+    if(me.getConsiderVehicle().toLowerCase() !== "no"){
+      aclTruck.addRight(AclObjectType.OBJECT,"luTruck", AclPermission.EDIT);
+    }
+
+    aclTrailer1 = me.getLuTrailer1().getACL();
+    aclTrailer2 = me.getLuTrailer2().getACL();
+    aclTrailer1.removeRight(AclObjectType.OBJECT,"luTrailer1", AclPermission.EDIT);
+    aclTrailer2.removeRight(AclObjectType.OBJECT,"luTrailer2", AclPermission.EDIT);
+
+    if(me.getConsiderVehicle().toLowerCase() === "trucktrailer" || me.getConsiderVehicle().toLowerCase() === "trucktrailers"){
+      aclTrailer1.addRight(AclObjectType.OBJECT,"luTrailer1", AclPermission.EDIT);
+      aclTrailer2.addRight(AclObjectType.OBJECT,"luTrailer2", AclPermission.EDIT);
+    }
+
+    aclEndWarehouse = me.getLuEndEtpWarehouse().getACL();
+    aclEndWarehouse.removeRight(AclObjectType.OBJECT,"luEndEtpWarehouse", AclPermission.EDIT);
+
+    //TourCheck List EA Rights.
+    liTourCheckItems = me.getLoTourChecks().getAllItems();
+
+    if(liTourCheckItems.length > 0){
+      for (i = 0; i < liTourCheckItems.length; i++) {
+        liTourCheckItem=liTourCheckItems[i];
+        acl = liTourCheckItem.getACL();
+        if(liTourCheckItem.getUsage() =="S"){
+          acl.addRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+        }
+        else{
+          acl.removeRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+        }
+      }
+    }
+  }
+
+  if (me.getTmgStatus().toLowerCase() === "running") {
+    acl.addRight(AclObjectType.OBJECT, "BoTour", AclPermission.EDIT);
+
+    if(me.getBoTourMeta().getConsiderMultipleWarehouses() !== "1"){
+      aclEndWarehouse = me.getLuEndEtpWarehouse().getACL();
+      aclEndWarehouse.removeRight(AclObjectType.OBJECT,"luEndEtpWarehouse", AclPermission.EDIT);
+    }
+
+    aclStartWarehouse = me.getLuEtpWarehouse().getACL();
+    aclStartWarehouse.removeRight(AclObjectType.OBJECT,"luEtpWarehouse", AclPermission.EDIT);
+
+    aclTruck = me.getLuTruck().getACL();
+    aclTruck.removeRight(AclObjectType.OBJECT,"luTruck", AclPermission.EDIT);
+
+    aclTrailer1 = me.getLuTrailer1().getACL();
+    aclTrailer2 = me.getLuTrailer2().getACL();
+
+    aclTrailer1.removeRight(AclObjectType.OBJECT,"luTrailer1", AclPermission.EDIT);
+    aclTrailer2.removeRight(AclObjectType.OBJECT,"luTrailer2", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"dateThru", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"timeThru", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"timeFrom", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"dateFrom", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"vehicleStatusStart", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"vehicleOKStart", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"mileageStart", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"mileageEnd", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"vehicleOKEnd", AclPermission.EDIT);
+    acl.addRight(AclObjectType.PROPERTY,"vehicleStatusEnd", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY, "message", AclPermission.EDIT);
+
+    if(me.getConsiderMileage().toLowerCase() === "no"){
+      acl.removeRight(AclObjectType.PROPERTY,"mileageEnd", AclPermission.EDIT);
+    }
+    if(me.getConsiderVehicleStatus().toLowerCase() === "no"){
+      acl.removeRight(AclObjectType.PROPERTY,"vehicleOKEnd", AclPermission.EDIT);
+    }
+    if(me.getConsiderVehicleStatus().toLowerCase() !== "statusreason" || me.getVehicleOKEnd() == "1"){
+      acl.removeRight(AclObjectType.PROPERTY,"vehicleStatusEnd", AclPermission.EDIT);
+    }
+
+    //TourCheck List EA Rights.
+    liTourCheckItems = me.getLoTourChecks().getAllItems();
+    if(liTourCheckItems.length > 0){
+      for (i = 0; i < liTourCheckItems.length; i++) {
+        liTourCheckItem=liTourCheckItems[i];
+        acl = liTourCheckItem.getACL();
+        if(liTourCheckItem.getUsage() =="E"){
+          acl.addRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+        }
+        else{
+          acl.removeRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+        }
+      }
+    }
+  }
+
+  if (Utils.isDefined(Framework.getProcessContext().navigationMode) &&
+      Framework.getProcessContext().navigationMode === "StartOfDay" &&
+      me.getTmgStatus().toLowerCase() === "running"){
+    var loAcl = me.getLoTourDescription().getACL();
+    loAcl.removeRight(AclObjectType.PROPERTY,"text", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY,"mileageEnd", AclPermission.EDIT);
+  }
+}
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

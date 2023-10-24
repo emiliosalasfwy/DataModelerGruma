@@ -1,0 +1,28 @@
+<BusinessLogic methodName="navigateToCustomer" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var mainAddress = me.getLoCustomerAddress().getMainAddress();
+var latitude = mainAddress.getLatitude();
+var longitude = mainAddress.getLongitude();
+var street = mainAddress.getStreet();
+var housenumber = mainAddress.getHouseNumber();
+var zipCode = mainAddress.getZipCode();
+var city = mainAddress.getCity();
+
+if(latitude === 0 && longitude === 0 && Utils.isEmptyString(street) && Utils.isEmptyString(housenumber) && Utils.isEmptyString(zipCode) && Utils.isEmptyString(city))
+{
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbNoGeoLocation"), buttonValues);
+}
+else 
+{
+  promise = BoFactory.createObjectAsync("BoGeoHelper", {}).then(
+    function(geoHelper) {
+      return geoHelper.startNavigation(latitude, longitude, street, housenumber, zipCode, city);
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

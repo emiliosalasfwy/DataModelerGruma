@@ -1,0 +1,95 @@
+<BusinessLogic methodName="setOnlyRelevantFilterAfterAction" businessObjectClass="LoIssueOverview" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="issueDetail" type="BoIssue" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Get the current ListItem
+var liSvcRequestIssue = me.getCurrent();
+
+if (liSvcRequestIssue && Utils.isDefined(liSvcRequestIssue)) {
+  // Preset attributes
+  liSvcRequestIssue.setPKey(issueDetail.getPKey());
+  liSvcRequestIssue.setIssuePhase(issueDetail.getIssuePhase());
+  liSvcRequestIssue.setInitiationDate(issueDetail.getInitiationDate());
+  liSvcRequestIssue.setBusinessModified(Utils.createAnsiDateTimeNow());
+  liSvcRequestIssue.setDueDate(issueDetail.getDueDate());
+  liSvcRequestIssue.setPriority(issueDetail.getPriority());
+  liSvcRequestIssue.setResponsiblePKey(issueDetail.getResponsiblePKey());
+  liSvcRequestIssue.setResponsibleName(
+    issueDetail.getLuResponsible().getName()
+  );
+  liSvcRequestIssue.setOwnerPKey(issueDetail.getOwnerPKey());
+  liSvcRequestIssue.setOwnerName(issueDetail.getLuOwner().getName());
+  liSvcRequestIssue.setText(issueDetail.getText());
+  liSvcRequestIssue.setCustomerName(issueDetail.getLuCustomer().getName());
+  liSvcRequestIssue.setOwnerBpaMainPKey(issueDetail.getOwnerBpaMainPKey());
+  liSvcRequestIssue.setInitiatorPKey(issueDetail.getInitiatorPKey());
+  liSvcRequestIssue.setSvcMetaPKey(issueDetail.getSvcRequestMetaPKey());
+  liSvcRequestIssue.setIsPrivate(
+    issueDetail.getBoSvcRequestMeta().getIsPrivate()
+  );
+  liSvcRequestIssue.setWfeWorkflowPKey(issueDetail.getWfeWorkflowPKey());
+  liSvcRequestIssue.setActualStatePKey(issueDetail.getActualStatePKey());
+  liSvcRequestIssue.setIsActive(issueDetail.getBoSvcRequestMeta().getActive());
+
+  var managementInfo = issueDetail.getLuCustomerManagementInfo();
+
+  if (
+    managementInfo.getIsManaged() === "0" &&
+    managementInfo.getIsSubstituted() == "1"
+  ) {
+    liSvcRequestIssue.setResponsibleIcon("UserSubstitute24");
+    liSvcRequestIssue.setSubstituteUsrPKey(
+      managementInfo.getReferenceUsrMainPKey()
+    );
+
+    if (managementInfo.getSubstitutedInLeadFollowUpTime() == "1") {
+      liSvcRequestIssue.setSubstitutionStatus("Inactive_Substitute");
+    } else {
+      liSvcRequestIssue.setSubstitutionStatus("Active_Substitute");
+    }
+  } else if (
+    managementInfo.getIsManaged() === "0" &&
+    managementInfo.getHasSubstitute() == "1"
+  ) {
+    liSvcRequestIssue.setResponsibleIcon("UserSubstituted24");
+    liSvcRequestIssue.setSubstituteUsrPKey(
+      managementInfo.getHasSubstituteUsrMainPKey()
+    );
+
+    if (managementInfo.getHasSubstituteInLeadFollowUpTime() == "1") {
+      liSvcRequestIssue.setSubstitutionStatus("Active_Substituted");
+    } else {
+      liSvcRequestIssue.setSubstitutionStatus("Inactive_Substituted");
+    }
+  } else {
+    liSvcRequestIssue.setResponsibleIcon("UserArrowDarkGrey16");
+  }
+
+  //Update filter condition
+  if (
+    liSvcRequestIssue.getIssuePhase().toLowerCase() === "initial" ||
+    liSvcRequestIssue.getIssuePhase().toLowerCase() === "released"
+  ) {
+    liSvcRequestIssue.setFilterOpen("1");
+  } else {
+    liSvcRequestIssue.setFilterOpen("0");
+  }
+}
+
+var FilterMap = me.getFilterMap();
+if (Utils.isDefined(FilterMap.filterOpen)) {
+  me.resetFilter("filterOpen");
+  me.setFilter("filterOpen", "1", "EQ");
+}
+
+var items = me.getItemObjects();
+
+if (items.length > 0) {
+  me.setCurrentByPKey(items[0].getPKey());
+} else {
+  me.setCurrentByPKey(undefined);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

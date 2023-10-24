@@ -1,0 +1,19 @@
+<BusinessLogic methodName="getDateDiff" businessObjectClass="BoDateTimeHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="ansiDateFrom" type="String" />
+    <MethodInput name="ansiDateThru" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// returns Date Difference in Minutes
+//Input is UTC dates -> TimeShiftings will not be captured
+
+var dateDiff = 0;
+
+var dateFrom = this.getUTCDateWithoutSeconds(ansiDateFrom);
+var dateThru = this.getUTCDateWithoutSeconds(ansiDateThru);
+
+dateDiff = (dateThru.getTime() - dateFrom.getTime())/1000/60;
+]]>
+</Code>
+  <Return name="dateDiff" value="dateDiff" />
+</BusinessLogic>

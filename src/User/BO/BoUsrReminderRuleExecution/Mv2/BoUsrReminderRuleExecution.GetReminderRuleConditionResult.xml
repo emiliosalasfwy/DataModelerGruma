@@ -1,0 +1,89 @@
+<BusinessLogic methodName="getReminderRuleConditionResult" businessObjectClass="BoUsrReminderRuleExecution" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="conditionUserExitId" type="DomId" />
+    <MethodInput name="currentConditionThreshold" type="DomInteger" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if (Utils.isDefined(conditionUserExitId) && !Utils.isEmptyString(conditionUserExitId) && conditionUserExitId === "38BTOT2015") {
+  promise = BoFactory.loadObjectByParamsAsync("LoUsrTimeEntry", {
+    "usrDailyReportPKey" : ApplicationContext.get("openTimeCardPKey")
+  }).then(
+    function (timeEntries) {
+      if (timeEntries.getAllItems().length > 0) {
+        var workingTimeDuration = 0;
+        var nonProductiveTimeDuration = 0;
+        var productiveTimeDuration = 0;
+        var breakTimeDuration = 0;
+        var now_utc;
+        var from_utc;
+        var dateDiffInMins;
+
+        //calculate working time duration
+        var workingTimeItems = timeEntries.getItemsByParamArray([{"activityType" : "WorkingTime", "op" : "EQ"}]);
+        var now = Utils.createDateNow();
+        now_utc = Utils.createSpecificDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+
+        for (var idxWTE = 0; idxWTE < workingTimeItems.length; idxWTE++) {
+          if (workingTimeItems[idxWTE].getDuration() === 0 && workingTimeItems[idxWTE].getEffectiveUTCTimeThru() === Utils.getMinDate()) {
+            from_utc = Utils.convertAnsiDate2Date(workingTimeItems[idxWTE].getEffectiveUTCTimeFrom());
+
+            //if time entry does not start in future
+            if(now_utc - from_utc >= 0) {
+              dateDiffInMins = parseInt(((now_utc - from_utc) / (60 * 1000)), 10);
+              workingTimeDuration = workingTimeDuration + dateDiffInMins;
+            }
+          } 
+          else {
+            workingTimeDuration = workingTimeDuration + workingTimeItems[idxWTE].getDuration();
+          }
+        }
+
+        //calculate non productive time duration
+        var nonProductiveTimeItems = timeEntries.getItemsByParamArray([{"productiveTimeEffect" : "-1", "op" : "EQ"}]);
+        for (var idxNPTE = 0; idxNPTE < nonProductiveTimeItems.length; idxNPTE++) {
+          if (nonProductiveTimeItems[idxNPTE].getDuration() === 0 && nonProductiveTimeItems[idxNPTE].getEffectiveUTCTimeThru() === Utils.getMinDate()) {
+            from_utc = Utils.convertAnsiDate2Date(nonProductiveTimeItems[idxNPTE].getEffectiveUTCTimeFrom());
+
+            //if time entry does not start in future
+            if(now_utc - from_utc >= 0) {
+              dateDiffInMins = parseInt(((now_utc - from_utc) / (60 * 1000)), 10);
+              nonProductiveTimeDuration = nonProductiveTimeDuration + dateDiffInMins;
+            }
+          }
+          else {
+            nonProductiveTimeDuration = nonProductiveTimeDuration + nonProductiveTimeItems[idxNPTE].getDuration();
+          }
+        }
+
+        //calculate productive time
+        productiveTimeDuration = workingTimeDuration - nonProductiveTimeDuration;
+        if (productiveTimeDuration < 0) {
+          productiveTimeDuration = 0;
+        }
+
+        //calculate break duration
+        var breakTimeItems = timeEntries.getItemsByParamArray([{"activityType" : "Break", "op" : "EQ"}]);
+        for (var idxBreakTE = 0; idxBreakTE < breakTimeItems.length; idxBreakTE++) {
+          if (breakTimeItems[idxBreakTE].getDuration() === 0 && breakTimeItems[idxBreakTE].getEffectiveUTCTimeThru() === Utils.getMinDate()) {
+            from_utc = Utils.convertAnsiDate2Date(breakTimeItems[idxBreakTE].getEffectiveUTCTimeFrom());
+
+            //if time entry does not start in future
+            if(now_utc - from_utc >= 0) {
+              dateDiffInMins = parseInt(((now_utc - from_utc) / (60 * 1000)), 10);
+              breakTimeDuration = breakTimeDuration + dateDiffInMins;
+            }
+          } 
+          else {
+            breakTimeDuration = breakTimeDuration + breakTimeItems[idxBreakTE].getDuration();
+          }
+        }
+        return productiveTimeDuration > 300 && breakTimeDuration < 30; 
+      }   
+    }
+  );
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

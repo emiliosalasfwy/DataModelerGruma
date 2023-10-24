@@ -1,0 +1,15 @@
+<BusinessLogic methodName="storeSysReleaseProcessPKey" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = me.determineSysReleaseProcessPKey().then(
+  function(pkey){
+    me.setStoredSysReleasePKey(pkey);
+    var stateNew = STATE.NEW;
+    var stateNewDirty = STATE.NEW | STATE.DIRTY;
+    if(me.getObjectStatus() !== stateNew && me.getObjectStatus() !== stateNewDirty) {
+      me.setObjectStatus(STATE.PERSISTED);
+    }
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

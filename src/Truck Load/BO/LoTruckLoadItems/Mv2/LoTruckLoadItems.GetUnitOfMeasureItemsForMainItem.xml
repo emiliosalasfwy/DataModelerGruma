@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getUnitOfMeasureItemsForMainItem" businessObjectClass="LoTruckLoadItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var unitOfMeasureItems = [];
+
+if(Utils.isDefined(mainItem)){
+  unitOfMeasureItems = me.getItemsByParam(
+    {"refPKey": mainItem.getRefPKey()}
+  );
+}]]>
+</Code>
+  <Return name="unitOfMeasureItems" value="unitOfMeasureItems" />
+</BusinessLogic>

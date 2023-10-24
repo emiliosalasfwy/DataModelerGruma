@@ -1,0 +1,80 @@
+<BusinessLogic methodName="cpInitComplexPricing" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if ((me.getBoOrderMeta().getComputePrice() === "4" || me.getBoOrderMeta().getComputePrice() === "5") && !Utils.isEmptyString(me.getBoOrderMeta().getCndCpCalculationSchemaPKey())) {
+  me.setCndCpCalculationSchemaPKey(me.getBoOrderMeta().getCndCpCalculationSchemaPKey());
+
+  if (Utils.isDefined(CP)) {
+    var obj = {
+      "VariantString1": "",
+      "VariantString2": "",
+      "VariantString3": "",
+      "VariantString4": "",
+      "VariantString5": "",
+      "VariantDecimal1": 0,
+      "VariantDecimal2": 0,
+      "VariantDecimal3": 0,
+      "VariantDecimal4": 0,
+      "VariantDecimal5": 0
+    };
+
+    promise = CP.PricingHandler.getInstance().initOrder(me.getPKey(), me.getSdoMetaPKey(), "TruckLoad", Utils.createDateNow(), me.getCurrency(), me.getBoOrderMeta().getCndCpCalculationSchemaPKey(), me.cpGetRelevantOrderAttributes(),
+                                                        ApplicationContext.get('user').getDistribChannel(), ApplicationContext.get('user').getDivision(), obj,me.getBoOrderMeta().getGeneratePricingLog()).then(
+      function () {
+        var obj = {
+          "VariantItemString1": "",
+          "VariantItemString2": "",
+          "VariantItemString3": "",
+          "VariantItemString4": "",
+          "VariantItemString5": "",
+          "VariantItemDecimal1": 0,
+          "VariantItemDecimal2": 0,
+          "VariantItemDecimal3": 0,
+          "VariantItemDecimal4": 0,
+          "VariantItemDecimal5": 0
+        };
+
+        if (Utils.isDefined(me.getLoItems())) {
+          var items = me.createPricingInformationForList();
+          var orderItemsBiggerZero = [];
+          var variantItemAttributes = [];
+          var currentItem;
+          var orderItem;
+
+          for (var i = 0; i < items.length; i++) {
+            orderItem = items[i].getData();
+
+            if (Utils.isDefined(orderItem.quantity) && orderItem.quantity > 0) {
+              orderItemsBiggerZero.push(orderItem);
+              variantItemAttributes.push({
+                "SdoItemPKey": orderItem.pKey,
+                "VariantAttributes": obj
+              });
+            }
+          }
+
+          if (orderItemsBiggerZero.length > 0) {
+            var initialCalculation = true;
+            if (me.getCalculationStatus() == "1") {
+              initialCalculation = false;
+            }
+
+            return CP.PricingHandler.getInstance().addProducts(orderItemsBiggerZero, variantItemAttributes).then(me.cpCalculate(initialCalculation).then(
+              function () {
+                me.setPricingReady("1");
+              }
+            ));
+          }
+          else {
+            me.setPricingReady("1");
+          }
+        }
+      }
+    );
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

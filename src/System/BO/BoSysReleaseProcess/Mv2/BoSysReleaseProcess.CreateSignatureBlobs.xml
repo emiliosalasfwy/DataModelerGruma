@@ -1,0 +1,16 @@
+<BusinessLogic methodName="createSignatureBlobs" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var numberOfSignatures = 4;
+var liSysSignatureBlob;
+
+for(var i = 1; i <= numberOfSignatures; i++) {
+  liSysSignatureBlob = {
+    "pKey": PKey.next(),
+    "signaturePKey": PKey.next(),
+  };
+  me.set("attachmentBlobPKey" + i, liSysSignatureBlob.pKey);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

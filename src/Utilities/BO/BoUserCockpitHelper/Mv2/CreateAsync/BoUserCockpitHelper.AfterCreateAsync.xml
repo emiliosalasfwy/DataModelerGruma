@@ -1,0 +1,18 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoUserCockpitHelper" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setCardUserWelcome_DateText('');
+var cardItemsPhoneLimit = 10;
+var cardItemsTabletLimit = 10;
+me.limitOfCardItems = cardItemsTabletLimit;
+if(Utils.isPhone()) 
+  {
+    me.limitOfCardItems = cardItemsPhoneLimit;
+  }
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

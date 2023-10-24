@@ -1,0 +1,72 @@
+<BusinessLogic methodName="calculateLogisticUnitTotals" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var dicHeaderSums = Utils.createDictionary();
+var itemMetas = me.getBoOrderMeta().getItemMetaJsonDictionary();
+var mainItems = me.getLoItems().getAllItems();
+var currentKey;
+var mainItem;
+var i;
+var li;
+
+//calculate totals
+for (i = 0; i < mainItems.length; i++){
+  mainItem = mainItems[i];
+
+  if((!Utils.isDefined(mainItem.getQuantity()) || mainItem.getQuantity() === 0) && mainItem.getTargetQuantity() === 0){
+    continue;
+  }
+
+  currentKey = mainItem.getQuantityLogisticUnit() + mainItem.getSdoItemMetaPKey();
+  if (dicHeaderSums.containsKey(currentKey)){
+    //unit already available --> update
+    li = dicHeaderSums.get(currentKey);
+    li.quantity = li.quantity + mainItem.getQuantity();
+    li.targetQuantity = li.targetQuantity + mainItem.getTargetQuantity();
+    li.qtyDifference = li.quantity - li.targetQuantity;
+  }
+  else{
+    //unit not available --> create
+    li = {
+      "pKey" : PKey.next(),
+      "quantityLogisticUnit" : mainItem.getQuantityLogisticUnit(),
+      "quantity" : mainItem.getQuantity(),
+      "targetQuantity" : mainItem.getTargetQuantity(),
+      "qtyDifference" : mainItem.getQuantity() - mainItem.getTargetQuantity(),
+      "sort" : Utils.getToggleSortOrder("DomPrdLogisticUnit", mainItem.getQuantityLogisticUnit()),
+      "itemMetaText" : itemMetas.get(mainItems[i].getSdoItemMetaPKey()).text
+    };
+
+    dicHeaderSums.add(currentKey, li);
+  }
+}
+
+//set exclamation mark if needed and add to LoQuantitySums
+me.setLoQuantitySums(BoFactory.instantiate("LoQuantitySums", {}	));
+
+var loQtySums = me.getLoQuantitySums();
+var dicKeys = dicHeaderSums.keys();
+var currentDicEntry;
+var qtySums = [];
+
+for (i = 0; i < dicKeys.length; i++){
+  currentDicEntry = dicHeaderSums.get(dicKeys[i]);
+  if (Utils.isDefined(currentDicEntry)){
+    if (currentDicEntry.qtyDifference === 0){
+      currentDicEntry.differenceExist = 'EmptyImage';
+    }
+    else{
+      currentDicEntry.differenceExist = 'PrioHigh24';
+    }
+    qtySums.push(currentDicEntry);
+  }
+}
+
+loQtySums.addListItems(qtySums);
+loQtySums.orderBy({
+  "itemMetaText" : "ASC",
+  "sort" : "DESC"
+});]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

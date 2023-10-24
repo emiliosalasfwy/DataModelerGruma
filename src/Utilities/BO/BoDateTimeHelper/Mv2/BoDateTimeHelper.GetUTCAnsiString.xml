@@ -1,0 +1,35 @@
+<BusinessLogic methodName="getUTCAnsiString" businessObjectClass="BoDateTimeHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fullDate" type="Object" />
+    <MethodInput name="geoOffset" type="Object" />
+    <MethodInput name="dstOffset" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//calculate UTC date with given date and geo and dst offset
+var helperDate = Utils.createDateByMilliSec(0);
+var utcDateString = "";
+var utcDate;
+
+helperDate.setHours(fullDate.getHours());
+helperDate.setMinutes(fullDate.getMinutes());
+helperDate.setSeconds(fullDate.getSeconds());
+
+if(Utils.isDefined(fullDate) &&
+   Utils.isDefined(geoOffset) && !Utils.isEmptyString(geoOffset) &&
+   Utils.isDefined(dstOffset) && !Utils.isEmptyString(dstOffset)){
+
+  var offset = parseFloat(parseFloat(geoOffset) + parseFloat(dstOffset))*60*60*1000*-1;
+  var utcDateTime = Utils.createDateByMilliSec(helperDate.getTime() + offset);
+  utcDate = Utils.createDateByMilliSec(fullDate.getTime() + offset);
+  var month = (utcDate.getMonth() +1) < 10 ? "0" + (utcDate.getMonth() +1) : utcDate.getMonth() +1;
+  var day = utcDate.getDate() < 10 ? "0" + utcDate.getDate() : utcDate.getDate();
+  var hours = utcDateTime.getHours() < 10 ? "0" + utcDateTime.getHours() : utcDateTime.getHours();
+  var minutes = utcDateTime.getMinutes() < 10 ? "0" + utcDateTime.getMinutes() : utcDateTime.getMinutes();
+  var seconds = utcDateTime.getSeconds() < 10 ? "0" + utcDateTime.getSeconds() : utcDateTime.getSeconds();
+
+  utcDateString = "" + utcDate.getFullYear()  + "-" + month + "-" + day +
+    " " + hours + ":" + minutes + ":" + seconds;
+}]]>
+</Code>
+  <Return name="utcDateString" value="utcDateString" />
+</BusinessLogic>

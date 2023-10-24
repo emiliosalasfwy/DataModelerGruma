@@ -1,0 +1,218 @@
+<BusinessLogic methodName="requestOnDemandDataAsync" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="syncContext" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var idsOfCustomersWithCallsForSync = [];
+var idsOfManagedCustomersFromSubstitution = [];
+var idsOfCallsToday = [];
+var idsOfAccountSalesFolderForSync = [];
+var idsOfOrgUnitSalesFolderForSync = [];
+var idsOfRelevantCustomersFromContracts = [];
+var idsOfRelevantParentAccounts = [];
+var userId = Facade.getSfUserId();
+var sqlBulkJsonArray = [];
+var request = new BatchNftRequest();
+var dateFrom;
+var dateThru;
+
+var loadIdsOfCustomersWithCallsForSync = function (result) {   
+  idsOfCustomersWithCallsForSync = me.removeLocalIDs(me.getPropertyValuesFromArray(result.CustomersWithCallsForSync, "AccountID"));
+  idsOfCallsToday = me.removeLocalIDs(me.getPropertyValuesFromArray(result.CustomersWithCallsForSync, "Id"));
+};
+
+var loadIdsOfManagedCustomersFromSubstitution = function (result) {
+  idsOfManagedCustomersFromSubstitution = me.removeLocalIDs(me.getPropertyValuesFromArray(result.ManagedCustomersFromSubstitution, "AccountID"));
+};
+
+var loadDependentCustomers = function (result) { 
+  var accountIds = me.removeLocalIDs(me.getPropertyValuesFromArray(result.DependentCustomers.concat(result.Account_TradeOrgs),"AccountID"));
+  if(accountIds.length > 0) {
+    request.addRequest('NFT_Job_Definition_List', accountIds);
+    request.addRequest('NFT_Account_Header', accountIds);
+  }
+};
+
+var loadCallData = function (result) {
+  if(idsOfCallsToday.length + idsOfCustomersWithCallsForSync.length + idsOfManagedCustomersFromSubstitution.length > 0) {
+    return me.addCallNftsToRequest(request,  idsOfCustomersWithCallsForSync.concat(idsOfManagedCustomersFromSubstitution));     
+  }
+  return when.resolve();
+};
+
+
+var loadCustomerTaskAttachments = function (result) {  
+  var idsOfCustomerTaskAttachments = me.removeLocalIDs(me.getPropertyValuesFromArray(result.CustomerTaskAttachments, "attachmentId"));
+  if(idsOfCustomerTaskAttachments.length > 0) { 
+    request.addRequest('NFT_Attachment', idsOfCustomerTaskAttachments);
+  }
+};
+
+var loadAttachments = function (result) { 
+  var parentEntityIds = me.removeLocalIDs(me.getPropertyValuesFromArray(result.ParentEntityIds, "parentId"));
+  parentEntityIds = parentEntityIds.concat(me.removeLocalIDs(me.getPropertyValuesFromArray(result.ManagedCustomers, "AccountID")));
+  if(parentEntityIds.length > 0) {
+    request.addRequest('NFT_Attachment', parentEntityIds);
+  }
+};
+
+var loadTourInventories = function (result) {
+  var idsOfAssignedTours = me.removeLocalIDs(me.getPropertyValuesFromArray(result.AssignedTours, "TourID"));
+  if(idsOfAssignedTours.length > 0) {
+    request.addRequest('NFT_Tour_Inventory', idsOfAssignedTours);               
+  }
+};
+
+var loadTripListsOfUsers = function (result) {
+  return BoFactory.loadObjectByParamsAsync(LO_TEAMOFSUPERVISOR, me.getQueryBy("usrPKey", userId))
+    .then(function (teamList) {  
+    var userIds = teamList.getAllItems();
+    var idsOfUsers = me.removeLocalIDs(me.getPropertyValuesFromArray(userIds, "usrPKey"));
+    if (!idsOfUsers.includes(userId))
+      idsOfUsers.push(userId);
+    if(idsOfUsers.length > 0) {        
+      request.addRequest('NFT_Trip_List', idsOfUsers);  
+    }
+    return when.resolve();
+  });
+};
+
+var loadCustomerSalesFolder = function (result) {
+  idsOfAccountSalesFolderForSync = me.removeLocalIDs(me.getPropertyValuesFromArray(result.AccountsSalesFolderForSync, "BpaMainPKey"));
+  if (idsOfAccountSalesFolderForSync.length > 0) {       
+    request.addRequest('NFT_Sales_Folder_Account', idsOfAccountSalesFolderForSync);        
+  }
+};
+
+var loadOrgUnitSalesFolder = function (result) {
+  idsOfOrgUnitSalesFolderForSync = me.removeLocalIDs(me.getPropertyValuesFromArray(result.OrgUnitSalesFolderForSync, "OrgUnitPKey"));
+  if (idsOfOrgUnitSalesFolderForSync.length > 0) {
+    request.addRequest('NFT_Sales_Folder_Org_Unit', idsOfOrgUnitSalesFolderForSync);  
+  }
+};
+
+var loadRelevantCustomerContract = function (result) {
+  idsOfRelevantCustomersFromContracts = me.removeLocalIDs(me.getPropertyValuesFromArray(result.RelevantCustomerContracts, "AccountId"));
+  if (idsOfRelevantCustomersFromContracts.length > 0) {
+    request.addRequest('NFT_Customer_Contract', idsOfRelevantCustomersFromContracts);  
+  }
+};
+
+var loadParentAccounts = function (result) {
+  idsOfRelevantParentAccounts = me.removeLocalIDs(me.getPropertyValuesFromArray(result.ParentAccounts, "AccountId"));
+  if (idsOfRelevantParentAccounts.length > 0) {
+    request.addRequest('NFT_Account_Header', idsOfRelevantParentAccounts);  
+  }
+};
+
+var promise = when.resolve();
+if(Utils.isSfBackend()) {
+
+  promise = me.getWorkingDays().then(
+    function (workingDayRange){
+      sqlBulkJsonArray = [
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "CustomersWithCallsForSync",
+          jsonParams       :  workingDayRange,
+          uniqueReturnKey  : "CustomersWithCallsForSync"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "ManagedCustomersFromSubstitution",
+          jsonParams       :  {},
+          uniqueReturnKey  : "ManagedCustomersFromSubstitution"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "DependentCustomers",
+          jsonParams       :  {},
+          uniqueReturnKey  : "DependentCustomers"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "Account_TradeOrgs",
+          jsonParams       :  {},
+          uniqueReturnKey  : "Account_TradeOrgs"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "CustomerTaskAttachments",
+          jsonParams       : { userId: Facade.getSfUserId() },
+          uniqueReturnKey  : "CustomerTaskAttachments"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "ManagedCustomers",
+          jsonParams       :  {},
+          uniqueReturnKey  : "ManagedCustomers"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "AssignedTours",
+          jsonParams       :  {},
+          uniqueReturnKey  : "AssignedTours"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "AccountsSalesFolderForSync",
+          jsonParams       : {userId: Facade.getSfUserId()},
+          uniqueReturnKey  : "AccountsSalesFolderForSync"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "OrgUnitSalesFolderForSync",
+          jsonParams       : {userId: Facade.getSfUserId()},
+          uniqueReturnKey  : "OrgUnitSalesFolderForSync"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "AllAttachments",
+          jsonParams       : {dateFrom : Utils.convertForDB(workingDayRange.previousDay, 'DomDate'), 
+                              dateThru : Utils.convertForDB(workingDayRange.nextDay, 'DomDate'), 
+                              cgVisitDateFrom: Utils.convertForDB(Utils.addDays2AnsiDate(Utils.createAnsiDateToday(), -7), 'DomDate'), 
+                              cgVisitDateThru: Utils.convertForDB(Utils.addDays2AnsiDate(Utils.createAnsiDateToday(), 14), 'DomDate')},
+          uniqueReturnKey  : "ParentEntityIds"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "RelevantCustomerContracts",
+          jsonParams       : {userId: Facade.getSfUserId()},
+          uniqueReturnKey  : "RelevantCustomerContracts"	
+        },
+        {
+          dataSource       : "DsBoSfReplicationCallbacks",
+          dataSourceMethod : "ParentAccounts",
+          jsonParams       :  {},
+          uniqueReturnKey  : "ParentAccounts"	
+        }
+      ];
+
+      return me.executeRequestsAsync(sqlBulkJsonArray).then(
+        function(result){
+
+          var promises = [];
+          loadIdsOfCustomersWithCallsForSync(result);
+          loadIdsOfManagedCustomersFromSubstitution(result);
+          loadDependentCustomers(result);  
+          promises.push(loadCallData(result));    
+          loadTourInventories(result);  
+          loadCustomerTaskAttachments(result);    
+          promises.push(loadTripListsOfUsers(result));    
+          loadCustomerSalesFolder(result);
+          loadOrgUnitSalesFolder(result);    
+          loadAttachments(result);
+          loadRelevantCustomerContract(result);
+          loadParentAccounts(result);
+
+          return when.all(promises)
+            .then(function() {
+            return Facade.requestBatchNftDataAndWait(request);       
+          });
+        }
+      );      
+    });
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

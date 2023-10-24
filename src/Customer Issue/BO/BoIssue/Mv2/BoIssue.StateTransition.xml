@@ -1,0 +1,60 @@
+<BusinessLogic methodName="stateTransition" businessObjectClass="BoIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="stateType" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var boWorkflow = me.getBoWorkflow();
+var nextStates = boWorkflow.getNextStatesByStateType(me.getActualStatePKey(), stateType);
+var nextState;
+
+if (Utils.isDefined(nextStates) && (nextStates.length > 0)) {
+
+  nextState = nextStates[0];
+  //Set new responsible
+  promise = boWorkflow.getNextResponsible(nextState.getPKey(), me.getResponsiblePKey(), me.getOwnerPKey()).then(
+    function (nextResponsible) {
+      if (Utils.isDefined(nextResponsible)) {
+        //Transition to next State
+        me.setNextStatePKey(nextState.getPKey());
+        me.setResponsiblePKey(nextResponsible);
+
+        if (boWorkflow.getRecentStatePolicy() == "1") {
+          //Recent State History Code
+          var newDate = Utils.createDateNow();
+          newDate.setHours(0, 0, 0, 0);
+
+          var liRecentState = {
+            "pKey": PKey.next(),
+            "svcIssuePKey": me.getPKey(),
+            "usrMainPKey": ApplicationContext.get('user').getPKey(),
+            "wfeStatePKey": me.getActualStatePKey(),
+            "salesOrg": me.getSalesOrg(),
+            "done": newDate,
+            "objectStatus":  STATE.NEW | STATE.DIRTY
+          };
+
+          me.getLoRecentState().addListItems([liRecentState]);
+        }
+
+        me.setIssuePhase(stateType);
+        //Finish transition
+        me.setActualStatePKey(nextState.getPKey());
+        me.setEARights();
+      }
+      else
+      {
+        var buttonValues = {};
+        buttonValues[Localization.resolve("OK")] = "ok";
+        promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), Localization.resolve("NoResponsibleFoundByWorkflow"), buttonValues);
+      }
+    }
+  );
+}
+else
+{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

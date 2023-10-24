@@ -1,0 +1,32 @@
+<BusinessLogic methodName="validateCheckInAmounts" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(me.getDocumentType() === "CashCheckIn" &&
+   me.getValidateForRelease() == "1" &&
+   Utils.isDefined(me.getLoCheckInPayment()) &&
+   me.getBoCashMeta().getPaymentModReasonRequired() === "Mand") {
+
+  var payments = me.getLoCheckInPayment().getAllItems();
+  for(var index = 0; index < payments.length; index++) {
+    if(payments[index].getLevel() === "main"){
+      if(payments[index].getDifference() != 0 && Utils.isEmptyString(payments[index].getModReason())) {
+        var newError;
+        newError = {
+          "level" : "error",
+          "objectClass" : "BoCash",
+          "simpleProperty" : "paymentModReasonRequired",
+          "messageID" : "CasCashReasonCodeNeeded",
+          "messageParams":{}
+        };
+        messageCollector.add(newError);
+        me.cancelRelease();
+        break;
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

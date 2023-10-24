@@ -1,0 +1,42 @@
+<BusinessLogic methodName="handlePaidAmountReceiptChanged" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="oldValue" type="String" />
+    <MethodInput name="newValue" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(oldValue != newValue){
+  var acl = me.getACL();
+
+  if(newValue < 0){
+    me.setPaidAmountReceipt(0);
+    newValue = 0;
+  }
+  if(me.getGrossTotalValueReceipt() <= 0){
+    acl.removeRight(AclObjectType.PROPERTY, "paidAmountReceipt", AclPermission.EDIT);
+    acl.removeRight(AclObjectType.PROPERTY, "paymentMethod", AclPermission.EDIT);
+  }
+  else {
+    if(!(me.getDocTaType() === "CashOrder" || me.getDocTaType() === "InvoiceCashInvoice")){
+      acl.addRight(AclObjectType.PROPERTY, "paidAmountReceipt", AclPermission.EDIT);
+      acl.addRight(AclObjectType.PROPERTY, "paymentMethod", AclPermission.EDIT);
+    }
+  }
+
+  //update paid amount and absolute paid amount, should be same as paid amount receipt
+  me.setPaidAmount(newValue);
+  me.setAbsolutePaidAmount(Math.abs(me.getPaidAmount()));
+
+  if(newValue === 0){
+    acl.removeRight(AclObjectType.PROPERTY, "isPaymentCollected", AclPermission.EDIT);
+  }
+  else{
+    acl.addRight(AclObjectType.PROPERTY, "isPaymentCollected", AclPermission.EDIT);
+  }
+  //reset payment collected flag whenever paid amount is changed
+  me.setIsPaymentCollected("0");
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

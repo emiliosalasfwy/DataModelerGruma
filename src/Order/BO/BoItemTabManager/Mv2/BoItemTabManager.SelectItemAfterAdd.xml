@@ -1,0 +1,73 @@
+<BusinessLogic methodName="selectItemAfterAdd" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="addProductResult" type="Object" />
+    <MethodInput name="barcodeScanBehavior" type="DomSdoBarcodeScanBehavior" />
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var bSelectLastCurrentItem = false;
+var filterList = this.getBoOrder().getLoItemFilter();
+var filterItems = filterList.getItemObjects();
+
+var allItems = this.getBoOrder().getLoItems();
+
+if (Utils.isDefined(addProductResult)) {
+  var _addProductResult = addProductResult; //JSON.parse(JSON.stringify(addProductResult));
+
+  if (Utils.isDefined(_addProductResult.selectPKey)) {
+    // Reset item filter bar to first item filter (which is potentially the "All" filter, consistent 
+    // behaviour between FlatList and Hierarchy) to be able to select the added item
+
+    if (filterItems.length > 0 && filterList.getCurrent()!=filterItems[0]) {
+      filterList.setCurrent(filterItems[0]);
+    }
+
+    var mainItem = allItems.getItemByPKey(_addProductResult.selectPKey);
+    // Select added item
+    allItems.setCurrent(mainItem);
+
+    if ((mode === "addScannedProduct" && barcodeScanBehavior === "OnlySelect") || (mode === "addProduct" && addProductResult.filterCountIncrements.length !== 0))
+    {
+      if (mainItem.getACL().isEditable(AclObjectType.OBJECT, "LiOrderItem"))
+      {
+        allItems.setFocus(mainItem, "quantity");
+      }
+    }
+    
+    this.setCurrentSelectedOrderItem(mainItem);
+
+    // Simulate changed event
+    //this.simulateItemChangedEvent(addProductResult.selectPKey);
+  } else {
+    bSelectLastCurrentItem = true;
+  }
+} else {
+  bSelectLastCurrentItem = true;
+}
+
+if (bSelectLastCurrentItem === true) {
+  // Reset item filter bar to first item filter (which is potentially the "All" filter, consistent 
+  // behaviour between FlatList and Hierarchy) to be able to select the added item
+
+  if (filterItems.length > 0) {
+    filterList.setCurrent(filterItems[0]);
+  }
+
+  var mainItem = this.getCurrentSelectedOrderItem();
+  mainItem = !Utils.isDefined(mainItem) && allItems.length > 0 ? allItems.getFirstItem() : mainItem; 
+  if (Utils.isDefined(mainItem)) 
+  {
+    allItems.setCurrent(mainItem);
+    //* UoM REWORK NEEDED *//
+	if ((mode === "addScannedProduct") && (barcodeScanBehavior === "OnlySelect") && mainItem.getACL().isEditable(AclObjectType.OBJECT, "LiOrderItem") || (mode === "addProduct" && addProductResult.filterCountIncrements.length !== 0))
+    {
+      allItems.setFocus(mainItem, "quantity");              
+    }
+    this.setCurrentSelectedOrderItem(mainItem);
+  }
+}
+// Return value to reset process variable
+var resultForProcess;]]>
+</Code>
+  <Return name="result" value="resultForProcess" />
+</BusinessLogic>

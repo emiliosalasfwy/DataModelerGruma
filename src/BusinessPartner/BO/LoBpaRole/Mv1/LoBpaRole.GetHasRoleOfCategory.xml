@@ -1,0 +1,19 @@
+<BusinessLogic methodName="getHasRoleOfCategory" businessObjectClass="LoBpaRole" accessibility="PUBLIC" final="false" asynchronous="FALSE" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="category" type="DomBpaCategory" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+		var me = this;
+		var oBpaRole;
+		var bHasBpaRole = "0";
+		
+		var parameters = {"category":category};
+		var oAllBpaRoles = me.getItemsByParam(parameters); 
+		
+		 if (oAllBpaRoles .length === 1) 
+		 {
+                       bHasBpaRole= "1";
+                 }
+   ]]></Code>
+  <Return name="hasBpaRole" value="bHasBpaRole" />
+</BusinessLogic>

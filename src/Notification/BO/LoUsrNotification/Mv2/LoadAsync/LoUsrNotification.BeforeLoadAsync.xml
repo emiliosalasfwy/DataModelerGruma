@@ -1,0 +1,21 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoUsrNotification" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.getListAsync("LoUsrNotification", context.jsonQuery).then(
+  function(notifications) {
+    for(var i=0; i<notifications.length; i++){
+      if(notifications[i].subject.length > 75){
+        notifications[i].subject= notifications[i].subject.substr(0, 75);
+        notifications[i].subject+= "...";
+      }
+    }
+
+    me.addItems(notifications, context.jsonQuery.params);
+    me.orderBy({"dueDate":"DESC", "priority": "ASC"});
+    return me;
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

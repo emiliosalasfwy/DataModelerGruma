@@ -1,0 +1,58 @@
+<BusinessLogic methodName="createPayments" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = me.loadPayments().then(
+  function () {
+    var loPaymentsCount = me.getLoPayments().getAllItems().length;
+    if (me.getPaidAmount() === 0 && loPaymentsCount > 0) {
+      me.getLoPayments().delete();
+    }
+    // Check whether payments need to be created
+    if (me.getPaidAmount() !== 0 && me.getIsOrderPaymentRelevant() === '1') {
+
+      var jsonQuery = {};
+      var jsonParams = [];
+      jsonParams.push({
+        field: "sdoMetaPKey",
+        operator: "EQ",
+        value: me.getSdoMetaPKey(),
+      });
+      jsonParams.push({
+        field: "paymentMethod",
+        operator: "EQ",
+        value: me.getPaymentMethod(),
+      });
+      jsonQuery.params = jsonParams;
+
+      return BoFactory.loadObjectByParamsAsync("LuPaymentMetaByPaymentMethod", jsonQuery).then(
+        function (luPaymentMetaByPaymentMethod) {
+
+          if (!Utils.isEmptyString(luPaymentMetaByPaymentMethod.getPKey())) {
+            var liPayment;
+
+            // Check if there is already a payment record - If yes, use it, if no then create one
+            if (loPaymentsCount === 0) {
+              liPayment = {};
+              liPayment.pKey = PKey.next();
+              liPayment.objectStatus = (STATE.NEW | STATE.DIRTY);
+              me.getLoPayments().addListItems([liPayment]);
+            } else {
+              liPayment = me.getLoPayments().getAllItems()[0];
+              liPayment.setObjectStatus(STATE.PERSISTED | STATE.DIRTY);
+            }
+
+            // Set values of payment
+            liPayment.sdoMainPKey = me.getPKey();
+            liPayment.sdoPaymentMetaPKey = luPaymentMetaByPaymentMethod.getPKey();
+            liPayment.initiationDate = Utils.createAnsiDateTimeToday();
+            liPayment.amount = me.getPaidAmount();
+            liPayment.amountReceipt = me.getPaidAmountReceipt();
+            liPayment.currency = me.getCurrency();
+            liPayment.paymentMethod = luPaymentMetaByPaymentMethod.getPaymentMethod();
+          }
+        });
+    }
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,30 @@
+<BusinessLogic methodName="getLatestLiAttachment" businessObjectClass="LoCallAttachments" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.resetFilter("clbMainPKey");
+
+var items = me.getItems();
+var lastDateTime = Utils.getMinDateTimeAnsi();
+var item;
+
+var dictFileTypes = Utils.createDictionary();
+dictFileTypes.add("jpg", "jpg");
+dictFileTypes.add("jpeg", "jpeg");
+dictFileTypes.add("png", "png");
+dictFileTypes.add("gif", "gif");
+dictFileTypes.add("image/jpg", "image/jpg");
+dictFileTypes.add("image/jpeg", "image/jpeg");
+dictFileTypes.add("image/png", "image/png");
+dictFileTypes.add("image/gif", "image/gif");
+
+// Check if the file type is image and is the latest created.
+for(var i = items.length - 1; i >= 0; i--) {
+  var itemDateTime = items[i].getCreationDate() +" "+ items[i].getCreationTime() + ":00";
+  if(dictFileTypes.containsKey(items[i].getFileType()) && itemDateTime >= lastDateTime) {
+    item = items[i]; 
+    lastDateTime = itemDateTime;
+  }
+}]]>
+</Code>
+  <Return name="latestLiAttachment" value="item" />
+</BusinessLogic>

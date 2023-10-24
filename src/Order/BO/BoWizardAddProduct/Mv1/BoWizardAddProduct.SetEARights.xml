@@ -1,0 +1,11 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="BoWizardAddProduct" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(this.getLuProduct().getPKey())) {
+  this.getACL().removeRight(AclObjectType.PROPERTY, "uoM", AclPermission.VISIBLE);
+} else {
+  this.getACL().addRight(AclObjectType.PROPERTY, "uoM", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

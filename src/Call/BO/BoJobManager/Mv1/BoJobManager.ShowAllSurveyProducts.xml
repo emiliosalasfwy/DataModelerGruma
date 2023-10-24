@@ -1,0 +1,28 @@
+<BusinessLogic methodName="showAllSurveyProducts" businessObjectClass="BoJobManager" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="DomPKey" />
+    <MethodInput name="boCall" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loCurrentPOS = this.getLoPOS().getItemsByParam({
+  "posId" : posId});
+
+if (loCurrentPOS.length > 0) {
+
+  var liCurrentPOS = loCurrentPOS[0];
+  this.getLoPOS().setCurrent(liCurrentPOS);
+  var loProducts = liCurrentPOS.getSurveyProducts();
+
+  loProducts.resetFilter("planned");
+  loProducts.resetFilter("hasDiscrepance");
+
+  loProducts.refreshUI();
+  boCall.getLoProductQuickFilter().onTabChange(boCall);
+
+  if (loProducts.getCount() > 0) {
+    loProducts.setCurrent(loProducts.getItems()[0]);
+  }
+}]]>
+</Code>
+  <Return name="posId" value="posId" />
+</BusinessLogic>

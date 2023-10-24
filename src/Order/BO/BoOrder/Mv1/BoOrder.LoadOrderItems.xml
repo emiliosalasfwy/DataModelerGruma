@@ -1,0 +1,63 @@
+<BusinessLogic methodName="loadOrderItems" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loOrderItems;
+
+var jsonQuery = {
+  params : []
+};
+
+var orderItemsQuery = me.getJsonQueryForLoItems();
+var useMergeEngine = orderItemsQuery.useMergeEngine;
+var loOrderItems;
+
+// Instantiate LoOrderItems to call "static" mergeOrderItemList() function
+var promise = BoFactory.createListAsync("LoOrderItems", {}).then(
+  function (loItems) {
+    loOrderItems = loItems;
+    if (Utils.isCasBackend() || !useMergeEngine) {
+      return loOrderItems.mergeOrderItemList(orderItemsQuery).then(
+        function () {
+          jsonQuery.params= loOrderItems.buildQueryCondition(orderItemsQuery, "ALL");
+
+          return BoFactory.loadObjectByParamsAsync("LoOrderItems", jsonQuery);
+        }
+      );
+    } else {
+      return BoFactory.loadObjectByParamsAsync("LoOrderItems", orderItemsQuery).then(
+        function (items) {
+          return me.addMissingUoMsForAllItems(items, items.getAllItems()).then(
+            function () {
+              items.orderByDefaultOrder();
+              return items;
+            }
+          );
+        }
+      );
+    }
+  }).then(
+  function (result) {
+    loOrderItems = result;
+    var suggestedQtyParams = [];
+    var suggestedQtyQuery = {};		
+    suggestedQtyParams.push( { "field" : "ordererPKey", "value": me.getOrdererPKey()});
+    suggestedQtyParams.push( { "field" : "sdoMetaPKey", "value": me.getSdoMetaPKey()});
+    suggestedQtyParams.push( { "field" : "documentType", "value":me.getDocumentType()});
+    suggestedQtyParams.push( { "field" : "numberOfHistValues", "value": me.getBoOrderMeta().getNumberOfHistValues() < '0' ? 0 : me.getBoOrderMeta().getNumberOfHistValues() });
+
+    suggestedQtyQuery.params = suggestedQtyParams;
+
+    return (me.getBoOrderMeta().getConsiderQuantitySuggestion() === "LQty" && me.getPhase() === "Initial") ? BoFactory.loadObjectByParamsAsync("LoSuggestedQuantity", suggestedQtyQuery): undefined;
+  }).then(function (loSuggestedQuantity) {
+  if (Utils.isDefined(loSuggestedQuantity)) {
+    me.setLoSuggestedQuantity(loSuggestedQuantity);
+  }
+  if (me.getIsCancel() !== "1") {
+    loOrderItems.createDisplayInformation(me.getBoOrderMeta(),me.getLoSuggestedQuantity()); 
+  }
+
+  return loOrderItems;
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

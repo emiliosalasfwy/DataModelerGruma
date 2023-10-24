@@ -1,0 +1,21 @@
+<BusinessLogic methodName="hasTimeEntries" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var hasTimeEntries = "0";
+var timeEntryItems;
+
+if (Utils.isDefined(me.getBoUserDailyReport())) {
+  if (Utils.isDefined(me.getBoUserDailyReport().getLoUsrTimeEntry())) {
+    timeEntryItems = me.getBoUserDailyReport().getLoUsrTimeEntry().getItemsByParamArray([
+      {"clbMainPKey" : me.getPKey(),"op" : "EQ"}
+    ]);
+
+    //bigger one because on load one TE is created
+    if (timeEntryItems.length > 1){
+      hasTimeEntries = "1";
+    }
+  }
+}]]>
+</Code>
+  <Return name="hasTimeEntries" value="hasTimeEntries" />
+</BusinessLogic>

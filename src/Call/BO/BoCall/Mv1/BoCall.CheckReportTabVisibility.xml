@@ -1,0 +1,7 @@
+<BusinessLogic methodName="checkReportTabVisibility" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var tabVisible = (Utils.isDefined(me.getBpaMainPKey()) && !Utils.isEmptyString(me.getBpaMainPKey()) && me.getLuCallMeta().getMobilityUserGuidance() !== "NonCustomer");]]>
+</Code>
+  <Return name="result" value="tabVisible" />
+</BusinessLogic>

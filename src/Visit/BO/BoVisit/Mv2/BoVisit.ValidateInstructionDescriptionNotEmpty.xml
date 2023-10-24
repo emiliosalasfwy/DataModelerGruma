@@ -1,0 +1,15 @@
+<BusinessLogic methodName="validateInstructionDescriptionNotEmpty" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getInstructionDescription())) {
+  var newError = {"level": "error",
+                  "objectClass": "BoVisit",
+                  "messageID": "VisitInstructionDescriptionMustNotBeEmpty"};
+  messageCollector.add(newError);
+}
+]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

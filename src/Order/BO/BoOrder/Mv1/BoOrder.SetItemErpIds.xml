@@ -1,0 +1,108 @@
+<BusinessLogic methodName="setItemErpIds" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[function nonZeroQuantity(item){
+  return item.getSaveZeroQuantity() !== '0' || item.getQuantity().toString() !== '0';
+}
+function isValidErpId(erpId){
+  return Utils.isDefined(erpId) && !Utils.isEmptyString(erpId) && !erpId.startsWith("Local_");
+}
+
+var orderItems = me.getLoItems().getAllItems();
+var filteredItems = orderItems.filter(nonZeroQuantity);
+
+//dictionary for tracking the current ids
+var dict = {};
+dict[me.getPKey()] = 80000;
+//determine new start erpid
+// highest erpid of a parent item + 10
+var currentParentErpId = 0;
+var i;
+var id;
+var currentItem;
+var parentPKey;
+
+for(i = 0; i < filteredItems.length; i++){
+  currentItem = filteredItems[i];
+  parentPKey = currentItem.getSdoParentItemPKey();
+  id = currentItem.getErpId();
+
+  if (Utils.isSfBackend() && currentItem.parentType === "Order"){
+    parentPKey = me.pKey;
+  }
+  if(parentPKey === ' ' && isValidErpId(id) && parseInt(id, 10) > currentParentErpId){
+    currentParentErpId = parseInt(id, 10);
+    dict[currentItem.getPKey()] = parseInt(id, 10);
+  }
+}
+
+currentParentErpId = currentParentErpId + 10;
+
+//set ids for parent Items
+for(i = 0; i < filteredItems.length; i++){
+  currentItem = filteredItems[i];
+  parentPKey = currentItem.getSdoParentItemPKey();
+  id = currentItem.getErpId();
+
+  if (Utils.isSfBackend() && currentItem.parentType === "Order"){
+    parentPKey = me.pKey;
+  }
+  if(parentPKey === ' ' && ( !isValidErpId(id) || id === '0')){
+    currentItem.setErpId(currentParentErpId.toString());
+    dict[currentItem.getPKey()] = currentParentErpId;
+    currentParentErpId = currentParentErpId + 10;
+  }
+}
+
+//determine max ids of all parents
+for(i = 0; i < filteredItems.length; i++){
+  currentItem = filteredItems[i];
+  parentPKey = currentItem.getSdoParentItemPKey();
+  id = currentItem.getErpId();
+
+  if (Utils.isSfBackend() && currentItem.parentType === "Order"){
+    parentPKey = me.pKey;
+  }
+  if(parentPKey !== ' ' && isValidErpId(id) && parseInt(id, 10) > 0){
+    if(dict[parentPKey]){
+      if(parseInt(id, 10) > dict[parentPKey]){
+        dict[parentPKey] = parseInt(id, 10);
+      }
+    }
+    else{
+      dict[parentPKey] = parseInt(id, 10);
+    }
+  }
+}
+
+//set ids for childs
+for(i = 0; i < filteredItems.length; i++){
+  currentItem = filteredItems[i];
+  parentPKey = currentItem.getSdoParentItemPKey();
+  id = currentItem.getErpId();
+
+  if (Utils.isSfBackend() && currentItem.parentType === "Order"){
+    parentPKey = me.pKey;
+  }
+  if(parentPKey !== ' ' && ( !isValidErpId(id) || id === '0')){
+    if(dict[parentPKey]){
+      var newId = dict[parentPKey] + 1;
+      currentItem.setErpId(newId.toString());
+      dict[parentPKey] = newId;
+    }
+  }
+}
+
+//set ErpIDs for LoSdoCondition
+if(Utils.isDefined(me.getLoSdoConditions())){
+  var sdoConditions =  me.getLoSdoConditions().getItems();
+  for(i = 0; i < sdoConditions.length; i++){
+    var currentSdoCondition = sdoConditions[i];
+    if(Utils.isDefined(me.getLoItems().getItemByPKey(currentSdoCondition.sdoItemPKey))){
+      currentSdoCondition.sdoItemErpId = me.getLoItems().getItemByPKey(currentSdoCondition.sdoItemPKey).getErpId();
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

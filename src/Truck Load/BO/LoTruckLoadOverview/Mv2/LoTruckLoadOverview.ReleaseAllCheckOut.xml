@@ -1,0 +1,87 @@
+<BusinessLogic methodName="releaseAllCheckOut" businessObjectClass="LoTruckLoadOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="checkOutItems" type="LoTruckLoadOverview" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var messageCollector;
+var iErrorCount = 0;
+var invActions;
+var iLoopCounter = -1;
+
+var truckLoadActions = [];
+
+//function which executed the check out actions for the documents
+invActions = function (truckLoadPKey) {
+  iLoopCounter++;
+  var currentPKey = truckLoadPKey[iLoopCounter];
+
+  messageCollector = new MessageCollector();
+
+  return BoFactory.loadObjectByParamsAsync("BoTruckLoad", { "pKey": currentPKey, "mode": "Express" }).then(
+    function (boTruckLoad) {
+      AppLog.log("Execute CheckOut: " + currentPKey + " loaded!");
+      boTruckLoad.setReleaseTriggered("1");
+      boTruckLoad.setValidateInventories("1");
+      return boTruckLoad.doValidateAsync(messageCollector).then(
+        function () {
+          if (messageCollector.containsNoErrors()) {
+            return boTruckLoad.setNextWorkflowState("release").then(
+              function () {
+                boTruckLoad.setActualPrdCheckOutType("Express");
+                boTruckLoad.setObjectStatus(this.self.STATE_DIRTY);
+
+                return boTruckLoad.saveAsync();
+              }).then(
+              function () {
+                AppLog.log("Execute CheckOut: " + currentPKey + " released!");
+              }
+            );
+          } else {
+            iErrorCount++;
+          }
+        }
+      );
+    }
+  );
+};
+
+BusyIndicator.show();
+Facade.startTransaction();
+var functions = [];
+var seqence_arguments = [];
+
+if (Utils.isDefined(checkOutItems)) {
+  for (var i = 0; i < checkOutItems.length; i++) {
+    functions.push(invActions);
+    seqence_arguments.push(checkOutItems[i].getPKey());
+  }
+}
+
+//Calling inventory actions in a sequence ... item n+1 should be executed if item n is finished
+//That's necessary because complex pricing engine is implemented as a Singleton
+var promise = when_sequence(functions, seqence_arguments).then(
+  function () {
+    return Facade.commitTransaction();
+  }).then(
+  function () {
+    BusyIndicator.hide();
+    if (iErrorCount > 0) {
+      var buttonValues = {};
+      var message;
+      buttonValues[Localization.resolve("OK")] = "ok";
+      var messageParams = {};
+      messageParams.ErrorCount = iErrorCount;
+
+      if (iErrorCount > 1) {
+        message = "CasExpressCheckOutNotification";
+      } else {
+        message = "CasExpressCheckOutNotificationForSingleDocument";
+      }
+
+      return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), MessageStore.getMessage("BoTruckLoad", message, messageParams), buttonValues);
+    }
+  }
+);]]>
+</Code>
+  <Return name="releaseAll" value="promise" />
+</BusinessLogic>

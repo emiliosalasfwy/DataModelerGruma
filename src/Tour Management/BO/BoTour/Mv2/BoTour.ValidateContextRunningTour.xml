@@ -1,0 +1,17 @@
+<BusinessLogic methodName="validateContextRunningTour" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//comparison might currently fail, awaiting option to compare local ids and SF id in code
+if(!Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) && ApplicationContext.get('currentTourPKey') !== me.getPKey()) {
+  var newError = {
+    "level": "error",
+    "objectClass": "BoTour",
+    "messageID": "CasBoRunningTourInContext"
+  };
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

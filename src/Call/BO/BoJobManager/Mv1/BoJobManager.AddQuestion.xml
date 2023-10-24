@@ -1,0 +1,115 @@
+<BusinessLogic methodName="addQuestion" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jobDefMetaPKey" type="String" />
+    <MethodInput name="jobDefMetaText" type="String" />
+    <MethodInput name="dataLength" type="String" />
+    <MethodInput name="dataType" type="Object" />
+    <MethodInput name="toggleId" type="String" />
+    <MethodInput name="pOS" type="String" />
+    <MethodInput name="posId" type="String" />
+    <MethodInput name="jobMetaPKey" type="String" />
+    <MethodInput name="considerMinValue" type="String" />
+    <MethodInput name="minValue" type="String" />
+    <MethodInput name="considerMaxValue" type="String" />
+    <MethodInput name="maxValue" type="String" />
+    <MethodInput name="stepSize" type="String" />
+    <MethodInput name="defaultValue" type="DomVariant" />
+    <MethodInput name="useStepper" type="String" />
+    <MethodInput name="pictureTaking" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentpos = me.getLoPOS().getItemsByParam({"posId": posId});
+var prdPosContentPKey = " ";
+
+if (currentpos.length > 0) {
+  prdPosContentPKey = currentpos[0].getPosContentPKey();
+}
+
+var questionitem = {
+  "pKey": PKey.next(),
+  "jobDefinitionListText": Localization.resolve("ClbManualQuestionGroupName"),
+  "questionText": jobDefMetaText,
+  "dataType": dataType.getId(),
+  "dataLength": dataLength,
+  "useStepper": useStepper ,
+  "toggleId": toggleId,
+  "pOS": pOS,
+  "manual": "1",
+  "posId": posId,
+  "bpaMainPKey": me.getBpaMainPKey(),
+  "clbMainPKey": me.getClbMainPKey(),
+  "jobDefinitionMetaPKey": jobDefMetaPKey,
+  "jobListPKey": " ",
+  "jobMetaPKey": jobMetaPKey,
+  "jobDefinitionPKey": " ",
+  "listed": "0",
+  "planned": "0",
+  "prdMainPKey": " ",
+  "clbPOSCheckPKey": posId,
+  "prdPOSContentPKey": prdPosContentPKey,
+  "lastValue": " ",
+  "value" : (Utils.isEmptyString(defaultValue)) ? " ": defaultValue,
+  "defaultValue": (Utils.isEmptyString(defaultValue)) ? " ": defaultValue,
+  "maxValue": " ",
+  "minValue": " ",
+  "done": "0",
+  "jobActionSuccess": " ",
+  "sort": "0",
+  "mandatory": "0",
+  "mandatoryImageId": "EmptyImage",
+  "cameraIcon" : (pictureTaking == "1") ? "CapturePictureIcon" : "EmptyImage",
+  "visible" : "1",
+  "visitDate": me.getReferenceDate(),
+  "visitTime": me.getTimeFrom(),
+  "history": " ",
+  "targetValue": " ",
+  "condition": " ",
+  "conditionOperator": " ",
+  "conditionAnswers": " ",
+  "jobDefListPKey": " ",
+  "thresholdViolation": "No",
+  "objectStatus": STATE.NEW | STATE.DIRTY
+};
+
+if(questionitem.dataType === "Decimal") {
+  questionitem.stepSize = stepSize;
+
+  if(considerMinValue) {
+    questionitem.considerMinValue = "1";
+    questionitem.minValue = minValue;
+  }
+  else {
+    questionitem.considerMinValue = "0";
+    questionitem.minValue = "-9999999";
+  }
+
+  if(considerMaxValue) {
+    questionitem.considerMaxValue = "1";
+    questionitem.maxValue = maxValue;
+  }
+  else {
+    questionitem.considerMaxValue = "0";
+    questionitem.maxValue = "9999999";
+  }
+  questionitem.value = "0";
+}
+
+if(questionitem.dataType === "Date") {
+  questionitem.minValue = minValue;
+  questionitem.maxValue = maxValue;
+}
+
+me.getLoQuestions().addListItems([questionitem]);
+me.getLoQuestions().setCurrent(questionitem);
+
+if (pictureTaking != "1") {
+  var aclRights = me.getLoQuestions().getCurrent().getACL();
+  aclRights.removeRight(AclObjectType.PROPERTY, "cameraIcon", AclPermission.VISIBLE);
+}
+
+var loPOS = me.getLoPOS().getItemsByParam({"posId": posId});
+var liPOS = loPOS[0];
+liPOS.setQuestionCount(parseInt(liPOS.getQuestionCount(), 10)+1);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

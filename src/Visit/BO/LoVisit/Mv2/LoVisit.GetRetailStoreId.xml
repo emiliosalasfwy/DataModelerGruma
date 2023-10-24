@@ -1,0 +1,9 @@
+<BusinessLogic methodName="getRetailStoreId" businessObjectClass="LoVisit" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="visitId" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var retailStoreId = me.getItemByPKey(visitId).retailStoreId;]]>
+</Code>
+  <Return name="retailStoreId" value="retailStoreId" />
+</BusinessLogic>

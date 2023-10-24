@@ -1,0 +1,38 @@
+<BusinessLogic methodName="prepareCategoryQuickFilterList" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var addItemsToLoProductQuickFilter = function (items){
+  var loProductCategoryQuickFilter = me.getLoProductCategoryQuickFilter();
+  var categoryExists;
+  var item;
+  var categoryName;
+
+  for (var i=0; i<items.length; i++){
+    categoryName = items[i].getProductCategoryName();
+    
+    if(Utils.isDefined(categoryName) && !Utils.isEmptyString(categoryName)){
+      
+      categoryExists = loProductCategoryQuickFilter.getItemsByParam({"text": categoryName});
+      if (categoryExists.length === 0 ){
+        item = {
+          "pKey": PKey.next(),
+          "text": categoryName,
+          "isSelected": false,
+          "specialOption": ""
+        };
+        loProductCategoryQuickFilter.addListItems([item]);
+      }
+    }
+  }
+  loProductCategoryQuickFilter.orderBy({"text": "ASC"});
+};
+
+
+var mainListItems = me.getLoPrimaryRetailVisitKPI().getAllItems();
+
+if(mainListItems.length > 0){
+  addItemsToLoProductQuickFilter(mainListItems);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

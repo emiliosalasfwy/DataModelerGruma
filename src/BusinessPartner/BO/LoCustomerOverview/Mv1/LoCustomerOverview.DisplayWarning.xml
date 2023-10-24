@@ -1,0 +1,12 @@
+<BusinessLogic methodName="displayWarning" businessObjectClass="LoCustomerOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var buttonValues = {};
+buttonValues[Localization.resolve("OK")] = "ok";
+
+var promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Warning"),
+                              Localization.resolve( "LoCustomerOverview_LocationNotFound"),
+                              buttonValues);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

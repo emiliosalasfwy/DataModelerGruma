@@ -1,0 +1,60 @@
+<BusinessLogic methodName="afterSaveAsync" businessObjectClass="BoTruckLoad" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+if (me.getMode() !== "ReviewStock") {
+  // Save Truck Load Document
+  deferreds.push(Facade.saveObjectAsync(me));
+
+  // Save Order Recent State
+  if (Utils.isDefined(me.getLoWfeRecentState())) {
+    deferreds.push(me.getLoWfeRecentState().saveAsync());
+  }
+
+  // Save notification only when its created.
+  if (Utils.isDefined(me.getBoUsrNotification()) && me.getBoUsrNotification().getObjectStatus() === (STATE.NEW | STATE.DIRTY)) {
+    deferreds.push(me.getBoUsrNotification().saveAsync());
+  }
+
+  var syncOption = me.getBoOrderMeta().getSyncOptions();
+
+  if (me.getPhase() === "Released" && Utils.isEmptyString(me.getInwardTransferDocumentPKey()) && syncOption == "Release" || syncOption == "ReleaseCancel") {
+    deferreds.push(Facade.startBackgroundReplication());
+  }
+
+  if (me.getPhase() === "Canceled" && syncOption == "Cancel" || syncOption == "ReleaseCancel") {
+    deferreds.push(Facade.startBackgroundReplication());
+  }
+
+  if (Utils.isDefined(me.getLoSysSignatureAttribute())) {
+    deferreds.push(me.getLoSysSignatureAttribute().saveAsync());
+  }
+
+  if (Utils.isDefined(me.getLoSysSignatureBlob())) {
+    deferreds.push(me.getLoSysSignatureBlob().saveAsync());
+  }
+
+  if (Utils.isDefined(me.getLoGeoLocation())) {
+    deferreds.push(Facade.saveListAsync(me.getLoGeoLocation()));
+  }
+}
+
+var promise = when.all(deferreds).then(
+  function () {
+    //Reset object status for all to prevent multiple saves
+    me.traverse(function(node) {
+      node.setObjectStatus(STATE.PERSISTED);
+      if (node.isList) {
+        node.getAllItems().forEach(function(item) {
+          item.setObjectStatus(STATE.PERSISTED);
+        });
+      }
+    }, function (a, b, c) { });
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,14 @@
+<BusinessLogic methodName="isCPCalculationEnabled" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[var me = this;
+    
+	var enabled = false;
+	var phase = me.getPhase();
+
+   if(me.getBoOrderMeta().getComputePrice() === "4" && me.getCndCpCalculationSchemaPKey() !== " " && me.getDocTaType() !=="NonValuatedDeliveryNote" && phase === "Initial" && (!Utils.isDefined(this.getCallInContext_clbMainPKey()) || this.getCallInContext_clbMainPKey() == this.getClbMainPKey()) ) {
+     
+    enabled = true;
+     
+   }]]></Code>
+  <Return name="enabled" value="enabled" />
+</BusinessLogic>

@@ -1,0 +1,28 @@
+<BusinessLogic methodName="getNextStates" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="actualStatePKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var wfeNextStates = [];
+var workflowStates = me.getLoWfeState();
+var allWorkflowTransitions = me.getLoWfeStateTransitions().getItemsByParamArray([{ "fromStatePKey": actualStatePKey },
+                                                                                 { "fromStatePKey": actualStatePKey.toLowerCase()
+                                                                                 }], undefined, "OR");
+
+for (var idxTrans = 0; idxTrans < allWorkflowTransitions.length; idxTrans++) {
+  var currentWfeTransition = allWorkflowTransitions[idxTrans];
+  var wfeStates = workflowStates.getItemsByParam({"pKey": currentWfeTransition.getToStatePKey()});
+  
+  for (var idxState = 0; idxState < wfeStates.length; idxState++) {
+    if (wfeStates[idxState].getStateType() != "HoldBack") {
+      var jsonObject = {};
+      jsonObject.toStatePKey = currentWfeTransition.getToStatePKey();
+      jsonObject.stateType = wfeStates[idxState].getStateType();
+
+      wfeNextStates.push(jsonObject);
+    }
+  }
+}]]>
+</Code>
+  <Return name="wfeNextStates" value="wfeNextStates" />
+</BusinessLogic>

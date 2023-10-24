@@ -1,0 +1,22 @@
+<BusinessLogic methodName="refreshPromotionStoreCalendarReport" businessObjectClass="BoCallReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="promotionList" type="Object" />
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="callDate" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isPhone()){
+  var chartHelper = me.getChartHelper();
+  var chartString = "chart_" + containerName;
+  var chartSelector = "#"+chartString;
+  var d3Container = chartHelper.getUIContainer(containerName);
+  d3Container.select(chartSelector).remove();
+  d3Container.select("#colorContainer").remove();
+
+  setTimeout(function (){
+    me.initializePromotionStoreCalendarReport(promotionList, containerName, callDate);
+  }, 100);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

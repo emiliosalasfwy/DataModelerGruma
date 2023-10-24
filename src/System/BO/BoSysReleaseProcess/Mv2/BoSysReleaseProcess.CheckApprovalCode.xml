@@ -1,0 +1,78 @@
+<BusinessLogic methodName="checkApprovalCode" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="eventId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+// Get number of step to check from event id
+var splitResult = eventId.split("_");
+if (splitResult.length > 1) {
+  var stepNumber = splitResult[1];
+
+  if (me.get("signatureApprovalSuccessful" + stepNumber) !== "1") {
+    // Get signature step meta data
+    var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+
+    if (stepItems.length > stepNumber - 1) {
+      var stepItem = stepItems[stepNumber - 1];
+
+      var id = me.get("signatureId" + stepNumber);
+      var code = me.get("signatureCode" + stepNumber);
+      var usrRoleId = stepItem.getUsrRoleId();
+      var etpWarehousePKey = me.getReferenceObject().getEtpWarehousePKey();
+
+      if (Utils.isEmptyString(id) || Utils.isEmptyString(code)) {
+        var buttonValues = {};
+        buttonValues[Localization.resolve("OK")] = "ok";
+
+        promise = Framework.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("ReleaseProcess_ApprovalCodeMissing"), buttonValues);
+      } 
+      else {
+        // Check entered information
+        code = Utils.sha256(code);
+
+        var params = [];
+        var jsonQuery = {};
+
+        params.push({
+          "field" : "id",
+          "value" : id
+        });
+        params.push({
+          "field" : "code",
+          "value" : code
+        });
+        params.push({
+          "field" : "usrRoleId",
+          "value" : usrRoleId
+        });
+        params.push({
+          "field" : "etpWarehousePKey",
+          "value" : etpWarehousePKey
+        });
+
+        jsonQuery.params = params;
+
+        promise = BoFactory.loadObjectByParamsAsync("LuUserApprovalCode", jsonQuery)
+          .then(function (lookup) {
+          if (!Utils.isDefined(lookup.getPKey()) || Utils.isEmptyString(lookup.getPKey())) {
+            var buttonValues = {};
+            buttonValues[Localization.resolve("OK")] = "ok";
+            return Framework.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("ReleaseProcess_ApprovalCodeMismatch"), buttonValues);
+          } else {
+            me.set("signatureName" + stepNumber, lookup.getName());
+            me.set("signatureApprovalSuccessful" + stepNumber, "1");
+            // Disable approval code controls
+            var acl = me.getACL();
+            acl.removeRight(AclObjectType.PROPERTY, 'signatureCode' + stepNumber, AclPermission.EDIT);
+            acl.removeRight(AclObjectType.PROPERTY, 'signatureId' + stepNumber, AclPermission.EDIT);
+            BindingUtils.refreshEARights();
+          }
+        });
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

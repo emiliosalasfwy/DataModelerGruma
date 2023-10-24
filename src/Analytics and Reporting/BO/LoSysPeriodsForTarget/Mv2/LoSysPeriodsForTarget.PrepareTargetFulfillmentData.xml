@@ -1,0 +1,70 @@
+<BusinessLogic methodName="prepareTargetFulfillmentData" businessObjectClass="LoSysPeriodsForTarget" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var targets = {};
+
+//Create an instance of LoTargetFulFillment
+var promise = BoFactory.createListAsync("LoTargetFulFillment", {})
+.then(function(loItems){
+  targets = loItems;
+  //Run through all the targets and summarize only the first 2 targets into LoTargetFulFillment
+  var numberofPeriod = 0;
+
+  var addItem = function(items){
+    var currentPeriodPKey = "";
+    var targetItem = {};
+
+    for(var i = 0; i < items.length; i++){
+      if(items[i].getSysPeriodPKey() != currentPeriodPKey){
+        numberofPeriod += 1;
+        // Take only the first 2 periods
+        if(numberofPeriod > 2){
+          break;
+        }
+        currentPeriodPKey = items[i].getSysPeriodPKey();
+        //Create a new item for the target fulfillment
+        targetItem = {
+          "periodText" : items[i].getPeriodText(),
+          "plannedTarget" : items[i].getPlannedTarget(),
+          "actualTarget" : 0,
+          "validFrom" : items[i].getValidFrom(),
+          "validThru" : items[i].getValidThru(),
+        };
+        //Add the new item to the targets
+        targets.addListItems([targetItem]);
+      }
+      // Add planned target for the same period for other routes
+      else{
+        targetItem.setPlannedTarget(targetItem.getPlannedTarget() + items[i].getPlannedTarget());
+      }
+    }
+  };
+
+  var now = Utils.createDateNow();
+  var itemsHasGreaterValidThru = [];
+  var itemsHasLesserValidThru = [];
+
+  me.getAllItems().forEach(function(item){
+    if(Utils.convertAnsiDate2Date(item.getValidThru()) >= now){
+      itemsHasGreaterValidThru.push(item);
+    }
+    else if(Utils.convertAnsiDate2Date(item.getValidThru()) < now){
+      itemsHasLesserValidThru.push(item);
+    }
+  });
+
+  // Get Current Period
+  if(itemsHasGreaterValidThru.length === 0){
+    numberofPeriod += 1;
+  }else{
+    addItem(itemsHasGreaterValidThru);
+  }
+
+  // Get one past period
+  addItem(itemsHasLesserValidThru);
+
+  return targets;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,17 @@
+<BusinessLogic methodName="createPricingInformationForList" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+var resultArray = [];
+
+var mainItems = me.getLoItems().getItemObjects();
+var length = mainItems.length;
+
+for(var i = 0; i < length; i++)
+{
+    resultArray.push(mainItems[i]);
+}]]>
+</Code>
+  <Return name="resultArray" value="resultArray" />
+</BusinessLogic>

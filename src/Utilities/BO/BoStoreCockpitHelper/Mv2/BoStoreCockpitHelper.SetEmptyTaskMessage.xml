@@ -1,0 +1,9 @@
+<BusinessLogic methodName="setEmptyTaskMessage" businessObjectClass="BoStoreCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var cardVisits_emptyMainMessage = "";
+cardVistTasks_emptyMainMessage = Localization.resolve("CardVisitTasks_NoDataMessageMainText");
+me.setCardVisitTasks_emptyMainMessage(cardVistTasks_emptyMainMessage);]]>
+</Code>
+  <Return name="result" value="me" />
+</BusinessLogic>

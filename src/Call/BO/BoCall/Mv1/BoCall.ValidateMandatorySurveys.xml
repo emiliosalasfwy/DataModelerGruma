@@ -1,0 +1,122 @@
+<BusinessLogic methodName="validateMandatorySurveys" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var newError;
+var messageCollector = new MessageCollector();
+var storeSurveyQuestions=[];
+var posSurveyQuestions=[];
+var promise;
+
+if ((me.getClbStatus()==="Completed" && me.getOriginalClbStatus()!=="Completed")) {
+  //LoadProductList and prerequisites
+  promise = me.getBoJobManager().loadAndSetPrerequisites("Surveys").then(
+    function() {
+      var boJobManager = me.getBoJobManager();
+      var jobDefs =boJobManager.getLoJobDefinitions().getItemsByParamArray([{"jobActionSuccess": "None", "op":"NE"}, {"jobMetaId": "Survey"}]);
+
+      if (jobDefs.length > 0) {
+        var posIds = boJobManager.getLoPOS().getAllItems().map(function(pos){return pos.getPosId();}).join(",");
+        return boJobManager.expandJobProducts(posIds).then(
+          function() {
+            jobDefs.sort(function(a,b){return (a.getJobDefListPKey() === b.getJobDefListPKey()) ? 0 : ((a.getJobDefListPKey() < b.getJobDefListPKey()) ? -1 : 1);});
+
+            var idxJobDef;
+            var liJobDef;
+            var liPOS;
+            var idxPOS;
+            var products;
+            var product;
+            var idxProduct;
+            var jdlProductCount;
+            var surveyCount;
+            var previousSurveyCount;
+            var filteredPOS;
+            var lastDemagnetizedJobListPKey = "";
+            var iStoreQuestionIndex = 0;
+            var iPOSQuestionIndex = 0;
+            var loExistingJobListJobs = boJobManager.getLoExistingJobListJobs();
+            var loPos = boJobManager.getLoPOS();
+            var loMagnetizedJobList = boJobManager.getLoMagnetizedJobList();
+            var length = jobDefs.length;
+
+            for(idxJobDef = 0; idxJobDef < jobDefs.length; idxJobDef++) {
+              liJobDef = jobDefs[idxJobDef];
+              filteredPOS = loPos.getItemsByParam({"isPOS": liJobDef.getPOS()});
+              var length2 = filteredPOS.length;
+              for(idxPOS = 0; idxPOS < length2; idxPOS++) {
+                surveyCount = 0;
+                jdlProductCount = 0;
+                liPOS = filteredPOS[idxPOS];
+                products = liPOS.getSurveyProducts().getItemsByParam({"posId": liPOS.getPosId()});
+                var length3 = products.length;
+                for(idxProduct = 0; idxProduct < length3; idxProduct++) {
+                  product = products[idxProduct];
+                  if(product.getJDLPKeys().indexOf(liJobDef.getJobDefListPKey())!==-1) {
+                    jdlProductCount++;
+                  }
+                }
+
+                var sPosBpaMainPKey = liPOS.getPosId() === " " ? " " : liPOS.getBpaMainPKey();
+                surveyCount = liPOS.getSurveys().getItemsByParam({"jobDefinitionPKey": liJobDef.getJobDefinitionPKey(), "done": "1"}).length;
+                previousSurveyCount = loExistingJobListJobs.getItemsByParam({"posBpaMainPKey": sPosBpaMainPKey, "jobDefinitionPKey": liJobDef.getJobDefinitionPKey()}).length;
+
+                if (surveyCount + previousSurveyCount < jdlProductCount) {
+                  if(liJobDef.getJobActionSuccess()==="Validation") {
+                    if(liPOS.getPosId() === " ") {
+                      if (storeSurveyQuestions.indexOf(liJobDef.getJobDefinitionMetaText()) == -1) {
+                        storeSurveyQuestions[iStoreQuestionIndex] = liJobDef.getJobDefinitionMetaText();
+                        iStoreQuestionIndex++;
+                      }
+                    }
+                    else {
+                      if (posSurveyQuestions.indexOf(liJobDef.getJobDefinitionMetaText()) == -1) {
+                        posSurveyQuestions[iPOSQuestionIndex] = liJobDef.getJobDefinitionMetaText();
+                        iPOSQuestionIndex++;
+                      }
+                    }
+                  }
+                  else if(liJobDef.getJobActionSuccess()==="Detach" && liJobDef.getStandardJobs()=="0") {
+                    //detach in magnetizejoblist
+                    if (lastDemagnetizedJobListPKey !== liJobDef.getJobListPKey()) {
+                      var loMagnetizedJobs = loMagnetizedJobList.getItemsByParam({"pKey": liJobDef.getJobListPKey()});
+                      if(loMagnetizedJobs.length > 0) {
+                        loMagnetizedJobs[0].setDemagnetizeOnSave("1");
+                        lastDemagnetizedJobListPKey = liJobDef.getJobListPKey();
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            if (storeSurveyQuestions.length > 0) {
+              newError = {"level": "error",
+                          "objectClass": "BoCall",
+                          "simpleProperty": " ",
+                          "messageParams": {"questions": "\n" + storeSurveyQuestions.join("\n") + "\n"},
+                          "messageID": "CasClbNotAllMandatoryStoreSurveysAnswered"
+                         };
+              messageCollector.add(newError);
+            }
+            if (posSurveyQuestions.length > 0) {
+              newError = {"level": "error",
+                          "objectClass": "BoCall",
+                          "simpleProperty": " ",
+                          "messageParams": {"questions": "\n" + posSurveyQuestions.join("\n") + "\n"},
+                          "messageID": "CasClbNotAllMandatoryPOSSurveysAnswered"
+                         };
+              messageCollector.add(newError);
+            }
+            return messageCollector;
+          });
+      }
+      else {
+        return messageCollector;
+      }
+    });
+}
+else {
+  promise = when.resolve(messageCollector);
+}]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

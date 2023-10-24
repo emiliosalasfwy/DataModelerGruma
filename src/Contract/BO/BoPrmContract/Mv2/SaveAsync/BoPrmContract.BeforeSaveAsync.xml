@@ -1,0 +1,88 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/***********************************************************************************************
+*  1 CGCloud tables / 2 onPrem tables                                                             *
+*                                                                                              *
+*  CGCloud:    -Slogan is stored in Contract__c                                                   *
+*  onPrem:  -Slogan is stored in a separate table                                              *
+************************************************************************************************/
+
+var promise;
+
+// SF/CASDIF: General Dif
+// If the backend is SalesForce, slogan is part of Contract__c 
+if (Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  promise = BoFactory.createObjectAsync("BoSfHelper", {}).then(
+    function (helper) {
+      return helper.saveTrackedObject(me, [{name: "sloganText", dsColumn: "Description_" + ApplicationContext.get('user').sfLanguagePostfix + "__c", value: me.getBoSlogan().getText()}]);
+    }
+  );
+}
+else
+{
+  promise = Facade.saveObjectAsync(me).then(
+    function () {
+      return true;
+    }
+  );
+}
+
+promise = promise.then(
+  function(boWasSaved) {
+    var promises = [];
+
+    if (boWasSaved)
+    {
+      if(Utils.isDefined(me.getLoPrmCttTactics()))
+      {
+        promises.push(me.getLoPrmCttTactics().saveAsync());
+      }
+      if(Utils.isDefined(me.getLoPrmCttProducts()))
+      {
+        promises.push(me.getLoPrmCttProducts().saveAsync());
+      }
+      if(Utils.isDefined(me.getLoPrmCttComment()))
+      {
+        if (Utils.isSfBackend())  // <!-- CW-REQUIRED: // SF/CASDIF: General Dif -->
+        {
+          var items = me.getLoPrmCttComment().getAllItems();
+
+          if (items.length > 0) {
+            items[0].setPKey(me.getPKey());
+          }
+        }
+        promises.push(me.getLoPrmCttComment().saveAsync());
+      }
+
+      // SF/CASDIF: General Dif
+      //in SF case sloagen is written directly to Contract__c
+      //CssBLProcessingSchedule is also not needed in SF case
+      if (!Utils.isSfBackend()){
+
+        if(Utils.isDefined(me.getLoRecentState()))
+        {
+          promises.push(me.getLoRecentState().saveAsync());
+        }
+
+        if(Utils.isDefined(me.getLoCssBLProcessingSchedule()))
+        {
+          promises.push(me.getLoCssBLProcessingSchedule().saveAsync());
+        }
+
+        if(Utils.isDefined(me.getBoSlogan()))
+        {
+          promises.push(me.getBoSlogan().saveAsync());
+        }
+      }
+    }
+
+    return when.all(promises);
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,66 @@
+<BusinessLogic methodName="getJsonQueryForProductForAdd" businessObjectClass="BoOrder" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var productForAddParams = [];
+var productForAddQuery = {};		
+var filterBySdoAssortment = me.getBoOrderMeta().getFilterBySdoAssortment();
+var allowForeignProducts = me.getBoOrderMeta().getAllowForeignProducts();
+
+/** Order Attributes */
+productForAddParams.push({"field" : "customerPKey", "value" : me.getOrdererPKey()});
+productForAddParams.push({"field" : "orderPKey" , "value" : me.getPKey()});
+
+/** Customer Assortment */
+productForAddParams.push( { "field" : "useBpaAssortment", "value" : me.getBoOrderMeta().getUseBpaAssortment()});
+if (me.getBoOrderMeta().getFilterByBpaAssortment() == '1'){
+  productForAddParams.push( { "field" : "filterByBpaAssortment", "value" : '1'});
+}
+
+/** Sales Document Assortment */
+productForAddParams.push( { "field" : "useSalesDocAssortment", "value" : me.getBoOrderMeta().getUseSalesDocAssortment()});
+if (filterBySdoAssortment == '1'){
+  productForAddParams.push( { "field" : "filterBySdoAssortment", "value" : '1'});
+}
+
+/** Listing (with modules) */
+productForAddParams.push( { "field" : "considerListing", "value" : me.getBoOrderMeta().getConsiderListing()});
+productForAddParams.push( { "field" : "listing", "value" : me.getBoOrderMeta().getListing()});		
+productForAddParams.push( { "field" : "listingWithModules", "value" : me.getBoOrderMeta().getListingWithModules()});
+productForAddParams.push( {"field" : "useConsiderModule" , "value" : me.getLuOrderer().getConsiderModule()});
+
+/** Closed Listing */
+productForAddParams.push( {"field" : "hitClosedListing", "value": me.getLuOrderer().getHitClosedListing()});
+productForAddParams.push( {"field" : "collectClosedListing", "value": me.getLuOrderer().getCollectClosedListing()});
+
+/** Promotions */
+productForAddParams.push( { "field" : "considerPromotion", "value" : me.getBoOrderMeta().getConsiderPromotion()});
+productForAddParams.push( { "field" : "considerSelectablePromotion", "value": me.getBoOrderMeta().getConsiderSelectablePromotion()});
+
+productForAddParams.push( { "field" : "sdoMetaPKey", "value" : me.getSdoMetaPKey()});
+productForAddParams.push( { "field" : "commitDate", "value" : me.getCommitDate()});
+
+/** Items List Mode (Hierarchy vs. Flat List) */
+if (me.getBoOrderMeta().getItemListOption() == "Hierarchy"){
+  productForAddParams.push( { "field" : "criterionAttribute", "value" : me.getBoOrderMeta().getCriterionAttributeForLevel(me.getBoOrderMeta().getNumberOfHierarchyLevels())});    
+} else{
+  productForAddParams.push({ "field": "criterionAttribute", "value": me.getBoOrderMeta().getCriterionAttributeForFlatList()});
+}
+
+if (allowForeignProducts != '1'){
+  productForAddParams.push( { "field" : "filterOutCompetitorProducts", "value" : '1'});
+}
+
+/** Query Condition */
+var queryCondition = "1=1 ";
+
+if (filterBySdoAssortment == '1') {
+  queryCondition += " AND SdoAssortment = '1' ";
+}
+
+productForAddParams.push({"field" : "queryCondition", "value" : queryCondition });
+
+productForAddQuery.params = productForAddParams;
+productForAddQuery.useMergeEngine = me.useMergeEngine();]]>
+</Code>
+  <Return name="jsonQuery" value="productForAddQuery" />
+</BusinessLogic>

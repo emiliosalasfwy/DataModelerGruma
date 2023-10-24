@@ -1,0 +1,75 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoVisitOverviewContextMenu" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var dicJsonQuery = Utils.convertDsParamsOldToNew(jsonQuery);
+var visitStatus = dicJsonQuery.visitStatus.getId();
+
+
+var bVisitIsReadOnly = visitStatus === "Completed" || visitStatus === "Abandoned";
+
+
+var contextMenuItemList = [];
+
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "ExecuteDarkGrey24",
+  "actionId" : "Execute",
+  "processEvent" : "Execute",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+
+var menuEntry1 = {
+  "id" : "0000002",
+  "actionImg" : "CompleteDarkGrey24",
+  "actionId" : "Complete",
+  "processEvent" : "Complete",
+  "actionVisible" : "1",
+  "actionEnabled" : (!bVisitIsReadOnly && visitStatus !== "Planned") ? "1" : "0"
+};
+var menuEntry3 = {
+  "id" : "0000004",
+  "actionImg" : "RescheduleDarkGrey24",
+  "actionId" : "Reschedule",
+  "processEvent" : "Re-Schedule",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+var menuEntry5 = {
+  "id" : "0000006",
+  "actionImg" : "InfoDarkGrey24",
+  "actionId" : "Info",
+  "processEvent" : "Info",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+var menuEntry6 = {
+  "id" : "0000007",
+  "actionImg" : "TripDarkGrey24",
+  "actionId" : "NavigateToCustomer",
+  "processEvent" : "NavigateToCustomer",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+
+  contextMenuItemList.push(menuEntry0);
+  contextMenuItemList.push(menuEntry1);
+  contextMenuItemList.push(menuEntry3);
+  contextMenuItemList.push(menuEntry5);
+  contextMenuItemList.push(menuEntry6);
+
+
+  if (bVisitIsReadOnly) {
+    menuEntry1.actionEnabled = "0";
+    menuEntry3.actionEnabled = "0";
+  }
+
+
+me.addItems(contextMenuItemList);
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="loVisitOverviewContextMenu" value="promise" />
+</BusinessLogic>

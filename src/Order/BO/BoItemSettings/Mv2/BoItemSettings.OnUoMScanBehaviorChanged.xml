@@ -1,0 +1,25 @@
+<BusinessLogic methodName="onUoMScanBehaviorChanged" businessObjectClass="BoItemSettings" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+if(Utils.isDefined(handlerParams)) {
+  if(handlerParams.newValue === "Current") {
+    acl.addRight(AclObjectType.PROPERTY, "uoMScanDefaultUnit", AclPermission.VISIBLE);
+  }
+  else {
+    acl.removeRight(AclObjectType.PROPERTY, "uoMScanDefaultUnit", AclPermission.VISIBLE);
+  }
+}
+else if(me.getUoMScanBehavior() === "Current") {
+  acl.addRight(AclObjectType.PROPERTY, "uoMScanDefaultUnit", AclPermission.VISIBLE);
+}
+else {
+  acl.removeRight(AclObjectType.PROPERTY, "uoMScanDefaultUnit", AclPermission.VISIBLE);
+}
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

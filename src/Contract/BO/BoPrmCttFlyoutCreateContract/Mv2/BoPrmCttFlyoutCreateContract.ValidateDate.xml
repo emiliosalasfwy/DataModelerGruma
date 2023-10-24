@@ -1,0 +1,16 @@
+<BusinessLogic methodName="validateDate" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(me.getDateFrom()) && Utils.isDefined(me.getDateThru())) {
+  if (me.getDateFrom() > me.getDateThru()) {
+    var newError = {"level": "error",
+                    "objectClass": "BoPrmCttFlyoutCreateContract",
+                    "messageID": "CasPrmDateFromGTDateThru"};
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,71 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoCallAssetOverview" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = result;
+var items = me.getAllItems();
+
+me.suspendListRefresh();
+
+for (var i = 0; i < items.length; i++) {
+  items[i].beginEdit();
+
+  var presence = items[i].getPresence();
+
+  if (items[i].getSurveyAvailable() === "0") {
+    items[i].setCondition(" ");
+    items[i].setUsage(" ");
+    items[i].setCreationDate(Utils.createAnsiDateTimeToday());
+  }
+  items[i].setConditionHist(" ");
+  items[i].setUsageHist(" ");
+
+  //name length restriction
+  if (items[i].getAssetName().length > 22) {
+    items[i].setAssetNameShort(items[i].getAssetName().substr(0, 22) + "...");
+  }
+
+  //bpa date formatting
+  if (Utils.isEmptyString(items[i].getValidFrom())) {
+    items[i].setFormattedDate(" ");
+  } else {
+    var fromDate = Utils.convertAnsiDate2Date(items[i].getValidFrom());
+    var thruDate = Utils.convertAnsiDate2Date(items[i].getValidThru());
+
+    var date = Localization.localize(fromDate, "date") + " - " + Localization.localize(thruDate, "date");
+    items[i].setFormattedDate(date);
+  }
+
+  //Set EA Rights
+  if (presence === "2" || presence === "3") {
+    items[i]
+      .getACL()
+      .removeRight(AclObjectType.PROPERTY, "presence", AclPermission.EDIT);
+  }
+
+  items[i].setObjectStatus(STATE.PERSISTED);
+
+  items[i].endEdit();
+}
+
+me.resumeListRefresh(true);
+
+me.orderBy({ registeredAsset: "DESC", astSurveySerialNumber: "ASC" });
+
+//Filter items by Hidden Field
+me.setFilter("hidden", "0");
+
+var filteredItems = me.getItemObjects();
+
+if (filteredItems.length > 0) {
+  me.setCurrentByPKey(filteredItems[0].getPKey());
+} else {
+  me.setCurrentByPKey(undefined);
+}
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

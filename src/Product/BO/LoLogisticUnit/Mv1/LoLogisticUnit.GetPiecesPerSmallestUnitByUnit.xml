@@ -1,0 +1,16 @@
+<BusinessLogic methodName="getPiecesPerSmallestUnitByUnit" businessObjectClass="LoLogisticUnit" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="unitType" type="DomPrdPiecesPerUnit" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var piecesPerSmallestUnit = 0;
+var params = {"unitType" : unitType};
+
+var result = this.getItemsByParam(params);
+
+if (result.length > 0) {
+	piecesPerSmallestUnit = result[0].getPiecesPerSmallestUnit();
+}]]>
+</Code>
+  <Return name="piecesPerSmallestUnit" value="piecesPerSmallestUnit" />
+</BusinessLogic>

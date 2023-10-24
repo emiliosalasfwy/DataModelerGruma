@@ -1,0 +1,104 @@
+<BusinessLogic methodName="setOpenDaysForItem" businessObjectClass="LoCustomerOpeningTime" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+    <MethodInput name="updateMode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var openDaysString = "";
+var noUpdate = (updateMode === "noUpdate");
+
+if (pKey) {
+  var liCustomerOpeningTime = me.getItemByPKey(pKey);
+  if (Utils.isDefined(liCustomerOpeningTime)) {
+
+    if (Utils.isSfBackend()) {
+      // SF/CASDIF: Changed algorithm necessary as toggles are sorted differently in SF
+      var days = [];
+
+      //Add days to array only when those are configured as customer opening hours
+      if(liCustomerOpeningTime.getMonday() == "1") {
+        days.push('mon');
+      }
+      if(liCustomerOpeningTime.getTuesday() == "1") {
+        days.push('tue');
+      }
+      if(liCustomerOpeningTime.getWednesday() == "1") {
+        days.push('wed');
+      }
+      if(liCustomerOpeningTime.getThursday() == "1") {
+        days.push('thu');
+      }
+      if(liCustomerOpeningTime.getFriday() == "1") {
+        days.push('fri');
+      }
+      if(liCustomerOpeningTime.getSaturday() == "1") {
+        days.push('sat');
+      }
+      if(liCustomerOpeningTime.getSunday() == "1") {
+        days.push('sun');
+      }
+
+      days.forEach(function(day) {
+        openDaysString = openDaysString + "\u00a0\u00a0" + AppManager.sysToggles.DomDayOfWeek.values[day].shortText;
+      });
+
+    }
+    else {
+      var actDayText;
+      var arrayDaysOfWeek = Utils.getToggleListObject("DayOfWeek").getAllItems();
+
+      for (var x in arrayDaysOfWeek) {
+        var isActDay = false;
+        var actDay = arrayDaysOfWeek[x].getId();
+        actDayText = "\u00a0\u00a0" + arrayDaysOfWeek[x].getShortText();
+        //SF/CASDIF: Not available in CW: Clockwork can not resolve html this is the only place in all contracts
+
+        switch (actDay) {
+          case "mon":
+            if (liCustomerOpeningTime.getMonday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "tue":
+            if (liCustomerOpeningTime.getTuesday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "wed":
+            if (liCustomerOpeningTime.getWednesday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "thu":
+            if (liCustomerOpeningTime.getThursday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "fri":
+            if (liCustomerOpeningTime.getFriday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "sat":
+            if (liCustomerOpeningTime.getSaturday() == "1") {
+              isActDay = true;
+            }
+            break;
+          case "sun":
+            if (liCustomerOpeningTime.getSunday() == "1") {
+              isActDay = true;
+            }
+            break;
+        }
+
+        if (isActDay) {
+          openDaysString += actDayText;
+        }
+      }
+    }
+    liCustomerOpeningTime.setOpenDays(openDaysString, noUpdate);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

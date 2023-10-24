@@ -1,0 +1,14 @@
+<BusinessLogic methodName="loadNotes" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync(LO_ORDERNOTES, me.getQueryBy("sdoMainPKey", me.getPKey())).then(
+  function (loNotes) {
+    me.setLoNotes(loNotes);
+    var items = loNotes.getItemObjects();
+    for (var i = 0; i < items.length; i++) {
+      items[0].setObjectStatus(STATE.PERSISTED);
+    }
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,8 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="LoPromotionForSalesFolder" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promotionList = me.getAllItems();
+var visible = (Utils.isSfBackend() && promotionList.length > 0);]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

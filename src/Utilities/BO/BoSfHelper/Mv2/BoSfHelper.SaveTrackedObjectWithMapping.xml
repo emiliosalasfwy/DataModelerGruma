@@ -1,0 +1,57 @@
+<BusinessLogic methodName="saveTrackedObjectWithMapping" businessObjectClass="BoSfHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bo" type="Object" />
+    <MethodInput name="mapping" type="Object" />
+    <MethodInput name="additionalMappings" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var objectStatus = bo.getObjectStatus();
+
+// prevent saving of new deleted objects because they are not in the DB
+var stateNewDeleted = STATE.NEW | STATE.DELETED;
+if ((objectStatus & stateNewDeleted) == stateNewDeleted) {
+  bo.setObjectStatus(STATE.PERSISTED);
+  promise = when.resolve(false);
+}
+else {
+  // Determine type of change
+  var changeType = "U";
+
+  if ((objectStatus & STATE.DELETED) > 0) {
+    changeType = "D";
+  }
+  else if ((objectStatus & STATE.NEW) > 0) {
+    changeType = "N";
+  }
+
+  var properties = AppManager.getArtifact("BUSINESSOBJECT", bo.$type).SimpleProperties.SimpleProperty;
+  var data =  bo.getData();
+
+  for (var i = 0; i < additionalMappings.length; i++) {
+    var additionalMapping = additionalMappings[i];
+    data[additionalMapping.name] = additionalMapping.value;
+    mapping.columnMapping[additionalMapping.name] = additionalMapping.dsColumn;
+  }
+
+  for (var j = 0; j < properties.length; j++) {
+    var dateTimeProp = properties[j];
+    if((dateTimeProp.type == "DomDate" || dateTimeProp.type == "DomDateTime") && (dateTimeProp.name in mapping.columnMapping)) {
+      data[dateTimeProp.name] = Utils.unixepochToTicks(Utils.convertForDB(data[dateTimeProp.name], dateTimeProp.type));
+    }
+  }
+
+  promise = Facade.putTrackedObjectInTransaction({
+    name: mapping.tableName,
+    idAttribute: mapping.idColumn,
+    idProperty: mapping.idProperty,
+    mapping: mapping.columnMapping,
+    changeType: changeType,
+    data: data
+  }).then(function () {
+    return when.resolve(true);
+  });
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

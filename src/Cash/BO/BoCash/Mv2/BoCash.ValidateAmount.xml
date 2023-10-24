@@ -1,0 +1,35 @@
+<BusinessLogic methodName="validateAmount" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+var paidAmount = me.getAbsolutePaidAmount();
+var minLimit = me.getBoCashMeta().getMinOrderValue();
+var maxLimit = me.getBoCashMeta().getMaxOrderValue();
+
+if(me.getValidateForRelease() == "1") {
+  //Validate min cash amount
+  if (minLimit > 0.01) {
+    if (paidAmount < minLimit) {
+      newError = {"level": "error",
+                  "objectClass": "BoCash",
+                  "simpleProperty": "absolutePaidAmount",
+                  "messageID": "CasCashValidateMinAmount",
+                  "messageParams": { "totalValue": paidAmount.toFixed(2) , "minValue": minLimit }};
+      messageCollector.add(newError);
+    }
+    //Validate max cash amount
+    else if (paidAmount > maxLimit) {
+      newError = {"level": "error",
+                  "objectClass": "BoCash",
+                  "simpleProperty": "absolutePaidAmount",
+                  "messageID": "CasCashValidateMaxAmount",
+                  "messageParams": { "totalValue": paidAmount.toFixed(2) , "maxValue": maxLimit }};
+      messageCollector.add(newError);
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,102 @@
+<BusinessLogic methodName="onKPIItemChanged" businessObjectClass="BoVisitAssessmentTask" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+for (var i = 0; i < handlerParams.modified.length; i++) {
+  switch (handlerParams.modified[i]) {
+    case "actualValue":
+
+      var relatedList = me.getLoPrimaryRetailVisitKPI();
+	
+      if(Utils.isDefined(relatedList)){
+       var relatedItem = relatedList.getItemByPKey(handlerParams.listItem.getPKey());
+
+       if(Utils.isDefined(relatedItem) && handlerParams.newValues.actualValue !== relatedItem.getActualValue()){
+        me.getLoPrimaryRetailVisitKPI().suspendListRefresh(); 
+        relatedItem.setActualValue(handlerParams.newValues.actualValue);
+        me.getLoPrimaryRetailVisitKPI().resumeListRefresh(true);
+       }
+      }
+
+
+
+      if(handlerParams.listItem.getAidDataType() === "DateTime" && handlerParams.listItem.getDataType() === "NullableString" && Utils.isDefined(handlerParams.newValues.actualValue) ){
+        var oldValue = handlerParams.oldValues.actualValue;
+
+        //check time format
+        var timeFormatValid = false;
+        
+        //check 24h format or 12h format
+        if((_.isString(handlerParams.newValues.actualValue) && /^((2[0-3]|[01]?[0-9]):([0-5][0-9]?))$/.test(handlerParams.newValues.actualValue))){
+          timeFormatValid = true;
+        }else if((_.isString(handlerParams.newValues.actualValue) && /^(1[0-2]|0?[1-9]):[0-5]?[0-9]{1}\s?[AaPp][Mm]$/.test(handlerParams.newValues.actualValue))){
+          timeFormatValid = true;
+        }
+        
+        if(!timeFormatValid){
+          var messageCollector = new MessageCollector();
+
+          var error = {
+            "level" : "error",
+            "objectClass" : "BoVisitAssessmentTask",
+            "messageParams":{"invalidKPI": handlerParams.listItem.getQuestion(), "product": handlerParams.listItem.getProductName() },
+            "messageID" : "BoVisitAssessmentKPIInvalidDateTime"
+          }; 
+          messageCollector.add(error);
+          me.getLoRetailVisitKPI().suspendListRefresh();
+          handlerParams.listItem.setActualValue(oldValue);
+          me.getLoRetailVisitKPI().resumeListRefresh(true);
+
+          var buttonValues = {};
+          buttonValues[Localization.resolve("Back")] = "back";
+          var messages = messageCollector.getMessages().join("<br>");
+          promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), messages, buttonValues)
+            .then(function(result){
+            messageCollector.destroy();
+          });
+
+        } else{
+          promise = when.resolve("valid");
+        }
+      }else if(handlerParams.listItem.getAidDataType() === "String" && Utils.isDefined(handlerParams.newValues.actualValue) ){
+
+        if(handlerParams.newValues.actualValue.length > 1000){
+          var messageCollector = new MessageCollector();
+
+          var error = {
+            "level" : "error",
+            "objectClass" : "BoVisitAssessmentTask",
+            "messageParams":{"processContextValue": handlerParams.listItem.getQuestion() },
+            "messageID" : "ValidationMessageInvalidData"
+          }; 
+          messageCollector.add(error);
+          me.getLoRetailVisitKPI().suspendListRefresh();
+          handlerParams.listItem.setActualValue(handlerParams.newValues.actualValue.substring(0,1000));
+          me.getLoRetailVisitKPI().resumeListRefresh(true);
+
+          var buttonValues = {};
+          buttonValues[Localization.resolve("Back")] = "back";
+          var messages = messageCollector.getMessages().join("<br>");
+          promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), messages, buttonValues)
+            .then(function(result){
+            messageCollector.destroy();
+          });
+
+        } else{
+          promise = when.resolve("valid");
+        }
+      }
+        
+      
+      
+      
+      
+      break;
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

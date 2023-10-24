@@ -1,0 +1,61 @@
+<BusinessLogic methodName="isCardVisible" businessObjectClass="BoSalesCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="cardName" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var visible = false;
+
+switch (cardName){
+
+  case "CardUserWelcome": 
+    visible = true;
+    break;
+
+  case "CardSync": 
+    visible = true;
+    break;
+
+  case "CardVisits": 
+    visible = true;
+    break;
+
+  case "CardReporting": 
+    visible = true;
+    break;
+
+  case "CardUserNotifications": 
+    visible = true;
+    break;
+
+  case "CardTasks": 
+    if(!ApplicationContext.get('user').hasRole('TourUser')){
+      visible = true;
+    }
+    break;
+
+  case "CardCustomerTasks": 
+    if(!ApplicationContext.get('user').hasRole('TourUser')){
+      visible = true;
+    }
+    break;
+
+  case "CardUserVisitsGuide":
+    visible = true;
+    break;
+
+  case "CardActivities":
+    visible = true;
+    break;
+
+  case "CardMobileLinks":
+  case "CardQuickAccess":
+    if(Utils.isSfBackend()){
+      visible = true;
+    }
+    break;
+
+  case "CardCustomersOverdue":
+    visible = true;
+    break;
+}]]></Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

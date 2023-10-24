@@ -1,0 +1,86 @@
+<BusinessLogic methodName="validateOpenDocuments" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+//Check only required if status transition from running to completed
+if(me.getTmgStatus()!== "Running") {
+  promise = when.resolve();
+} else {
+  var jsonQuery = {};
+  var jsonParams = [];
+  var sdoMetaPkeys = [];
+
+  jsonQuery.params = jsonParams;
+
+  jsonParams.push({"field" : "tmgMainPKey", "value" : me.getPKey()});
+  jsonParams.push({"field" : "tmgTourObjectRelUsage", "value" : "'SdoMeta.ProductCheckIn'"});
+
+  if (Utils.isCasBackend()){
+    jsonQuery.additionalCondition = "AND SdoMeta.PrdCheckInPolicy <> #prdCheckInPolicy#";
+  }
+  else{
+    jsonQuery.additionalCondition = "AND Order_Template__c.Product_Check_in_Policy__c <> #prdCheckInPolicy#";
+  }
+
+  jsonParams.push({"field" : "prdCheckInPolicy", "value" : 'Optional'});
+
+  promise = BoFactory.loadObjectByParamsAsync("LoTruckLoadTemplates", jsonQuery).then(
+    function(result){
+
+      if(Utils.isDefined(result)){
+        if(result.getAllItems().length>0){
+          for(var i = 0; i<result.getAllItems().length; i++){
+            sdoMetaPkeys.push("'" + result.getAllItems()[i].getPKey() + "'"); 
+          }
+          sdoMetaPkeys=sdoMetaPkeys.join(",");
+        }
+      }
+
+      return BoFactory.loadObjectByParamsAsync("LuTourOpenDocuments", {"TmgMainPKey" : me.getPKey(), "SdoMetaPKeys" : sdoMetaPkeys});
+    }
+  ).then(
+    function(luTourOpenDocuments){
+      if(Utils.isDefined(luTourOpenDocuments)) {
+        var openRelatedDocuments=luTourOpenDocuments.getOpenRelatedDocuments();
+        var doneCashCheckInDocuments=luTourOpenDocuments.getDoneCashCheckInDocuments();
+        var doneProductCheckIns=luTourOpenDocuments.getDoneProductCheckIns();
+        var openFakeInwardDocuments=luTourOpenDocuments.getOpenFakeInwardDocuments();
+        var openFakeRejectedDocuments=luTourOpenDocuments.getOpenFakeRejectedDocuments();
+
+
+        if(openRelatedDocuments > 0 || openFakeRejectedDocuments > 0 || openFakeInwardDocuments > 0){
+          //If there is at least one open document document, the tour cannot be completed. The system displays a message.
+          messageCollector.add({
+            "level" : "error",
+            "objectClass" : "BoTour",
+            "messageID" : "CasTmgOpenDocuments"
+          });
+        }
+
+        if(me.getCashCheckInRequired() === "Mandatory" && doneCashCheckInDocuments < 1){
+          //If there is no closed cash check in document, the tour cannot be closed. The system displays a message.
+          messageCollector.add({
+            "level" : "error",
+            "objectClass" : "BoTour",
+            "messageID" : "CasTmgNoMandatoryCheckIn"
+          });
+        }
+
+        if(sdoMetaPkeys.length > 0 && doneProductCheckIns<1){
+          //If there is no closed product check in document for the document template in question, the tour cannot be closed. The system displays a message.
+          messageCollector.add({
+            "level" : "error",
+            "objectClass" : "BoTour",
+            "messageID" : "CasTmgNoMandatoryPrdCheckIn"
+          });
+        }
+      }
+    }
+  );
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

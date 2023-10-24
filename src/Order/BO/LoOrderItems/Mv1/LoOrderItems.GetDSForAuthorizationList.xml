@@ -1,0 +1,152 @@
+<BusinessLogic methodName="getDSForAuthorizationList" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mergeProperty" type="DomString" />
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="listing" type="DomString" />
+    <MethodInput name="listingWithModules" type="DomString" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Datasource name (required by merge engine)
+var LO_MEAUTHORIZATIONLIST = "LoMeAuthorizationList";
+var LO_MEAUTHORIZATIONLIST_WITHOUT_MODULES = "LoMeAuthorizationListWithoutModules";
+
+var _listing;
+var _listingWithModules;
+var dsParams = "";
+var listobject = "";
+
+
+if(Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  if (listing == "Hit")
+  {
+    listobject = LO_MEAUTHORIZATIONLIST_WITHOUT_MODULES;
+    dsParams =
+      {
+      "params": [
+        { "field": "customerPKey", "value": customerPKey }
+      ]};
+  } 
+  else
+  {
+    listobject = LO_MEAUTHORIZATIONLIST;
+    dsParams =
+      {
+      "params": [
+        { "field": "customerPKey", "value": customerPKey }
+      ]};
+  }
+}
+else
+{
+  // Dermine parameter values for Listing and ListingWithModules
+  if (typeof listing != "undefined")
+  {
+    if (listing == "Collection")
+    {
+      listobject = LO_MEAUTHORIZATIONLIST_WITHOUT_MODULES;
+      _listing = "AND (PrdProposalAuthListPrdRel.Listing = 'Collection' OR PrdProposalAuthListPrdRel.Listing = 'Hit') ";
+    } 
+    else if (listing == "Hit")
+    {
+      listobject = LO_MEAUTHORIZATIONLIST_WITHOUT_MODULES;
+      _listing = "AND PrdProposalAuthListPrdRel.Listing = 'Hit' ";
+    }
+  }
+
+  if (typeof listingWithModules != "undefined")
+  {
+    if (listingWithModules == "Collection")
+    {
+      listobject = LO_MEAUTHORIZATIONLIST;
+      _listingWithModules = " AND (PrdProposalAuthListPrdRel.ListingWithModules = 'Collection' OR PrdProposalAuthListPrdRel.ListingWithModules = 'Hit' )";
+    } 
+    else if (listingWithModules == "Hit")
+    {
+      listobject = LO_MEAUTHORIZATIONLIST;
+      _listingWithModules = " AND PrdProposalAuthListPrdRel.ListingWithModules = 'Hit' ";
+    } 
+  } 
+
+  // Build datasource parameters depending on Listing and ListingWithModules value
+  if ((typeof _listing != "undefined") && (typeof _listingWithModules != "undefined")) 
+  {
+    dsParams =
+      {
+      "params": [
+        { "field": "customerPKey", "value": customerPKey },
+        { "field": "addCond_Listing", "value": _listing },
+        { "field": "addCond_ListingWithModules", "value": _listingWithModules }
+      ]};    
+  } else if (typeof _listing != "undefined")
+  {
+    dsParams =
+      {
+      "params": [
+        { "field": "customerPKey", "value": customerPKey },
+        { "field": "addCond_Listing", "value": _listing }
+      ]};
+  } else if (typeof _listingWithModules != "undefined") 
+  {
+    dsParams = 
+      {
+      "params": [
+        { "field": "customerPKey", "value": customerPKey },
+        { "field": "addCond_ListingWithModules", "value": _listingWithModules }
+      ]};
+  } 
+}
+
+// Add group by to param list for eliminating the listing/listingWithModules duplicates in case of proposal list
+// Duplicates are desired in case of the LoProductForAdd where the configuration is used for matching against the listing.
+dsParams.params.push({
+  "field" : "groupBy_for_proposal",
+  "value" : " GROUP BY prdMainPKey, listed "
+});
+
+var dataSourceColumns =
+    [
+      { "name": "listed", 
+       "alias": "listed" 
+      },{
+        "name" : "listing",
+        "alias" : "listing",
+        "default" : "None"
+      },{
+        "name" : "listingWithModules",
+        "alias" : "listingWithModules",
+        "default" : "None"
+      },{
+        "name" : "customerProductNumber",
+        "alias" : "customerProductNumber",
+        "default" : " "
+      },{
+        "name" : "focusProductType",
+        "alias" : "focusProductType",
+        "default" : " "
+      }
+    ];
+
+if(Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  dataSourceColumns.push(
+    {      
+      "name" : "focusProductImage",
+      "alias" : "focusProductImage",
+      "default" : " "
+    }
+  );
+}
+
+var datasourceDefiniton = 
+    {
+      "boName": listobject,
+      "dsParams": dsParams,
+      "matchingColumn": "prdMainPKey",
+      "dataSourceColumns": dataSourceColumns,
+      "mergeProperty": mergeProperty,
+      "lookupDataSource": "false"
+    };]]>
+</Code>
+  <Return name="dsForAuthorizationList" value="datasourceDefiniton" />
+</BusinessLogic>

@@ -1,0 +1,16 @@
+<BusinessLogic methodName="capturePicture" businessObjectClass="BoImageHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="cameraSettings" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+promise = Facade.getPictureAsync(cameraSettings);
+
+// Do something with the image url provided
+// In Android, example imageURI = file:///storage/emulated/0/Android/data/test.com/cache/1395835803979.jpg
+// In ios, example imageURI = file:///var/mobile/Applications/7D13E650-ACE8-43A0-B23B-1825A5231C2D/tmp/cdv_photo_002.jpg 
+// JSON will be in this formart {"width":1024,"height":768,"path":"BpaAttachmentBlob/0020000000002jot.jpg"}]]>
+</Code>
+  <Return name="value" value="promise" />
+</BusinessLogic>

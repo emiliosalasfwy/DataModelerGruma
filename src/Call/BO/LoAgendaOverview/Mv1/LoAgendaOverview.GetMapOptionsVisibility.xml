@@ -1,0 +1,13 @@
+<BusinessLogic methodName="getMapOptionsVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="option" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var displayTraffic = (option === "DisplayTraffic" && Framework.getProcessContext().displayTraffic !== "1");
+var hideTraffic = (option === "HideTraffic" && Framework.getProcessContext().displayTraffic == "1");
+var displayRoute = (option === "DisplayRoute" && Framework.getProcessContext().displayRoute !== "1");
+var hideRoute = (option === "HideRoute" && Framework.getProcessContext().displayRoute == "1");
+var result = displayTraffic || hideTraffic || displayRoute || hideRoute;]]>
+</Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

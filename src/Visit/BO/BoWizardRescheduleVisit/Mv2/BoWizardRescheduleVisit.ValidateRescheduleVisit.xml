@@ -1,0 +1,27 @@
+<BusinessLogic methodName="validateRescheduleVisit" businessObjectClass="BoWizardRescheduleVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//If any Date or Time field is empty, raise error
+if (me.getDateFrom()===null || me.getTimeFrom()==="" || me.getDateThru() === null || me.getTimeThru()==="") {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardRescheduleVisit",
+      "messageID" : "FillInDateAndTimeFields"
+    });
+}else{
+  //Validate TimeThru bigger TimeFrom, can be done via evaluating Duration which is set to 0 in that case
+
+  if(me.getDuration()===0){
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardRescheduleVisit",
+      "messageID" : "StartPlannedTimeAfterEndPlannedTimeNotAllowed"
+    });
+  }
+
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

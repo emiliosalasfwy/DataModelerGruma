@@ -1,0 +1,20 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoRewardProductValidation" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loRewardProducts = BoFactory.instantiate("LoRewardProducts");
+var rewardProducts = context.jsonQuery.hurdleEvaluationHelper.loRewardProducts.getData();
+var currentRewardId = context.jsonQuery.rewardId;
+
+// Filter reward products based on current reward
+rewardProducts = rewardProducts.filter(function(product){return product.promotionReward == currentRewardId && product.isValidFreeItem == "1";});
+loRewardProducts.addListItems(rewardProducts);
+me.setLoRewardProducts(loRewardProducts);
+me.setHurdleEvaluationHelper(context.jsonQuery.hurdleEvaluationHelper);
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

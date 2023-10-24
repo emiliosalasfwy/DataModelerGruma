@@ -1,0 +1,39 @@
+<BusinessLogic methodName="validateContactPartner" businessObjectClass="BoCustomer" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[/*
+UC:  NGM Customer - Contact
+The system saves and validates the contact partner
+The contact partner Last Name must not be empty.
+*/
+  
+if (Utils.isDefined(this.getLoContactPartner()))
+{
+  var items = this.getLoContactPartner().getItemObjects();
+  
+  for(var i=0; i < items.length; i++) {
+
+    if(Utils.isEmptyString(items[i].getLastName())) {
+
+      messageCollector.add({
+        "level": "error", 
+        "objectClass": "BoCustomer", 
+        "messageID": "CasBpaMainContactPartnerLastNameEmpty"
+      });
+    }
+    
+    var email1 = items[i].getEmail1();
+    if (items[i].getEmailEditable() == '1' && !Utils.isEmptyString(email1) && !SalesforceTools.isValidEmail(email1))
+    {
+      messageCollector.add({
+        "level": "error", 
+        "objectClass": "BoCustomer", 
+        "messageID": "CasBpaMainContactPartnerEmailInvalid"
+      });
+    }
+    
+  }
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

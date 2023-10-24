@@ -1,0 +1,10 @@
+<BusinessLogic methodName="getOrderUnitItems" businessObjectClass="LoOrderItems" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderUnitItems = this.getItemsByParam(
+  {
+    "isOrderUnit" : "1"
+  });]]>
+</Code>
+  <Return name="orderUnitItems" value="orderUnitItems" />
+</BusinessLogic>

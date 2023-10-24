@@ -1,0 +1,113 @@
+<BusinessLogic methodName="setInventoryBalanceOfCashPayment" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="paymentPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(Utils.isDefined(paymentPKey))
+{
+  var liPayments = me.getLoPayments().getItemByPKey(paymentPKey);
+  var objectStatus = liPayments.getObjectStatus();
+  if(Utils.isEmptyString(liPayments.getIvcInformationObject()))
+  {
+    var ivcMetas = me.getBoCashMeta().getIvcMetasByPaymentMeta(liPayments.getSdoPaymentMetaPKey());
+    var ivcMetaPKeys = [];
+    var usrMainPKeys = [];
+    var bpaMainPKeys = [];
+    var tmgTourPKeys = [];
+    var etpVehiclePKeys = [];
+    for (var i = 0; i < ivcMetas.length; i++) {
+      ivcMetaPKeys.push(ivcMetas[i].getIvcMetaPKey());
+      usrMainPKeys.push(ivcMetas[i].getUsrMainPKey());
+      bpaMainPKeys.push(ivcMetas[i].getBpaMainPKey());
+      tmgTourPKeys.push(ivcMetas[i].getTmgTourPKey());
+      etpVehiclePKeys.push(ivcMetas[i].getEtpVehiclePKey());
+    }
+    var jsonParamsForFinding = [];
+    var jsonQueryForFinding = {};
+
+    jsonParamsForFinding.push({
+      "field" : "ivcMetaPKeys",
+      "value" : "'" + ivcMetaPKeys.join("','") + "'"
+    });
+    jsonParamsForFinding.push({
+      "field" : "usrMainPKeys",
+      "value" : "'" + usrMainPKeys.join("','") + "'"
+    });
+    jsonParamsForFinding.push({
+      "field" : "bpaMainPKeys",
+      "value" : "'" + bpaMainPKeys.join("','") + "'"
+    });
+    jsonParamsForFinding.push({
+      "field" : "prdMainPKeys",
+      "value" : "' '"
+    });
+    jsonParamsForFinding.push({
+      "field" : "tmgTourPKeys",
+      "value" : "'" + tmgTourPKeys.join("','") + "'"
+    });
+    jsonParamsForFinding.push({
+      "field" : "etpVehiclePKeys",
+      "value" : "'" + etpVehiclePKeys.join("','") + "'"
+    });
+    jsonParamsForFinding.push({
+      "field" : "addCond_Currency",
+      "value" : " AND IvcMain.Currency = '" + liPayments.getCurrency() + "' "
+    });
+
+    jsonQueryForFinding.params = jsonParamsForFinding;
+
+    promise = BoFactory.loadObjectByParamsAsync("LoInventoryFinding", jsonQueryForFinding).then(
+      function (loInventoryFinding) {
+
+        // Build inventory information object and store at payment
+        var liInventory;
+        var ivcInformation = {};
+        var ivcInformationObject = [];
+        var params = {};
+
+        for (var i = 0; i < ivcMetas.length; i++) {
+          params = {};
+          params.ivcMetaPKey = ivcMetas[i].getIvcMetaPKey();
+          params.usrMainPKey = ivcMetas[i].getUsrMainPKey();
+          params.bpaMainPKey = ivcMetas[i].getBpaMainPKey();
+          params.tmgTourPKey = ivcMetas[i].getTmgTourPKey();
+          params.etpVehiclePKey = ivcMetas[i].getEtpVehiclePKey();
+
+          // + Currency?
+
+          ivcInformation = {};
+          ivcInformation.ivcMainPKey = " ";
+          ivcInformation.balance = 0;
+
+          liInventory = loInventoryFinding.getItemsByParam(params);
+
+          // If inventory found, add IvcMainPKey to IvcInformationObject
+          if (liInventory.length > 0) {
+            ivcInformation.ivcMainPKey = liInventory[0].getIvcMainPKey();
+            ivcInformation.balance = liInventory[0].getBalance();
+          }
+
+          ivcInformation.ivcMetaByPaymentMeta = ivcMetas[i];
+
+          ivcInformationObject.push(ivcInformation);
+        }
+
+        liPayments.setIvcInformationObject(ivcInformationObject);
+        liPayments.setObjectStatus(objectStatus);
+      }
+    );
+  }
+  else
+  {
+    promise = when.resolve();
+  }
+}
+else 
+{
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

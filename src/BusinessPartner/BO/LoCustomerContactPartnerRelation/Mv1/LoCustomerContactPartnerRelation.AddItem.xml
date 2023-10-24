@@ -1,0 +1,19 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoCustomerContactPartnerRelation" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fromPKey" type="DomPKey" />
+    <MethodInput name="toPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[// Create contact partner relations (BpaEmploysRel)
+var jsonBpaEmploysRelData = {};
+
+jsonBpaEmploysRelData.pKey = PKey.next();
+jsonBpaEmploysRelData.salesOrg = ApplicationContext.get('user').getBoUserSales().getSalesOrg();
+jsonBpaEmploysRelData.fromPKey = fromPKey;
+jsonBpaEmploysRelData.toPKey = toPKey;
+
+me.addItems([jsonBpaEmploysRelData]);
+me.getItemByPKey(jsonBpaEmploysRelData.pKey).setObjectStatus(STATE.NEW | STATE.DIRTY);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,15 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoFlyoutRegisterAsset" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isEmptyString(me.getSerialNumber())){
+  var newError = {"level": "error",
+                  "objectClass": "BoFlyoutRegisterAsset",
+                  "messageID": "CasAstRegisterFillInAllValues"};
+  messageCollector.add(newError);
+}
+me.setObjectStatus(STATE.NEW);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

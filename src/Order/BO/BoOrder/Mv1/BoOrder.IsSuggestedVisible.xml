@@ -1,0 +1,20 @@
+<BusinessLogic methodName="isSuggestedVisible" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var phase = me.getPhase();
+var currentUserPKey = ApplicationContext.get('user').getPKey();
+
+var isQtySuggestionValid = (me.getBoOrderMeta().getConsiderQuantitySuggestion() === "LQty" && 
+                            me.getBoOrderMeta().getLoOrderItemMetas().getMainItemTemplate().getQuantitySuggestionPolicy() === "OrderedQuantity") || 
+    me.getBoOrderMeta().getConsiderQuantitySuggestion() === "UserExit";
+var isSelectedPromotionPkeyDefined = !Utils.isDefined(me.getSelectedPromotionPKey()) || Utils.isEmptyString(me.getSelectedPromotionPKey());
+var isSpecialPromotionValid =(!Utils.isEmptyString(me.getSelectedPromotionPKey()) && me.getLoSelectablePromotion().getCurrent().getSpecialPromoted() === '1');
+var isOrderInitial = (phase === BLConstants.Order.PHASE_INITIAL);
+var isSyncStatusValid = (me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE);
+var isCurrentUserResponsible = (me.getResponsiblePKey() === currentUserPKey);
+var isSuggestedQtyExpected = (isQtySuggestionValid && isSelectedPromotionPkeyDefined) || isSpecialPromotionValid;
+
+var visible = isSuggestedQtyExpected && isOrderInitial && isSyncStatusValid && isCurrentUserResponsible;]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

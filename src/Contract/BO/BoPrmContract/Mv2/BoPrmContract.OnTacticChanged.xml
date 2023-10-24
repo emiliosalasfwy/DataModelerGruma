@@ -1,0 +1,24 @@
+<BusinessLogic methodName="onTacticChanged" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[for (var i = 0; i < handlerParams.modified.length; i++) {
+  switch (handlerParams.modified[i]) {
+    case "costAmount":
+      handlerParams.listItem.setCostAmount(me.getValidStepperValue(handlerParams.listItem.getCostAmount(), 0, undefined, false));
+      break;
+
+    case "active":
+      var value = handlerParams.newValues[handlerParams.modified[i]];
+      if (value == "1") {
+        me.getLuPrmCttTacticProductCount().set('tacticCount', (me.getLuPrmCttTacticProductCount().getTacticCount() + 1));
+      } else {
+        me.getLuPrmCttTacticProductCount().set('tacticCount', (me.getLuPrmCttTacticProductCount().getTacticCount() - 1));
+      }
+      break;
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

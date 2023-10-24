@@ -1,0 +1,17 @@
+<BusinessLogic methodName="timeCardOperations" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+//Don't release the timecard if it is not related to the current user
+var currentUserPKey = ApplicationContext.get('user').getPKey();
+var boUserDailyReport = me.getBoUserDailyReport();
+
+if(Utils.isDefined(ApplicationContext.get('openTimeCardPKey')) && Utils.isDefined(boUserDailyReport) && boUserDailyReport.getOwnerUsrMainPKey() === currentUserPKey &&  boUserDailyReport.getResponsiblePKey() === currentUserPKey) {
+  promise = boUserDailyReport.setNextWorkflowState("Release");
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

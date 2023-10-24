@@ -1,0 +1,28 @@
+<BusinessLogic methodName="executeRequestsAsync" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="requests" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+var result = {};
+var requestQueryArray = [];
+
+for (var i = 0; i < requests.length; i++) {
+    var requestObject = requests[i];
+    var dataSource = AppManager.getDataSourceByDataSourceName(requestObject.dataSource);
+    var requestQuery = dataSource.getCustomStatement(requestObject.dataSourceMethod)(requestObject.jsonParams);
+    requestQueryArray.push(requestQuery);
+}
+return Facade.executeQueries(requestQueryArray).then(
+    function (requestQueryArrayResult) {
+        for (var i = 0; i < requests.length; i++) {
+            var requestObject = requests[i];
+            var resultObject = requestQueryArrayResult[i];
+            result[requestObject.uniqueReturnKey] = resultObject;
+        }
+        return result;
+    });]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

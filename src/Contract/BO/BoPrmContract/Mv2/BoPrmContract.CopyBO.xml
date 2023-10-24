@@ -1,0 +1,183 @@
+<BusinessLogic methodName="copyBO" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="userPKey" type="String" />
+    <MethodInput name="prmMetaPKey" type="String" />
+    <MethodInput name="bpaCustomerPKey" type="String" />
+    <MethodInput name="dateFrom" type="String" />
+    <MethodInput name="isManagedCustomer" type="String" />
+    <MethodInput name="substitutedUsrPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//REMOVE WORKAROUND WHEN FW FIX IS AVAILABLE (CHECK FOR UNDEFINED IN COPY METHOD (ENGINE.JS))
+if(!Utils.isDefined(me.getLoRecentState()))
+{
+  me.setLoRecentState(BoFactory.instantiate("LoPrmCttRecentState"));
+}
+//REMOVE WORKAROUND WHEN FW FIX IS AVAILABLE (CHECK FOR UNDEFINED IN COPY METHOD (ENGINE.JS))
+
+var copyBO = me.copy();
+
+var oldDateFrom = Utils.convertAnsiDate2Date(copyBO.getDateFrom());
+oldDateFrom.setHours(0, 0, 0, 0);
+var newDateFrom = Utils.convertAnsiDate2Date(dateFrom);
+newDateFrom.setHours(0, 0, 0, 0);
+
+//Calculate Day Offset
+var dayOffset = (newDateFrom - oldDateFrom) / (1000 * 60 * 60 * 24);
+
+var newDateThru = Utils.convertAnsiDate2Date(copyBO.getDateThru());
+if(Utils.convertDate2Ansi(newDateThru)!=Utils.getMaxDateTime())
+{
+  newDateThru.setDate(newDateThru.getDate() + dayOffset);
+}
+
+var newMainPKey = PKey.next();
+copyBO.setPKey(newMainPKey);
+copyBO.setPrmId(newMainPKey);
+copyBO.setPrmMetaPKey(prmMetaPKey);
+copyBO.setResponsiblePKey(userPKey);
+copyBO.setInitiatorPKey(userPKey);
+copyBO.setDateInitiation(newDateFrom);
+copyBO.setOwnerPKey(userPKey);
+copyBO.setBpaCustomerPKey(bpaCustomerPKey);
+copyBO.setDateFrom(newDateFrom);
+copyBO.setDateThru(newDateThru);
+copyBO.setPhase("Planning");
+
+// set responsible / owner to substituted user if it is a substituted customer
+if ((!isManagedCustomer || isManagedCustomer.getId()=="0") && substitutedUsrPKey && !Utils.isEmptyString(substitutedUsrPKey))
+{
+  copyBO.setResponsiblePKey(substitutedUsrPKey);
+  copyBO.setOwnerPKey(substitutedUsrPKey);
+}
+
+var jsonParams = copyBO.prepareLookupsLoadParamsFromObject(copyBO);
+
+var promise = Facade.loadLookupsAsync(jsonParams).then(
+  function (lookups) {
+    copyBO.assignLookups(lookups);
+
+    return BoFactory.loadObjectByParamsAsync("BoWorkflow", copyBO.getQueryBy("pKey", copyBO.getWfeWorkflowPKey()));
+  }).then(
+  function (boWorkflow) {
+    copyBO.setBoWorkflow(boWorkflow);
+    var initialState = boWorkflow.getInitialState().toStatePKey;
+    var liState = boWorkflow.getLoWfeState().getItemByPKey(initialState);
+    if (Utils.isDefined(liState)) {
+      copyBO.setActualStatePKey(liState.getPKey());
+      copyBO.setNextStatePKey(liState.getPKey());
+      copyBO.setWfeStateText(liState.getText());
+      copyBO.setPhaseType(liState.getStateType());
+    }
+
+    //Load SloganBO
+    return BoFactory.createObjectAsync(BO_PRMCTTSLOGAN, {
+      "params" : [{
+        "field" : "prmContractPKey",
+        "operator" : "EQ",
+        "value" : newMainPKey
+      }, {
+        "field" : "text",
+        "operator" : "EQ",
+        "value" : copyBO.getBoSlogan().getText()
+      }, {
+        "field" : "salesOrg",
+        "operator" : "EQ",
+        "value" : copyBO.getSalesOrg()
+      }, {
+        "field" : "language",
+        "operator" : "EQ",
+        "value" : copyBO.getBoSlogan().getLanguage()
+      }
+                 ]
+    });
+  }).then(
+  function (boSlogan) {
+    copyBO.setBoSlogan(boSlogan);
+    copyBO.getBoSlogan().setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+    //Set Recent state & comment empty
+    copyBO.setLoRecentState(BoFactory.instantiate("LoPrmCttRecentState", {}));
+    copyBO.setLoPrmCttComment(BoFactory.instantiate("LoPrmCttComment", {}));
+
+    var idxLi;
+    var liNewItem;
+    var copiedItems = [];
+
+    // Copy tactics
+    var loPrmCttTactics = BoFactory.instantiate("LoPrmCttTactics", {});
+    var oldTactics = me.getLoPrmCttTactics().getAllItems();
+    var newTctDateFrom = Utils.createDateNow(),
+        newTctDateThru = Utils.createDateNow();
+    for (idxLi = 0; idxLi < oldTactics.length; idxLi++) {
+
+      liNewItem = oldTactics[idxLi].copy();
+      if(Utils.isSfBackend())
+      {
+        newTctDateFrom = Utils.convertAnsiDate2Date(Utils.getISODateTimeUTC(liNewItem.getDateFrom()));
+        newTctDateFrom.setDate(newTctDateFrom.getDate() + dayOffset);
+        newTctDateThru = Utils.convertAnsiDate2Date(Utils.getISODateTimeUTC(liNewItem.getDateThru()));
+        newTctDateThru.setHours(0, 0, 0, 0);
+      }
+      else
+      {
+        newTctDateFrom = Utils.convertAnsiDate2Date(liNewItem.getDateFrom());
+        newTctDateFrom.setDate(newTctDateFrom.getDate() + dayOffset);
+        newTctDateThru = Utils.convertAnsiDate2Date(liNewItem.getDateThru());
+        newTctDateThru.setHours(0, 0, 0, 0);
+      }
+
+      if(Utils.convertDate2Ansi(newTctDateThru)!=Utils.getMaxDateTime() && (Utils.convertAnsiDate2Date(me.getDateThru()) >= newTctDateThru))
+      {
+        newTctDateThru.setDate(newTctDateThru.getDate() + dayOffset);
+      }
+
+      liNewItem.setDateFrom(newTctDateFrom);
+      liNewItem.setDateThru(newTctDateThru);
+
+      liNewItem.setPKey(PKey.next());
+      liNewItem.setTacticParentPKey(newMainPKey);
+      liNewItem.setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+      copiedItems.push(liNewItem);
+    }
+    loPrmCttTactics.addObjectItems(copiedItems);
+    copyBO.setLoPrmCttTactics(loPrmCttTactics);
+
+    // Copy products
+    copiedItems = [];
+    var loPrmCttProducts = BoFactory.instantiate("LoPrmCttProducts", {});
+    var oldProducts = me.getLoPrmCttProducts().getAllItems();
+    for (idxLi = 0; idxLi < oldProducts.length; idxLi++) {
+      liNewItem = oldProducts[idxLi].copy();
+      liNewItem.setPKey(PKey.next());
+      liNewItem.setPrmContractPKey(newMainPKey);
+      liNewItem.setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+      copiedItems.push(liNewItem);
+    }
+    loPrmCttProducts.addObjectItems(copiedItems);
+    copyBO.setLoPrmCttProducts(loPrmCttProducts);
+
+    //Copy Annotation
+    copiedItems = [];
+    var loComment = BoFactory.instantiate("LoPrmCttComment", {});
+    var oldComments = me.getLoPrmCttComment().getAllItems();
+    for (idxLi = 0; idxLi < oldComments.length; idxLi++) {
+      liNewItem = oldComments[idxLi].copy();
+      liNewItem.setPKey(PKey.next());
+      liNewItem.setPrmContractPKey(newMainPKey);
+      liNewItem.setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+      copiedItems.push(liNewItem);
+    }
+    loComment.addObjectItems(copiedItems);
+    copyBO.setLoPrmCttComment(loComment);
+    copyBO.setObjectStatus(Utils.data.Model.STATE_NEW_DIRTY);
+    copyBO.setLuPrmCttTacticProductCount(me.getLuPrmCttTacticProductCount());
+
+    var aclBO = copyBO.getACL();
+    aclBO.addRight(AclObjectType.OBJECT, "BoPrmContract", AclPermission.EDIT);  
+
+    return copyBO;
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,22 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoSelectablePromotion" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (result.getCount() > 0)
+{
+	result.addListItems([{
+      pKey: " ",
+      promotionSlogan: Localization.resolve("Order_ClearPromotionFilter"),
+      mediaPath: " ",
+      attachmentBlobPKey: " ",
+      fileType: " ",
+      specialOption: "CLEAR"
+    }], {}, true);
+}
+
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

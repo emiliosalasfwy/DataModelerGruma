@@ -1,0 +1,7 @@
+<ListObject name="LoCustomerPOSForValidate" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoCustomerPOSForValidate" />
+  <Item objectClass="LiCustomerPOSForValidate" />
+  <Methods>
+    <Method name="saveAsync" />
+  </Methods>
+</ListObject>

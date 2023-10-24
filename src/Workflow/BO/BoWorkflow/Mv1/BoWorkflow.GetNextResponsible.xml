@@ -1,0 +1,46 @@
+<BusinessLogic methodName="getNextResponsible" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="nextStatePKey" type="DomPKey" />
+    <MethodInput name="responsiblePKey" type="DomPKey" />
+    <MethodInput name="ownerPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(Utils.isSfBackend()) {
+  promise = me.getNextResp_Salesforce(nextStatePKey, responsiblePKey, ownerPKey);
+} else {
+  promise = me.getNextResponsibleCollection(nextStatePKey, responsiblePKey, ownerPKey).then(
+    function (nextResponsibleCollection) {
+      if (Utils.isDefined(nextResponsibleCollection)){
+        var nextResponsiblePKey;
+        var key;
+
+        // Check for 'Main' responsible
+        for (key in nextResponsibleCollection.mainResponsibles){
+          if (nextResponsibleCollection.mainResponsibles.hasOwnProperty(key)){
+            nextResponsiblePKey = nextResponsibleCollection.mainResponsibles[key];
+            break;
+          }
+        }
+
+        // If there is no 'Main' responsible, take first of other responsibles found
+        if (!Utils.isDefined(nextResponsiblePKey)){
+          for (key in nextResponsibleCollection.responsibles){
+            if (nextResponsibleCollection.responsibles.hasOwnProperty(key)){
+              nextResponsiblePKey = nextResponsibleCollection.responsibles[key];
+              break;
+            }
+          }
+        }
+
+        return nextResponsiblePKey;
+      }
+      else{
+        return undefined;
+      }
+    });
+}]]>
+</Code>
+  <Return name="nextResponsiblePKey" value="promise" />
+</BusinessLogic>

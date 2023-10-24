@@ -1,0 +1,18 @@
+<BusinessLogic methodName="onVehicleOKStartChanged" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var acl = me.getACL();
+
+if(me.getVehicleOKStart() === "0"){	
+  me.setVehicleStatusStart(" ");
+  acl.removeRight(AclObjectType.PROPERTY,"vehicleStatusStart", AclPermission.EDIT);
+}else{
+  if(me.getConsiderVehicleStatus().toLowerCase() === "statusreason"){
+    acl.addRight(AclObjectType.PROPERTY,"vehicleStatusStart", AclPermission.EDIT);
+  }
+}
+
+BindingUtils.refreshEARights();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

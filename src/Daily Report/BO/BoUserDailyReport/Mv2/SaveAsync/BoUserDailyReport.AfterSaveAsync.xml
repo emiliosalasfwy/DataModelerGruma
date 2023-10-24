@@ -1,0 +1,80 @@
+<BusinessLogic methodName="afterSaveAsync" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/*****************************************************************
+*  1 CGCloud table / 2 onPrem tables                                *
+*                                                                *
+*  CGCloud:    -Annotation is directly stored in User_Document__c   *
+*  onPrem:  -Separate table for annotation                       *
+******************************************************************/
+var promise;
+
+if (Utils.isSfBackend()) {
+  promise = BoFactory.createObjectAsync("BoSfHelper", {}).then(
+    function (helper) {
+      return helper.saveTrackedObject(me, [{name: "annotation", dsColumn: "Annotation__c", value: me.getBoUserDRAnnotation().getText()}]);
+    }
+  );
+}
+else {
+  //Save UsrDoc
+  promise = Facade.saveObjectAsync(me).then(
+    function () {
+      return true;
+    }
+  );
+}
+
+//Resolve all promisises - Workaround for TQ Save.
+promise = promise.then(
+  function (boWasSaved) {
+    var promises = [];
+    if (boWasSaved) {
+      me.setObjectStatus(STATE.PERSISTED);
+
+      // Save UsrDocActivity
+      if (Utils.isDefined(me.getLoUsrDRActivity())) {
+        promises.push(me.getLoUsrDRActivity().saveAsync());
+      }
+
+      //Recent state and time entries not supported
+      if (!Utils.isSfBackend()) {
+        // Save UsrAnnotation 
+        // In SF case an annotation is saved directly to Daily Report
+        if (Utils.isDefined(me.getBoUserDRAnnotation())) {
+          promises.push(me.getBoUserDRAnnotation().saveAsync());
+        }
+
+        // Save UsrDrRecentState
+        if (Utils.isDefined(me.getLoUserDRRecentState())) {
+          promises.push(me.getLoUserDRRecentState().saveAsync());
+        }
+
+        // Save UsrTimeEntries
+        if (Utils.isDefined(me.getLoUsrTimeEntry())) {
+          promises.push(me.getLoUsrTimeEntry().saveAsync());
+        }
+      }
+    }
+
+    return when.all(promises).then(
+      function () {
+        //Reset object status for all to prevent multiple saves
+        me.traverse(function(node){
+          node.setObjectStatus(STATE.PERSISTED);
+          if(node.isList) {
+            node.getAllItems().forEach(function(item){
+              item.setObjectStatus(STATE.PERSISTED);
+            });
+          }
+        },function (a, b, c){});
+      }
+    );
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

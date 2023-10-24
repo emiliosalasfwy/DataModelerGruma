@@ -1,0 +1,104 @@
+<BusinessLogic methodName="calculateTotalActivityDuration" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var totalDuration = 0;
+var loActivities = me.getLoUsrDRActivity().getItemObjects();
+var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+var diff;
+var i;
+
+for (var idxloActivities = 0; idxloActivities < loActivities.length; idxloActivities++) {
+  totalDuration = totalDuration + parseInt(loActivities[idxloActivities].getDuration(), 10);
+}
+
+me.setTotalHours(Math.floor(totalDuration / 60));
+me.setTotalMinutes(totalDuration % 60);
+me.setTotalLineString(me.getTotalHours() + ' / ' + me.getTotalMinutes());
+
+//Update list item of daily report overview list
+if (Utils.isDefined(Framework.getProcessContext().dailyReportList) && Utils.isDefined(Framework.getProcessContext().dailyReportList.getCurrent()) && Framework.getProcessContext().dailyReportList.getCurrent().getPKey() === me.getPKey()) {
+  Framework.getProcessContext().dailyReportList.getCurrent().setHours(me.getTotalHours().toString());
+  Framework.getProcessContext().dailyReportList.getCurrent().setMinutes(me.getTotalMinutes().toString());
+}
+
+if (me.getBoUserDocMeta().getUiGroup() !== "TimeCard" && ( Utils.isDefined(me.getWorkTimeFrom()) || Utils.isDefined(me.getWorkTimeThru()))) {
+  var timeFrom = Utils.convertAnsiTime2Time(me.getWorkTimeFrom());
+  var timeThru = Utils.convertAnsiTime2Time(me.getWorkTimeThru());
+  diff = timeThru.getTime() - timeFrom.getTime();
+  var mins = (diff/1000)/60;
+
+  me.setTotalHours(Math.floor(mins/60));
+  me.setTotalMinutes(mins%60);
+  me.setTotalWorkingTime(me.getTotalHours() + ' / ' + me.getTotalMinutes());
+}
+
+if (me.getBoUserDocMeta().getUiGroup() === "TimeCard") {
+  var workingTimeInMnts = 0;
+  var nonProdTimeInMnts = 0;
+  // UTC Time
+  var now = Utils.createDateNow();
+  var now_utc = Utils.createSpecificDate(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+  var filterArray = [];
+
+  //remove the hidden dummy items
+  var hiddenItems = me.getLoUsrTimeEntry().getItemsByParamArray([{
+    "description": "Hidden",
+    "op": "EQ"
+  }]);
+  if (hiddenItems.length > 0) {
+    var pkeys = [];
+    for (i = 0; i < hiddenItems.length; i++) {
+      pkeys.push(hiddenItems[i].getPKey());
+    }
+    if (pkeys.length > 0) {
+      me.getLoUsrTimeEntry().removeItems(pkeys);
+    }
+  }
+
+  filterArray.push({ "usrTimeEntryMetaPKey": me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey(), "op": "EQ" });
+  var items = me.getLoUsrTimeEntry().getItemsByParamArray(filterArray);
+
+  if (items.length > 0) {
+    if (items[0].getSystemTimeThru() === Utils.getMinDate()) {
+      diff = Math.abs(now_utc - Utils.convertAnsiDate2Date(items[0].getEffectiveUTCTimeFrom()));
+      workingTimeInMnts = Math.floor((diff / 1000) / 60);
+    }
+    else {
+      workingTimeInMnts = parseInt(items[0].getDuration(), 10);
+    }
+
+    if(workingTimeInMnts >= 0) {
+      me.setTotalWorkingTime(dateTimeHelper.getFormattedTimeString(workingTimeInMnts));
+      //refresh master list in UI
+      if(Utils.isDefined(Framework.getProcessContext().dailyReportList) && Utils.isDefined(Framework.getProcessContext().dailyReportList.getCurrent())) {
+        Framework.getProcessContext().dailyReportList.getCurrent().setHours(Math.floor(workingTimeInMnts/60));
+        Framework.getProcessContext().dailyReportList.getCurrent().setMinutes(workingTimeInMnts%60);
+      }
+    }
+    else {
+      me.setTotalWorkingTime("00:00");
+      if(Utils.isDefined(Framework.getProcessContext().dailyReportList) && Utils.isDefined(Framework.getProcessContext().dailyReportList.getCurrent())) {
+        Framework.getProcessContext().dailyReportList.getCurrent().setHours("0");
+        Framework.getProcessContext().dailyReportList.getCurrent().setMinutes("0");
+      }
+    }
+  }
+
+  filterArray = [];
+  filterArray.push({ "productiveTimeEffect": "-1", "op": "EQ" });
+  items = me.getLoUsrTimeEntry().getItemsByParamArray(filterArray);
+
+  for (i = 0; i < items.length; i++) {
+    nonProdTimeInMnts += items[i].getDuration();
+  }
+
+  //Set non productive time
+  me.setNonProductiveTime(dateTimeHelper.getFormattedTimeString(nonProdTimeInMnts));
+
+  //Set productive time
+  var prodTimeInMnts = workingTimeInMnts - nonProdTimeInMnts;
+  me.setProductiveTime(dateTimeHelper.getFormattedTimeString(prodTimeInMnts));
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

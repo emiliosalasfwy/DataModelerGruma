@@ -1,0 +1,13 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoTimeCardReports" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setChartHelper(ApplicationContext.get("chartHelper"));
+me.setObjectStatus(me.self.STATE_NEW);
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

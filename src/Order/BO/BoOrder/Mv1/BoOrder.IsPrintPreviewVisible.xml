@@ -1,0 +1,17 @@
+<BusinessLogic methodName="isPrintPreviewVisible" businessObjectClass="BoOrder" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var orderDocument = me.getBoOrderMeta().getSdoSubType() === "OrderEntry";
+var deliveryDocument = me.getBoOrderMeta().getSdoSubType() === "Delivery";
+var invoiceDocument = me.getBoOrderMeta().getSdoSubType() === "Invoice";
+var isOrderConfirmationPDF = me.getBoOrderMeta().getReportPolicy() === "Confirmation";
+
+//ReservedForFutureUse: In future release we will have an own button for theses phases and we have to hide the preview button
+//var orderPhase = !(me.getPhase() === BLConstants.Order.PHASE_RELEASED || me.getPhase() === BLConstants.Order.PHASE_READY || me.getPhase() === BLConstants.Order.PHASE_FEEDBACK);
+var orderPhase = true;
+
+//Logic to display or hide the button base on Document Type
+var visible = (orderPhase && (orderDocument || invoiceDocument || (deliveryDocument && isOrderConfirmationPDF)));]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

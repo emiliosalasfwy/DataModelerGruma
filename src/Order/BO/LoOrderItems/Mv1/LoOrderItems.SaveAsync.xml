@@ -1,0 +1,11 @@
+<BusinessLogic methodName="saveAsync" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.beforeSave();
+
+var promise = Facade.saveListAsync(this);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,38 @@
+<BusinessLogic methodName="reloadManagementInformation" businessObjectClass="BoWizardCreateNewIssue" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Determine substitution Info
+var managementInfoParams = [];
+var managementInfoQuery = {};
+
+managementInfoParams.push({
+  field: "customerPKey",
+  value: me.getLuCustomer().getPKey(),
+});
+managementInfoParams.push({
+  field: "referenceDate",
+  value: Utils.createAnsiDateTimeToday(),
+});
+managementInfoParams.push({
+  field: "referenceUserPKey",
+  value: ApplicationContext.get("user").getPKey(),
+});
+
+managementInfoQuery.params = managementInfoParams;
+
+var promise = BoFactory.loadObjectByParamsAsync(
+  "LuCustomerManagementInfo",
+  managementInfoQuery
+).then(function (customerManagementInfoLookup) {
+  if (customerManagementInfoLookup) {
+    me.setHasSubstitute(customerManagementInfoLookup.getHasSubstitute());
+    me.setSubstitutedUsrPKey(
+      customerManagementInfoLookup.getSubstitutedUsrMainPKey()
+    );
+    me.setIsManagedCustomer(customerManagementInfoLookup.getIsManaged());
+    me.setIsSubstituted(customerManagementInfoLookup.getIsSubstituted());
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

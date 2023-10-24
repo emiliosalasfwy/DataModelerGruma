@@ -1,0 +1,10 @@
+<BusinessLogic methodName="verifyLoginName" businessObjectClass="BoUserCheck" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loginNameValid = 0;
+if(Utils.isDefined(this.getPKey()) && !Utils.isEmptyString(this.getPKey())) {
+  loginNameValid = 1;
+}]]>
+</Code>
+  <Return name="loginNameValid" value="loginNameValid" />
+</BusinessLogic>

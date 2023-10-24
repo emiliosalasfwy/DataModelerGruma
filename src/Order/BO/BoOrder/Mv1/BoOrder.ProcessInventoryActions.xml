@@ -1,0 +1,162 @@
+<BusinessLogic methodName="processInventoryActions" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loOrderPayments = me.getLoPayments();
+var orderPayments;
+
+// Find inventory and set balance for items with quantity > 0 but without IvcInformationObject
+var deferreds = [];
+
+var itemMetas = me.getBoOrderMeta().getItemMetaJsonDictionary();
+var itemMeta;
+var item;
+
+var itemsMain = me.getLoItems();
+var items = itemsMain.getAllItems();
+var index;
+
+for (index = 0; index < items.length; index++) {
+  var item = items[index];
+
+  itemMeta = itemMetas.get(item.getSdoItemMetaPKey());
+
+  if (Utils.isDefined(itemMeta) && (item.getQuantity() > 0) && (item.getIvcInformationObject() == " " || !Utils.isDefined(item.getIvcInformationObject())) && ((itemMeta.useUserInventory == "1") || (itemMeta.useQuota == "1"))) {
+    deferreds.push(
+      me.setInventoryBalanceOfItem(item.getPKey())
+    );
+  }
+}
+
+// Find inventories for cash transactions
+if (Utils.isDefined(loOrderPayments)) {
+  orderPayments = loOrderPayments.getAllItems();
+
+  var payment;
+
+  for (var i = 0; i < orderPayments.length; i++) {
+    payment = orderPayments[i];
+
+    if ((payment.getAmount() !== 0) && (Utils.isEmptyString(payment.getIvcInformationObject()))) {
+      deferreds.push(
+        me.setInventoryBalanceOfPayment(payment.getPKey())
+      );
+    }
+  }
+}
+
+
+// Create transactions and missing inventories
+
+var promise = when.all(deferreds).then(function () {
+
+  //-------------------------------------------
+  // Product inventories
+  //-------------------------------------------
+
+  // Create loInventories and loInventoryTransactions
+  me.setLoInventories(BoFactory.instantiateLightweightList("LoInventory"));
+  me.setLoInventoryTransactions(BoFactory.instantiateLightweightList("LoInventoryTransaction"));
+
+  // Get all item template information
+  var itemMetas = me.getBoOrderMeta().getItemMetaJsonDictionary();
+
+  // Create missing inventories and write transactions
+  var itemMeta;
+  var ivcInformationObject;
+  var ivcInformation;
+  var validationError;
+  var validationErrors = [];
+  var loInventories = me.getLoInventories();
+  var loInventoryTransactions = me.getLoInventoryTransactions();
+  var commitDate = me.getCommitDate();
+  var itemsMain = me.getLoItems();
+  var items = itemsMain.getAllItems();
+  var index;
+  var mainItemIvcInfo;
+
+  for (index = 0; index < items.length; index++) {
+    var item = items[index];
+
+    if (!Utils.isEmptyString( item.getIvcInformationObject())) {
+      mainItemIvcInfo = item.getIvcInformationObject();
+    }
+
+    itemMeta = itemMetas.get(item.getSdoItemMetaPKey());
+
+    if (Utils.isDefined(itemMeta) && item.getQuantity() > 0) {
+
+      if ((itemMeta.useUserInventory == "1") || (itemMeta.useQuota == "1")) {
+        ivcInformationObject = item.getIvcInformationObject();
+
+        //Write transaction for each inventory control template (combination of IvcMeta and IvcTaMeta)
+        if (Utils.isDefined(ivcInformationObject) && !Utils.isEmptyString( ivcInformationObject)) {
+          for (var j = 0; j < ivcInformationObject.length; j++) {
+            ivcInformation = ivcInformationObject[j];
+
+            if (Utils.isEmptyString( ivcInformation) && Utils.isDefined(mainItemIvcInfo)) {
+              ivcInformation=  mainItemIvcInfo[0];
+            }
+            //Create inventory if not already exists
+            if (Utils.isEmptyString(ivcInformation.ivcMainPKey)) {
+              if (itemMeta.useUserInventory == "1") {
+                ivcInformation.ivcMainPKey = loInventories.createInventoryForOrderItem(item, ivcInformation, me.getBoOrderMeta().getProductInventoryRecordTypeId());
+              }
+            }
+
+            //Write transaction (could be still empty in case of a not found quota - quotas are not created automatically)
+            if (!Utils.isEmptyString(ivcInformation.ivcMainPKey)) {
+              if ((itemMeta.useUserInventory == "1") || (itemMeta.useQuota == "1")) {
+                validationError = loInventoryTransactions.createTransactionForOrderItem(item, ivcInformation, itemMeta.checkUserInventoryOver, itemMeta.checkQuotaOver, commitDate);
+                if (Utils.isDefined(validationError)) {
+                  validationErrors.push(validationError);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  //-------------------------------------------
+  // Cash inventories
+  //-------------------------------------------
+
+  if (Utils.isDefined(loOrderPayments)) {
+    orderPayments = loOrderPayments.getAllItems();
+
+    // Create missing inventories and write transactions
+    var orderPayment;
+
+    for (var i = 0; i < orderPayments.length; i++) {
+      orderPayment = orderPayments[i];
+
+      if (orderPayment.getAmount() !== 0) {
+        ivcInformationObject = orderPayment.getIvcInformationObject();
+
+        //Write transaction for each inventory control template (combination of IvcMeta and IvcTaMeta)
+        if (Utils.isDefined(ivcInformationObject)) {
+          for (var k = 0; k < ivcInformationObject.length; k++) {
+            ivcInformation = ivcInformationObject[k];
+
+            //Create inventory if not already exists
+            if (Utils.isEmptyString(ivcInformation.ivcMainPKey)) {
+              ivcInformation.ivcMainPKey = loInventories.createInventoryForOrderPayment(orderPayment, ivcInformation,  me.getBoOrderMeta().getCashFloatRecordTypeId());
+            }
+            //Write transaction
+            if(!Utils.isEmptyString(ivcInformation.ivcMainPKey)){
+              loInventoryTransactions.createTransactionForOrderPayment(orderPayment, ivcInformation);
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+  return validationErrors;
+
+});]]>
+</Code>
+  <Return name="validationErrors" value="promise" />
+</BusinessLogic>

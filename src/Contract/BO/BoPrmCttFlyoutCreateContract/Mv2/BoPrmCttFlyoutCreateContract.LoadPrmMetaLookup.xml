@@ -1,0 +1,15 @@
+<BusinessLogic methodName="loadPrmMetaLookup" businessObjectClass="BoPrmCttFlyoutCreateContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="prmMetaPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setPrmMetaPKey(prmMetaPKey);
+
+var promise = BoFactory.loadObjectByParamsAsync("LuPrmMeta", me.getQueryBy("pKey", prmMetaPKey)).then(
+  function (lookup) {
+    me.setLuPrmMeta(lookup);
+    me.setObjectStatus(STATE.NEW);
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

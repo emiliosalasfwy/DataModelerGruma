@@ -1,0 +1,11 @@
+<BusinessLogic methodName="checkEditModeCalculationNeeded" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if(me.getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE && me.getCalculationStatus() === BLConstants.Order.CALCULATION_REQUIRED){
+  promise = me.cpCalculate();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

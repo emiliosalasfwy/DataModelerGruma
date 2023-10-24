@@ -1,0 +1,12 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoCallAttachments" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+     
+     var me = this;
+     var promise= Facade.saveListAttachmentAsync(me, "ClbAttachment", "ClbAttachmentBlob", "attachmentBlob", "attachmentBlobPKey", "fileType");
+		
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

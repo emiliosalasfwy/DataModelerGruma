@@ -1,0 +1,113 @@
+<BusinessLogic methodName="reschedule" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="newDateFrom" type="String" />
+    <MethodInput name="newTimeFrom" type="String" />
+    <MethodInput name="newDateThru" type="String" />
+    <MethodInput name="newTimeThru" type="String" />
+    <MethodInput name="newAllDayFlag" type="Boolean" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var buttonValues = {};
+//reset timecard to avoid unnecessary time entries
+me.setBoUserDailyReport(null);
+
+if (me.isReadOnly()) {
+  buttonValues[Localization.resolve("OK")] = "ok";
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbNotEditable"), buttonValues);
+}
+else {
+  var dateFrom;
+  var dateThru;
+  var currentDateFrom = Utils.convertAnsiDate2Date(me.getDateFrom());
+  var currentDateThru = Utils.convertAnsiDate2Date(me.getDateThru());
+  var dayDifference = parseInt(((currentDateThru.getTime() - currentDateFrom.getTime()) / (24 * 3600 * 1000)), 10);
+  var isDateChanged = false;
+  var isDateFromChanged = false;
+  var isDateThruChanged = false;
+  var isTimeChanged = false;
+  var isTimeFromChanged = false;
+  var isTimeThruChanged = false;
+
+  if (Utils.isDefined(newAllDayFlag) && newAllDayFlag != "0") {
+    me.setAllDay("1");
+    isTimeChanged = true;
+  }
+  else {
+    me.setAllDay("0");
+    isTimeChanged = true;
+  }
+  if (Utils.isDefined(newDateFrom)) {
+    dateFrom = Utils.convertAnsiDate2Date(newDateFrom);
+    isDateFromChanged = dateFrom.getTime() !== currentDateFrom.getTime();
+    isDateChanged = isDateFromChanged;
+  }
+  if (Utils.isDefined(newDateThru)) {
+    dateThru = Utils.convertAnsiDate2Date(newDateThru);
+    isDateThruChanged = (dateThru.getTime() !== currentDateThru.getTime());
+    isDateChanged = isDateChanged || currentDateThru;
+  }
+  if (me.allDay != "1"){
+    if (!Utils.isEmptyString(newTimeFrom)) {
+      isTimeFromChanged = (newTimeFrom !== me.getTimeFrom());
+      isTimeChanged = isTimeFromChanged;
+    }
+    if (!Utils.isEmptyString(newTimeThru)) {
+      isTimeThruChanged = (newTimeThru !== me.getTimeThru());
+      isTimeChanged = isTimeChanged || isTimeThruChanged;
+    }
+  }
+
+  if (newTimeFrom && newTimeThru && newTimeFrom > newTimeThru) {
+    buttonValues[Localization.resolve("OK")] = "ok";
+    promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), Localization.resolve("BoCall_CasClbTimeFromGreaterTimeThru"), buttonValues);
+  }
+  else {
+    if (isDateChanged || isTimeChanged) {
+      if (isDateChanged) {
+        if (isDateFromChanged) {
+          me.setDateFrom(dateFrom);
+          currentDateFrom = Utils.convertAnsiDate2Date(me.getDateFrom());
+        }
+        if (isDateThruChanged && dateThru >= currentDateFrom) {
+          // update currentDateFrom
+          me.setDateThru(dateThru);
+        } else {
+          // move DateThru according to DateFrom if not target DateThru is given
+          me.setDateThru(Utils.addDays2AnsiFullDate(Utils.convertDate2Ansi(currentDateFrom),dayDifference));
+        }
+        // update currentDateThru
+        currentDateThru = Utils.convertAnsiDate2Date(me.getDateThru());
+      }
+
+      if (isTimeChanged) {
+        var timeDifference = me.getCallDuration(me.getDateFrom(), me.getTimeFrom(), me.getDateThru(), me.getTimeThru());
+        if (isTimeFromChanged) {
+          me.setTimeFrom(newTimeFrom);
+        }
+        if (isTimeThruChanged && (currentDateFrom !== currentDateThru || newTimeThru > me.getTimeFrom())) {
+          me.setTimeThru(newTimeThru);
+        }
+        else {
+          if(!Utils.isDefined(newTimeThru)){
+            // move TimeThru according to TimeFrom if not target TimeThru is given
+            newTimeThru = Utils.convertAnsiTime2Time(me.getTimeFrom());
+            newTimeThru.setMinutes(newTimeThru.getMinutes() + timeDifference);
+            me.setTimeThru(Utils.convertTime2Ansi(newTimeThru));
+          }
+        }
+        if(me.getAllDay() == '1'){
+          //update duration for all day calls and multiple all day calls. Time part must be ignored
+          if(me.getDateFrom() === me.getDateThru())me.setDuration(24*60);
+          else me.setDuration(me.getCallDuration(me.getDateFrom(), "00:00", me.getDateThru(), "00:00") + (24*60));
+        }else{
+          me.setDuration(me.getCallDuration(me.getDateFrom(), me.getTimeFrom(), me.getDateThru(), me.getTimeThru()));
+        }
+      }
+    }
+    promise = when.resolve(newDateFrom);
+  }
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

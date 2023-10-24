@@ -1,0 +1,15 @@
+<BusinessLogic methodName="getPropertyValuesFromArray" businessObjectClass="BoSfReplicationCallbacks" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="objectArray" type="Object" />
+    <MethodInput name="propertyName" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var allPropertyValues = objectArray.reduce(
+  function (collectedValues, nextObject) 
+  {
+    return collectedValues.concat(nextObject[propertyName]);
+  }, []);
+var result = Utils.uniq(allPropertyValues);]]>
+</Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

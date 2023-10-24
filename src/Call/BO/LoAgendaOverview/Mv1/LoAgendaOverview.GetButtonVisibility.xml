@@ -1,0 +1,41 @@
+<BusinessLogic methodName="getButtonVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="token" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var me = this;
+      var visible = true;
+	
+      // Execute Break Button for initial time cards
+      // hide button if:
+      // 1. if there is no open time card available for the logged in user
+      // 2. if the default break time entry template is not specified for the current time card
+      if (token === "btnBreak"){
+          if( !Utils.isDefined(ApplicationContext.get("openTimeCardPKey")) ||
+              Utils.isEmptyString(ApplicationContext.get("openTimeCardPKey"))  ||
+              Utils.isEmptyString(ApplicationContext.get("openTimeCardBreakMetaPKey")) ||
+              Utils.isEmptyString(ApplicationContext.get("openTimeCardBreakMetaPKey"))
+            ){
+              return false;
+			}
+ 		   else{
+ 			return true;
+		   }
+      }
+
+      if (token === "btnScanCustomer"){
+		if(ApplicationContext.get('user').hasRole('TourUser')){
+			if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && !Utils.isEmptyString(ApplicationContext.get('currentTourPKey')) &&
+			   Utils.isDefined(ApplicationContext.get('currentTourStatus')) && ApplicationContext.get('currentTourStatus') === "Running"){
+				return true;
+			}else{ 
+				return false;
+			}
+		}else{
+			return true;			
+		}		
+	 }
+
+     
+	]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

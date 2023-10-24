@@ -1,0 +1,51 @@
+<BusinessLogic methodName="createAttrMappingCashCheckOut" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var attributes = Utils.createDictionary();
+var ref = me.getReferenceObject();
+var tour = ApplicationContext.get('currentTour');
+var amount;
+var currency;
+var time;
+
+if(Utils.isDefined(tour)){
+  var tourId = tour.getId();
+  attributes.add("TourId", tourId);
+}
+
+if (ref.getLoEtpWarehouse) {
+  ref.getLoEtpWarehouse().setFilter("pKey", ref.getEtpWarehousePKey());
+  var filteredItems = ref.getLoEtpWarehouse().getItemObjects();
+  if (filteredItems.length > 0) {
+    var warehouseId = filteredItems[0].getText();
+    attributes.add("Warehouse", warehouseId);
+  }
+}
+
+if(Utils.isDefined(tour)){
+  var driver = tour.getDriverName();
+  attributes.add("Driver", driver);
+}
+
+if (ref.getReleaseTime) {
+  time = Localization.localize(ref.getReleaseTime(), "dateTime");
+}
+
+if (!Utils.isEmptyString(time)) {
+  attributes.add("Date", time);
+}
+
+if (ref.getCurrency) {
+  currency = Utils.getToggleText("DomCurrency", ref.currency, false);
+}
+
+if (ref.getAbsolutePaidAmount) {
+  amount = Localization.localize(ref.getAbsolutePaidAmount().toFixed(2), "number");
+}
+
+if (!Utils.isEmptyString(amount) && !Utils.isEmptyString(currency)) {
+  attributes.add("Amount", amount + " " + currency);
+}]]>
+</Code>
+  <Return name="attributes" value="attributes" />
+</BusinessLogic>

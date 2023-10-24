@@ -1,0 +1,15 @@
+<BusinessLogic methodName="checkResponsibleEqUser" businessObjectClass="BoTruckLoad" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" businessObjectType="businessobject">
+ <Parameters>
+    <MethodInput name="usrMainPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+       
+      var result = "0";
+      
+      if (this.getResponsiblePKey() == usrMainPKey) {
+        result = "1";
+      }
+     	     
+    ]]></Code>
+  <Return name="result" value="result" />
+</BusinessLogic>

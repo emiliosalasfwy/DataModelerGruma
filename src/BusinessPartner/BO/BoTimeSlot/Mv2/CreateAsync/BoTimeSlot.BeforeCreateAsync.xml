@@ -1,0 +1,27 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoTimeSlot" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(context);
+
+//handling time formats for date control
+//if not time availavle set to now
+//if time format like 15:08:00.000Z (SF Time format) --> convert to 15:08
+
+if(!Utils.isDefined(context.jsonQuery.startTime)){
+  me.setStartTime(Utils.createAnsiTimeNow());
+}else if(context.jsonQuery.startTime.length > 5){
+  context.jsonQuery.startTime = context.jsonQuery.startTime.substring(0,5);
+}
+
+
+if(!Utils.isDefined(context.jsonQuery.endTime)){
+  me.setEndTime(Utils.createAnsiTimeNow());
+}else if(context.jsonQuery.endTime.length > 5){
+  context.jsonQuery.endTime = context.jsonQuery.endTime.substring(0,5);
+}
+]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,30 @@
+<BusinessLogic methodName="determineSplittingRule" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bpaSplittingOption" type="Object" />
+    <MethodInput name="bpaSplittingRule" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+if(me.getSplittingOption() == "1")
+{ 
+  if(bpaSplittingOption === "Yes")
+  {
+    me.setSplittingRule(bpaSplittingRule);
+  }
+  else if(bpaSplittingOption === "FromSalesDoc" && me.getBoOrderMeta().getSplittingOption() === "Yes")
+  {
+    me.setSplittingRule(me.getBoOrderMeta().getSplittingRule());
+  }
+  else
+  {
+    me.setSplittingRule(' ');
+  }
+}
+else
+{
+  me.setSplittingRule(' ');
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,13 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoPrmAnnotation" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = Facade.saveObjectAsync(me)
+.then(
+  function() {
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

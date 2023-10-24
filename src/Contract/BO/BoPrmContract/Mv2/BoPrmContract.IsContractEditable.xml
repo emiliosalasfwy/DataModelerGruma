@@ -1,0 +1,12 @@
+<BusinessLogic methodName="isContractEditable" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var luManagement = me.getLuCustomerManagementInfo();
+var usrMainPKey = ApplicationContext.get('user').getPKey();
+var managementInfo = ((me.getResponsiblePKey() == usrMainPKey) && (luManagement.getHasSubstitute() == "0")) || ((luManagement.getHasSubstitute() == "1") && (luManagement.getHasSubstituteUsrMainPKey() == usrMainPKey));
+var contractPhase = (me.getPhase() != "Committed" && me.getPhase() != "Cancelled");
+var visible = (contractPhase && managementInfo);
+]]>
+</Code>
+  <Return name="result" value="visible" />
+</BusinessLogic>

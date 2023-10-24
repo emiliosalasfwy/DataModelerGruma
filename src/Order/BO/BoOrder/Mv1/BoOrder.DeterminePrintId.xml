@@ -1,0 +1,60 @@
+<BusinessLogic methodName="determinePrintId" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//logic to set print id based on Document type and Document Transaction Type
+var printId = "";
+var currentDate = Utils.createAnsiDateToday();
+var documentType = me.getDocumentType();
+var documentTransactionType = me.getDocTaType();
+var hasValidPayerValidFrom = me.getLuOrderer().getPayerValidFrom();
+var hasValidPayerValidThru = me.getLuOrderer().getPayerValidThru();
+
+if((hasValidPayerValidFrom <= currentDate) && (hasValidPayerValidThru >= currentDate)){
+  if(documentType === 'OrderEntry'){
+    switch(documentTransactionType){
+      case "CashOrder":
+        printId = BLConstants.Order.STANDARD_CASH_ORDER_PDF;
+        break;
+      case "CreditOrder":
+        printId = BLConstants.Order.DIRECT_CREDIT_ORDER_PDF;
+        break;
+      case "NoPaymentOrder":
+        printId = BLConstants.Order.ORDER_CONFIRMATION_PDF;
+        break;
+    }
+  } else if (documentType === 'Invoice') {
+    switch(documentTransactionType){
+      case "InvoiceCashInvoice":
+        printId = BLConstants.Order.DIRECT_CASH_INVOICE_PDF;
+        break;
+      case "InvoiceCreditInvoice":
+        printId = BLConstants.Order.STANDARD_CREDIT_INVOICE_PDF;
+        break;
+      case "NoPayment":
+        printId = BLConstants.Order.STORE_TRANSFER_PDF;
+        break;
+      case "CreditMemo":
+        printId = BLConstants.Order.STANDARD_RETURNS_PDF;
+        break;
+    }
+  } else if (documentType === 'Delivery' && me.getBoOrderMeta().getReportPolicy() === "Confirmation") {
+    printId = BLConstants.Order.ORDER_CONFIRMATION_PDF;
+  }
+}
+
+if(Utils.isEmptyString(printId)){
+  switch(documentType){
+    case "Invoice":
+      printId = BLConstants.Order.STORE_TRANSFER_PDF;
+      break;
+    case "OrderEntry":
+      printId = BLConstants.Order.ORDER_CONFIRMATION_PDF;
+      break;
+    default:
+      printId = BLConstants.Order.ORDER_CONFIRMATION_PDF;
+      break;
+  }
+}]]>
+</Code>
+  <Return name="printId" value="printId" />
+</BusinessLogic>

@@ -1,0 +1,17 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoWizardTripList" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(context);
+
+me.setResponsibleUser(context.jsonQuery.responsibleUser);
+me.setMode(context.jsonQuery.tripListMode);
+me.setDescription(" ");
+me.setType();
+me.setValidFrom(Utils.createDateToday());
+me.setValidThru(Utils.getMaxDate());
+me.setDayOfWeek();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

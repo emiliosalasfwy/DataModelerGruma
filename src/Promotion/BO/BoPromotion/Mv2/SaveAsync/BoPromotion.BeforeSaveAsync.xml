@@ -1,0 +1,27 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoPromotion" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var boAnnotation = me.getBoAnnotation();
+var loRecentState = me.getLoRecentState();
+var promises = [];
+
+
+promises.push(Facade.saveObjectAsync(me));
+
+if(Utils.isDefined(boAnnotation)) {
+	promises.push(boAnnotation.saveAsync());
+}
+if(Utils.isDefined(loRecentState)) {
+	promises.push(loRecentState.saveAsync());
+}
+
+var promise = when.all(promises)
+.then(
+  function () {
+    return me;
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

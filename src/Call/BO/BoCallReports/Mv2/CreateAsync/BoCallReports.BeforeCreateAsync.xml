@@ -1,0 +1,12 @@
+<BusinessLogic methodName="beforeCreateAsync" businessObjectClass="BoCallReports" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[me.setChartHelper(ApplicationContext.get("chartHelper"));
+me.setObjectStatus(me.self.STATE_NEW);
+
+var promise = when.resolve();]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

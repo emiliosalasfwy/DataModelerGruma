@@ -1,0 +1,26 @@
+<BusinessLogic methodName="releaseButtonActive" businessObjectClass="BoOrder" businessObjectType="" asynchronous="" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[
+
+var editable = me.isEditable();
+
+if(Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  var phase = me.getPhase();
+  if ((phase == "Released") || (phase == "Closed") || (phase == "Canceled"))
+  {
+    editable = false;
+  }
+}
+
+var calcReq = me.getCalculationStatus() == "2" || me.getCalculationStatus() == "3" || me.getCalculationStatus() == "4";
+
+editable = editable && (!calcReq || me.releaseSupportedDocTType());
+
+if(me.getIsOrderPaymentRelevant() == '1'){
+  var isPaymentDone = (me.getIsPaymentCollected()  == "1" || me.getPaidAmountReceipt() === 0);
+  editable = editable &&  isPaymentDone;
+}]]>
+</Code>
+  <Return name="editable" value="editable" />
+</BusinessLogic>

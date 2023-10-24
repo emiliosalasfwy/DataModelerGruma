@@ -1,0 +1,33 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoItemFilter" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newParams;
+// Insert item for category selection
+if (Utils.isDefined(context.jsonQuery)) {
+  newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+
+if(Utils.isDefined(newParams) && Utils.isDefined(newParams.sdoSubType) && newParams.sdoSubType == "OrderEntry"){
+  var json = {};
+  json.pKey = "0000007";
+  json.imageId = "CabinetGrey24";
+  json.name = Localization.resolve("ImageSelector_HierarchyLabel");
+  json.count = "";
+  json.filterCode = "Hierarchy";
+  json.defaultGroup = "0";
+  json.displayOnHierarchyLevel = "2";
+  json.sortOrder = "-1";
+  me.addItems([json]);
+}
+
+me.orderBy({"sortOrder" : "ASC"});
+var promise=when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

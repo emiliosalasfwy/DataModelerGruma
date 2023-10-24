@@ -1,0 +1,88 @@
+<BusinessLogic methodName="handleRewardSelection" businessObjectClass="BoHurdleEvaluationHelper" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="rewardGroupPkey" type="String" />
+    <MethodInput name="multiplicity" type="String" />
+    <MethodInput name="rewardPKey" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promise = when.resolve();
+var deferreds = [];
+
+//suspend and discard reward list events
+me.getLoRewards().suspendListRefresh();
+
+var updateRewardCacheAndPricingEngine = function(reward){
+  var updatePromise = when.resolve();
+  if(reward.getIsApplicable() === '1') {
+    if (reward.getRewardType() === "Special") {
+      updatePromise = me.userExitForSpecialReward(reward, false);
+    }
+    else if (reward.getRewardType() === "FreeItem") {
+      updatePromise = me.getOrderCache().handleFreeItemsFromReward(reward.getPKey(), true);
+    }
+    else {
+      var newValue = reward.getSelected() === '1' ? '1' : '0';
+      if (me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE ||
+          me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE) {
+        updatePromise = CP.PricingHandler.getInstance().updateRewardCache(reward.getPricingConditionTemplate(), reward.getPKey(), newValue);
+      }
+    }
+  }
+  return updatePromise;
+};
+
+if (!Utils.isEmptyString(rewardPKey)) { // manual selection of rewards
+  var currentReward = me.getLoRewards().getItemByPKey(rewardPKey);
+  deferreds.push(updateRewardCacheAndPricingEngine(currentReward)); // handling pricing engine for selected item
+  if (currentReward.getSelected() === '1' && !(multiplicity === "n" && Utils.isEmptyString(currentReward.getSubGroup()))) {
+    var rewards = me.getLoRewards().getItemsByParamArray([{rewardGroupId: rewardGroupPkey}, {pKey: rewardPKey, op: "NE"}]);
+    for (var i = 0; i < rewards.length; i++) {
+      var isMatchingSubGroup = currentReward.getSubGroup() === rewards[i].getSubGroup();
+      if(rewards[i].getSelected() === '1' && (multiplicity == "1" || (multiplicity === "n" && isMatchingSubGroup))) {
+        rewards[i].setSelected('0');
+        rewards[i].setIsSelectedOnUI('0');
+        deferreds.push(updateRewardCacheAndPricingEngine(rewards[i])); // handling pricing engine for deselected items
+      }
+    }
+  }
+}
+else {
+  if(multiplicity =="1") {
+    var groupRewards = me.getLoRewards().getItemsByParam({'rewardGroupId': rewardGroupPkey, 'selected': 1, 'isReadyToBeApplicable': 1}).reverse('sort');
+    if(groupRewards.length > 1){
+      for(var y = 1; y < groupRewards.length; y++ ) {
+        groupRewards[y].setSelected('0');
+        groupRewards[y].setIsSelectedOnUI('0');
+      }
+    }
+  }
+  else {
+    var subGroupRewards = me.getLoRewards().getItemsByParamArray([{'rewardGroupId': rewardGroupPkey},{'selected' : '1'},{ 'isReadyToBeApplicable': 1},{ 'subGroup' : ' ','op' : 'NE'}]).reverse('sort');
+    if(subGroupRewards.length > 1){
+      var subgroups = {};
+      subGroupRewards.forEach(function(reward) {
+        var subgroup = reward.getSubGroup();
+        if(!(subgroup in subgroups)) {
+          subgroups[subgroup] = [];
+        }
+        subgroups[subgroup].push(reward);
+        if(subgroups[subgroup].length>1) {
+          reward.setSelected('0');
+          reward.setIsSelectedOnUI('0');
+        }
+      });
+    }
+  }
+}
+
+promise = when.all(deferreds).then(function(){
+  me.getLoRewards().resumeListRefresh(true);
+  if(me.getOrderCache().getCalculationStatus() !== BLConstants.Order.CALCULATION_REQUIRED && 
+     (me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.BUTTON_MODE ||
+      me.getOrderCache().getBoOrderMeta().getComputePrice() === BLConstants.Order.EDIT_MODE)) {
+    me.getOrderCache().setCalculationStatus(BLConstants.Order.CALCULATION_REQUIRED);
+    return me.getOrderCache().resetCalculationResult();
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

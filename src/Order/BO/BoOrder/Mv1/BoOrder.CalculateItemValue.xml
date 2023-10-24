@@ -1,0 +1,24 @@
+<BusinessLogic methodName="calculateItemValue" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var deferreds = [];
+if (me.getBoOrderMeta().getComputePrice() !== "4" && me.getBoOrderMeta().getComputePrice() !== "5"){
+  //mainItem.getBasePrice() was float for devices and string for chrome - using .toString() for conversion
+  //checked for de en versions - working fine
+  var priceCalculator = me.getSimplePricingCalculator();
+  var prices = priceCalculator.calculateItemValue(mainItem, me.getBoOrderMeta());
+  //list of modified attributes has to be reset -> performance optimization (list refresh is missing)
+  // otherwise event is triggerd twice for qty -> wrong basket values
+  mainItem.modified = [];
+  deferreds.push(mainItem.setPrice(prices.price));
+  deferreds.push(mainItem.setBasePrice(prices.basePrice));
+  deferreds.push(mainItem.setBasePriceReceipt(prices.basePriceReceipt));
+  deferreds.push(mainItem.setGrossValue(prices.grossValue));
+  deferreds.push(mainItem.setGrossValueReceipt(prices.grossValueReceipt));
+  deferreds.push(mainItem.setValue(prices.value));
+  deferreds.push(mainItem.setValueReceipt(prices.valueReceipt));
+}
+var promise = when.all(deferreds);]]></Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

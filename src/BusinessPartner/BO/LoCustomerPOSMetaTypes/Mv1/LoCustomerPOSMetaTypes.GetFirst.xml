@@ -1,0 +1,11 @@
+<BusinessLogic methodName="getFirst" businessObjectClass="LoCustomerPOSMetaTypes" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var posTypePKey;
+
+if(me.getAllItems().length > 0) {
+  posTypePKey = me.getAllItems()[0].getPKey();
+}]]>
+</Code>
+  <Return name="pkey" value="posTypePKey" />
+</BusinessLogic>

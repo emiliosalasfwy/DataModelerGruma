@@ -1,0 +1,32 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoPrmIconAttachment" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var prmPromotionPKeys = "";
+var newParams = context.jsonQuery.params;
+
+for(var i = 0; i < newParams.length; i++) {
+  var loPromotion = newParams[i].value.getAllItems();
+  for(var j=0; j<loPromotion.length; j++) {
+    if(prmPromotionPKeys) {
+      prmPromotionPKeys = prmPromotionPKeys + "'" +  loPromotion[j].prmPKey + "',";
+    } else {
+      prmPromotionPKeys =  "'" +  loPromotion[j].prmPKey + "',";
+    }
+  }
+}
+
+if(prmPromotionPKeys.length > 0){
+  prmPromotionPKeys = prmPromotionPKeys.substring(0, prmPromotionPKeys.length-1);
+}
+
+var promise = Facade.getListAsync("LoPrmIconAttachment", me.getQueryBy("prmPromotionPKeys", prmPromotionPKeys)).then(
+  function(icons) {
+    me.addItems(icons, context.jsonQuery.params);
+    return me;
+  });]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

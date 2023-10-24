@@ -1,0 +1,92 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoSurveys" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(context);
+var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var posIdParam = params.posId;
+var boJobManager = params.boJobManager;
+var skipPresettingJobs = params.skipPresettingJobs;
+
+var loCurrentPOS = boJobManager.getLoPOS().getItemsByParam({
+  "posId" : posIdParam
+});
+
+if (loCurrentPOS.length > 0) {
+  var liCurrentPOS = loCurrentPOS[0];
+
+  var jsonParams = context.jsonQuery.params;
+  jsonParams.push({
+    "field" : "clbMainPKey",
+    "operator" : "EQ",
+    "value" : boJobManager.getClbMainPKey()
+  });
+  jsonParams.push({
+    "field" : "clbMetaPKey",
+    "operator" : "EQ",
+    "value" : boJobManager.getClbMetaPKey()
+  });
+  jsonParams.push({
+    "field" : "bpaMainPKey",
+    "operator" : "EQ",
+    "value" : boJobManager.getBpaMainPKey()
+  });
+  jsonParams.push({
+    "field" : "validFrom",
+    "operator" : "EQ",
+    "value" : boJobManager.getReferenceDate()
+  });
+  jsonParams.push({
+    "field" : "timeFrom",
+    "operator" : "EQ",
+    "value" : boJobManager.getTimeFrom()
+  });
+
+  //LastValue finding
+  if (boJobManager.getOriginalClbStatus() !== "Completed") {
+    //Determine POSBpaMainPKeys
+    var posList = boJobManager.getLoPOS().getAllItems();
+    var posIdx = posList.length;
+    var pos;
+    var pOSBpaMainPKeys = " ";
+    var jobDefPKeys = "";
+    while (posIdx--) {
+      pos = posList[posIdx];
+      if (pos.getPosId() !== " ") {
+        pOSBpaMainPKeys += "'" + pos.getBpaMainPKey() + "', ";
+      }
+    }
+    //Remove last occurrence of ","
+    pOSBpaMainPKeys = pOSBpaMainPKeys.replace(/,(?=[^,]*$)/, '');
+    jsonParams.push({
+      "field" : "pOSBpaMainPKeys",
+      "operator" : "EQ",
+      "value" : pOSBpaMainPKeys
+    });
+
+    if(!skipPresettingJobs){
+      //Determine relevant jobDefPKeys with lastValue Setting
+      var jdList = boJobManager.getLoJobDefinitions().getItemsByParamArray([
+        {"presetting": "LastValue", "op": "EQ"},
+        {"jobMetaId": "Survey", "op": "EQ"}
+      ]);
+      var jdIdx = jdList.length;
+      var jd;
+      while (jdIdx--) {
+        jd = jdList[jdIdx];
+        jobDefPKeys += "'" + jd.getJobDefinitionPKey() + "', ";
+      }
+      //Remove last occurrence of ","
+      jobDefPKeys = jobDefPKeys.replace(/,(?=[^,]*$)/, '');
+      jsonParams.push({
+        "field" : "jobDefPKeys",
+        "operator" : "EQ",
+        "value" : jobDefPKeys
+      });
+    }
+  }
+}]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

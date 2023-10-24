@@ -1,0 +1,8 @@
+<BusinessLogic methodName="bindPrinter" businessObjectClass="BoUserSettings" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//This function has been deprecated and not used for printing functionality anymore
+var promise = Facade.selectPrinterAsync();]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,23 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTourChecks" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise=when.resolve(context);
+var newParams;
+
+if (Utils.isDefined(context.jsonQuery)) {
+  newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+}
+
+if(Utils.isDefined(ApplicationContext.get('currentTourPKey')) && Utils.isDefined(newParams) && !Utils.isDefined(newParams.tmgMainPKey)){
+  newParams.tmgMainPKey = ApplicationContext.get('currentTourPKey');
+}
+
+context.jsonQuery = newParams;]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

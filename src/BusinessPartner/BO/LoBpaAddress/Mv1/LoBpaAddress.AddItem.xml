@@ -1,0 +1,33 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoBpaAddress" businessObjectType="" asynchronous="FALSE" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="referencePKey" type="DomPKey" />
+    <MethodInput name="main" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+
+// Create empty ListItem
+var liBpaAddress =   {
+  "pKey" : PKey.next(),
+  "referencePKey" :referencePKey,
+  "usage" : "Delivery",
+  "main" : main,
+  "street" : " ",
+  "houseNumber" :" ",
+  "zipCode" :" ",
+  "city" :" ",
+  "countryState" :" ",
+  "country" :" ", 
+  "longitude" :0, 
+  "latitude" :0, 
+  "objectStatus" : STATE.NEW | STATE.DIRTY
+};
+
+// Add new Item to ListObjext
+me.addListItems([liBpaAddress]);
+
+// Set new ListItem as current Item in List
+me.setCurrentByPKey(liBpaAddress.getPKey());]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

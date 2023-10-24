@@ -1,0 +1,25 @@
+<BusinessLogic methodName="getDefaultWorkBegins" businessObjectClass="BoWizardCreateCallViaTpl" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var workBegins = ApplicationContext.get('user').getBoUserSales().getWorkBegins();
+var promise;
+//If no Default WorkBeginTime for User is found, search in SysSettings
+if (Utils.isEmptyString(workBegins) || workBegins === Utils.getMinDateTime()) {
+  var jsonQuerySysSetting = {};
+  jsonQuerySysSetting.iD = "ClbStartTime";
+  promise = BoFactory.loadObjectByParamsAsync("LuSysSettingById", jsonQuerySysSetting)
+    .then(function (luSysSettingById) {
+    workBegins = luSysSettingById.getValue();
+    if (Utils.isEmptyString(workBegins)) {
+      workBegins = "09:00";
+    }
+    me.setWorkBegins(workBegins);
+    return me;
+  });
+} else {
+  me.setWorkBegins(workBegins);
+  promise = when.resolve(me);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

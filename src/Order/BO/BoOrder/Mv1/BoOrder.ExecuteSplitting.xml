@@ -1,0 +1,178 @@
+<BusinessLogic methodName="executeSplitting" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise;
+var deferreds = [];
+
+if (me.isSplittingEnabled()) {
+  var itemSplittingData = me.esCreateItemSplittingData();
+
+  //Input parameter format is wrong
+  //var mainDocHeaderAttributeData = me.esGetMainDocHeaderAttributes();
+
+  //############ start splitting function ############ 
+  var createSplittingDoc = function (splittingGroup) {
+
+    //Commented header discount and payment reason - <TBD>
+    var splittingDoc = BoFactory.instantiate("BoOrder", {
+      "asn" : me.getAsn(),
+      "billToCustomerPKey": me.getBillToCustomerPKey(),
+      "brokerCustomerPKey" :  me.getBrokerCustomerPKey(),
+      "calculationStatus" :  me.getCalculationStatus(),
+      "calculationTime" :  me.getCalculationTime(),
+      "cancelReason" :  me.getCancelReason(),
+      "clbMainPKey" :  me.getClbMainPKey(),
+      "cndCpCalculationSchemaPKey" :  me.getCndCpCalculationSchemaPKey(),
+      "commitDate" :  me.getCommitDate(),
+      "currency" :  me.getCurrency(),
+      "customerOrderId" :  me.getCustomerOrderId(),
+      "debitCredit" :  me.getDebitCredit(),
+      "deliveryRecipientPKey" :  me.getDeliveryRecipientPKey(),
+      "distribChannel" :  me.getDistribChannel(),
+      "division" :  me.getDivision(),
+      "docTaType" :  me.getDocTaType(),
+      "documentType" :  me.getDocumentType(),
+      //"headerDiscount" :  me.getHeaderDiscount(),
+      "initiationDate" :  me.getInitiationDate(),
+      "initiatorPKey" :  me.getInitiatorPKey(),
+      "ivcRef1PKey" :  me.getIvcRef1PKey(),
+      "ivcRef2PKey" :  me.getIvcRef2PKey(),
+      "ivcRef3PKey" :  me.getIvcRef3PKey(),
+      "ivcRef4PKey" :  me.getIvcRef4PKey(),
+      "ivcRef5PKey" :  me.getIvcRef5PKey(),
+      "message" :  me.getMessage(),
+      "ordererPKey" :  me.getOrdererPKey(),
+      "ownerPKey" :  me.getOwnerPKey(),
+      "payerCustomerPKey" :  me.getPayerCustomerPKey(),
+      "paymentMethod" :  me.getPaymentMethod(),
+      //"paymentReason" :  me.getPaymentReason(),
+      "pricingDate" :  me.getPricingDate(),
+      "releaseTime" :  me.getReleaseTime(),
+      "responsiblePKey" :  me.getResponsiblePKey(),
+      "salesOrg" :  me.getSalesOrg(),
+      "sdoMetaPKey" :  me.getSdoMetaPKey(),
+      "tmgMainPKey" :  me.getTmgMainPKey(),
+      "wfeWorkflowPKey" :  me.getWfeWorkflowPKey()
+    });
+
+    //Lo's and Lu's BOs
+    splittingDoc.setLuDeliveryRecipient(me.getLuDeliveryRecipient());
+    //nested BOs
+    splittingDoc.setBoOrderMeta(me.getBoOrderMeta());
+    splittingDoc.setBoWorkflow(me.getBoWorkflow());
+
+    //Set delivery date after meta object set
+    splittingDoc.setDeliveryDate(me.getDeliveryDate());
+
+    //Header Attributes and Pricing information
+    return me.esSetHeaderAttributes(splittingDoc, splittingGroup)
+      .then(function () {
+        //check for missing inventories
+        //Inventory is not required on main document. It is handled for each splitted document @line 123.
+        /* return me.processInventoryActions();
+      })
+      .then(
+      function()
+      {*/
+
+        //setting the items of the splitting document
+        me.esCreateSplittingDocumentItems(splittingDoc, itemSplittingData.get(splittingGroup.getSplittingGroup()));
+
+        //copy over the notes
+        me.esCopyNotes(splittingDoc);
+        //In CGCloud we create order Sdo Conditions in preparePrint method now. Thus this method is not ready to use when splitting order is enabled in CGCloud.
+        //For a consistent behaviour as in Order this method needs an update. 
+        return splittingDoc.cpCreateSdoConditions();
+      })
+      .then(function () {
+        //Signature Attributes and Blobs
+        return me.esSetSignatureAttributes(splittingDoc);
+      })
+      .then(function () {
+        //Copy the signature images
+        return me.esCopySignatures(splittingDoc);
+      })
+      .then(function () {
+        //Before Release set phase to inital and next available phase to be released
+        var wfeInitialStateJson = splittingDoc.getBoWorkflow().getInitialState();
+        if (Utils.isDefined(wfeInitialStateJson)) {
+          splittingDoc.setPhase('Initial');
+          splittingDoc.setActualStatePKey(wfeInitialStateJson.toStatePKey);
+          splittingDoc.setNextStatePKey(splittingDoc.getActualStatePKey());
+          splittingDoc.setSetPhaseInBeforeSave("1");
+        }
+        //release the document
+        return splittingDoc.release();
+      })
+      .then(function () {
+        //create the inventories and ivc transactions
+        return splittingDoc.processInventoryActions();
+      })
+      .then(function () {
+        //save the document
+        return splittingDoc.saveAsync();
+      }); //last
+  };
+  //############ end splitting function ############ 
+
+  var splittingGroups = me.getLoSplittingGroups().getAllItems();
+  var documentIndex = 0;
+  var currentDoc;
+
+  //############ start handler function ############ 
+  var handleSplitting = function()
+  {
+    var handlePromise;
+
+    if (documentIndex < splittingGroups.length) {
+      currentDoc = splittingGroups[documentIndex];
+      handlePromise = createSplittingDoc(currentDoc)
+        .then(function() {
+          documentIndex++;
+          return handleSplitting();
+        }
+      );
+    } else {
+      //Releasing documents when no "splittingGroups" available
+      me.setSetPhaseInBeforeSave("1");
+      handlePromise = when.resolve();
+    }
+    return handlePromise;
+  };
+  //############ end handler function ############ 
+
+  //looping over splitting groups
+
+  promise = me.esStoreParentSignatures()
+    .then(function () {
+      Facade.startTransaction();
+
+      return handleSplitting();
+    })
+    .then(function () {
+
+      //cancel parent/initial document
+      if (splittingGroups.length !== 0) {
+        me.cancel();
+        me.setSetPhaseInBeforeSave("0");
+      }
+
+
+      deferreds = [];
+
+      deferreds.push(Facade.saveObjectAsync(me));
+      if (Utils.isDefined(me.getLoInventories())) {
+        deferreds.push(me.getLoInventories().saveAsync());
+      }
+
+      return when.all(deferreds);
+    })
+    .then(function () {
+      return Facade.commitTransaction();
+    });
+} else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

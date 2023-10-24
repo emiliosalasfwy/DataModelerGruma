@@ -1,0 +1,46 @@
+<BusinessLogic methodName="updateJobListMagnetization" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var loadType = "Magnetization";
+var callDateChangedAfterLoad = me.getBoJobManager().getCallDateChangedAfterLoad() == "1";
+if (callDateChangedAfterLoad) {
+  loadType = "Remagnetization";
+}
+
+var promise = me.getBoJobManager().loadAndSetPrerequisites(loadType).then(
+  function () {
+    var loMagnetizedJobLists = me.getBoJobManager().getLoMagnetizedJobList().getAllItems();
+    var idxJobList;
+    var liMagnetizedJobList;
+    var invalid = false;
+    var jobInfoUpdated = false;
+    var callCompletion = me.getClbStatus() === "Completed" && me.getOriginalClbStatus() !== "Completed" ? "1" : "0";
+
+    for (idxJobList = 0; idxJobList < loMagnetizedJobLists.length; idxJobList++) {
+      liMagnetizedJobList = loMagnetizedJobLists[idxJobList];
+      if (callDateChangedAfterLoad) {
+        // check whether joblist have become invalid due to date changes
+        var dateFrom = Utils.convertDate2Ansi(me.getDateFrom());
+        if (!(liMagnetizedJobList.getValidFrom() <= dateFrom && liMagnetizedJobList.getValidThru() >= dateFrom)) {
+          if (!jobInfoUpdated) {
+            me.getBoJobManager().getLoMagnetizedJobList().updateJobInfo(me.getBoJobManager());
+            jobInfoUpdated = true;
+          }
+          invalid = liMagnetizedJobList.getJobExists() === "0";
+        } else {
+          invalid = false;
+        }
+      }
+      if (liMagnetizedJobList.getDemagnetizeOnSave() == "1" || invalid) {
+        liMagnetizedJobList.setClbMainPKey(" ");
+      } else if (liMagnetizedJobList.getMagnetizeOnSave() == "1" || callCompletion == "1") {
+        liMagnetizedJobList.setDone(callCompletion);
+        liMagnetizedJobList.setClbMainPKey(me.getPKey());
+      } else {
+        liMagnetizedJobList.setObjectStatus(STATE.PERSISTED);
+      }
+    }
+  });]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

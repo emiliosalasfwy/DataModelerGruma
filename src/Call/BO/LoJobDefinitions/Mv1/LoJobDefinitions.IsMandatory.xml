@@ -1,0 +1,17 @@
+<BusinessLogic methodName="isMandatory" businessObjectClass="LoJobDefinitions" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="jobDefinitionMetaPKey" type="String" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+     
+	var result = "0";
+
+	var jobDefs = this.getItemsByParamArray([{"jobDefinitionMetaPKey":jobDefinitionMetaPKey, "op":"EQ" },{"mandatory":"1", "op":"EQ" }]);
+	if (jobDefs.length > 0)
+	{
+		result = "1";
+	}
+
+    ]]></Code>
+  <Return name="mandatory" value="result " />
+</BusinessLogic>

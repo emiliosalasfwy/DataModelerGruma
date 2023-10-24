@@ -1,0 +1,32 @@
+<BusinessLogic methodName="cancelAllVisit" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reasonCode" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var deferreds = [];
+
+Facade.startTransaction();
+
+var me = this;
+var visits = me.getAllItems();
+
+//Show busy indicator while canceling all visits
+BusyIndicator.show();
+
+if(Utils.isDefined(visits) && visits.length > 0){
+  for(var index = 0; index < visits.length; index++){
+    if(visits[index].getClbStatus() === "Planned"){
+      deferreds.push(me.cancelVisit(visits[index].getPKey(), reasonCode, true));
+    }
+  }
+}
+var promise = when.all(deferreds)
+  .then(function () {
+  return Facade.commitTransaction();
+})
+  .then(function () {
+  BusyIndicator.hide();
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

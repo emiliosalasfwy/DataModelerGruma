@@ -1,0 +1,102 @@
+<BusinessLogic methodName="summarizeUoMMovement" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="shipmentList" type="Object" />
+    <MethodInput name="OrderItemMetaList" type="Object" />
+    <MethodInput name="uomToggle" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getLoItems().getAllItems();
+var length = items.length;
+var dicIn = Utils.createDictionary();
+var dicOut = Utils.createDictionary();
+var index;
+
+for(index = 0; index < length; index++) {
+  var item = items[index];
+  if(item.getQuantity() > 0) {
+    var sdoItemMetaPkey = item.getSdoItemMetaPKey();
+    var itemMeta = OrderItemMetaList.getItemByPKey(sdoItemMetaPkey);
+    if(Utils.isDefined(itemMeta)) {
+      var md = itemMeta.getMovementDirection();
+      var quantity = item.getQuantity();
+      var uom = Utils.getToggleText("DomPrdLogisticUnit", item.getQuantityLogisticUnit());
+      if(md === "In") {
+        if(!dicIn.containsKey(uom)) {
+          dicIn.add(uom, 0);
+        }
+        dicIn.data[uom] = dicIn.data[uom] + quantity;
+      }
+      else if(md === "Out") {
+        if(!dicOut.containsKey(uom)) {
+          dicOut.add(uom, 0);
+        }
+        dicOut.data[uom] = dicOut.data[uom] + quantity;
+      }
+    }
+  }
+}
+
+var quantityIn = 0;
+var quantityOut = 0;
+length = dicIn.keys().length;
+var uoms = dicIn.keys();
+var currentUom;
+var parameters;
+var toggleEntry;
+var order;
+var li;
+
+for(index = 0; index < length; index++) {
+  currentUom = uoms[index];
+  quantityIn = dicIn.data[currentUom];
+  quantityOut = 0;
+  if(dicOut.containsKey(currentUom)) {
+    quantityOut = dicOut.data[currentUom];
+  }
+  parameters = {"text":currentUom};
+  toggleEntry = uomToggle.getItemsByParam(parameters);
+  order = 0;
+  if(toggleEntry.length > 0) {
+    order = toggleEntry[0].getSortOrder();
+  }
+
+  li = {
+    "unit": currentUom,
+    "quantityIn": quantityIn,
+    "quantityOut": quantityOut,
+    "order" : order
+  };
+  shipmentList.addListItems([li]);
+}
+
+length = dicOut.keys().length;
+var uoms = dicOut.keys();
+
+for(index = 0; index < length; index++) {
+  currentUom = uoms[index];
+  if(dicIn.containsKey(currentUom)) {
+    continue;
+  }
+
+  quantityOut = dicOut.data[currentUom];
+  quantityIn = 0;
+  parameters = {"text":currentUom};
+  toggleEntry = uomToggle.getItemsByParam(parameters);
+  order = 0;
+  if(toggleEntry.length > 0) {
+    order = toggleEntry[0].getSortOrder();
+  }
+
+  li = {
+    "unit": currentUom,
+    "quantityIn": quantityIn,
+    "quantityOut": quantityOut,
+    "order" : order
+  };
+  shipmentList.addListItems([li]);
+}
+
+shipmentList.orderBy({ "order" : "DESC" });]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

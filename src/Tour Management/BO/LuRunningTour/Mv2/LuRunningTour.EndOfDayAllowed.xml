@@ -1,0 +1,69 @@
+<BusinessLogic methodName="endOfDayAllowed" businessObjectClass="LuRunningTour" businessObjectType="lookupobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var messageCollector = new MessageCollector();
+
+var promise = BoFactory.loadObjectByParamsAsync("LuTourOpenCalls", {"TmgMainPKey" : me.getPKey() }).then(
+  function(luOpenCalls) {
+    if(luOpenCalls.getOpenCallsCount() > 0) {
+      messageCollector.add({
+        "level" : "warning",
+        "objectClass" : "BoTour",
+        "simpleProperty": " ",
+        "messageID" : "EndOfDayNotAllowedOpenCallsMessage",      
+      });
+    }
+    return BoFactory.loadObjectByParamsAsync("LuTourRelatedSalesDocuments", {"TmgMainPKey" : me.getPKey() });
+  }).then(
+  function(luOpenDocs) {
+    if(luOpenDocs.getOpenDocsCount() > 0) {
+      messageCollector.add({
+        "level" : "warning",
+        "objectClass" : "BoTour",
+        "messageID" : "EndOfDayNotAllowedOpenOrdersOrDeliveriesMessage",       
+      });
+    }
+    return BoFactory.loadObjectByParamsAsync("LuTourCashDocumentsNotRelatedToEOD", {});
+  }).then(
+  function(luOpenCashDocs) {
+    if(luOpenCashDocs.getOpenCashDocumentsCount() > 0) {
+      messageCollector.add({
+        "level" : "warning",
+        "objectClass" : "BoTour",
+        "messageID" : "EndOfDayNotAllowedOpenCashDocsMessage",       
+      });
+    }    
+
+    return BoFactory.loadObjectByParamsAsync("LuTourDocumentsNotRelatedToEOD", {});
+  }).then(
+  function(luOpenInventoryDocs) {        
+
+    if(luOpenInventoryDocs.getOpenInventoryDocumentsCount() > 0) {
+      messageCollector.add({
+        "level" : "warning",
+        "objectClass" : "BoTour",
+        "messageID" : "EndOfDayNotAllowedOpenInventoryDocsMessage",            
+      });
+    }
+
+    if(messageCollector.getCount() > 0) {
+      var buttonValues = {};
+      buttonValues[Localization.resolve("OK")] = "ok";
+      var messages = messageCollector.getMessages().join("<br>");
+      return MessageBox.displayMessage(Localization.resolve("Warning"), messages, buttonValues).then(
+        function() {           
+          messageCollector.destroy();
+
+          return "0";
+        }
+      );
+    } else {
+      messageCollector.destroy();
+
+      return "1";
+    }
+  }
+);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,31 @@
+<BusinessLogic methodName="validatePOSDeletion" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LuHasReferencedAsset", me.getQueryBy('posPKey', posPKey))
+.then(function(luHasReferencedAsset){
+  if(luHasReferencedAsset.referencedAssetCount > 0){
+    var messageCollector = new MessageCollector();
+    var buttonValues = {};
+    var newError = {
+      "level": "error",
+      "objectClass": "BoCustomer", 
+      "simpleProperty": " ", 
+      "messageID": "CasBpaPOSHasReferencedAsset"
+    };
+    messageCollector.add(newError);
+    var messages = messageCollector.getMessages().join("<br>");
+    buttonValues[Localization.resolve("OK")] = "ok";
+    return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), messages, buttonValues)
+      .then(function(){
+      return when.resolve("invalid");
+    });
+  }
+  else{
+    return when.resolve("valid");
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

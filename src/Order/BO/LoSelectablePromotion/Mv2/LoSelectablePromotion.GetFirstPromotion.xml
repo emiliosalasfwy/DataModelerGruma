@@ -1,0 +1,14 @@
+<BusinessLogic methodName="getFirstPromotion" businessObjectClass="LoSelectablePromotion" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="phase" type="String" />
+    <MethodInput name="responsiblePKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var promotionPKey = " ";
+var items = me.getItemsByParamArray([{PKey: " ", op: "NE"}]);
+var currentUserPKey =  ApplicationContext.get('user').getPKey();
+
+if(items.length > 0 && !(['Released', 'Canceled', 'Ready', 'Feedback', 'Voided'].includes(phase)) && (responsiblePKey === currentUserPKey)) {
+  promotionPKey = items[0].getPKey();
+}]]></Code>
+  <Return name="promotionPKey" value="promotionPKey" />
+</BusinessLogic>

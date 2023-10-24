@@ -1,0 +1,26 @@
+<BusinessLogic methodName="calculateOrderValue" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve();
+
+if (me.getBoOrderMeta().getComputePrice() !== BLConstants.Order.BUTTON_MODE &&
+    me.getBoOrderMeta().getComputePrice() !== BLConstants.Order.EDIT_MODE) {
+  var priceCalculator = me.getSimplePricingCalculator();
+  var prices = priceCalculator.calculateHeaderValue(me);
+
+  //No tax calculation implemented in first version - set both properties to the same order value
+  me.modified = [];
+  me.setGrossTotalValue(prices.grossTotalValue);
+  me.setGrossTotalValueReceipt(prices.grossTotalValueReceipt);
+  me.setTotalValue(prices.totalValue);
+  me.setTotalValueReceipt(prices.totalValueReceipt);
+
+  if(me.getIsOrderPaymentRelevant() === '1') {
+    me.setPaidAmountReceipt(me.getGrossTotalValueReceipt());
+  }
+  //Update total value at item filter
+  me.updateItemFilterTotalValue();
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

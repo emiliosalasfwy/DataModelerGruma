@@ -1,0 +1,24 @@
+<BusinessLogic methodName="cancelAllVisibility" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible = true;
+
+if (!Utils.isDefined(ApplicationContext.get('currentTourPKey'))){
+  visible = false;
+} else{
+  var visits = me.getAllItems();
+  var hasPlanCall = false;
+
+  if(Utils.isDefined(visits) && visits.length > 0){
+    for(var index = 0; index < visits.length; index++){
+      if(visits[index].getClbStatus() === "Planned"){
+        hasPlanCall = true;
+        break;
+      }
+    }
+  }
+  visible = hasPlanCall;
+}]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

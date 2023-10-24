@@ -1,0 +1,31 @@
+<BusinessLogic methodName="validateSub" businessObjectClass="BoWizardCreateNewCall" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (messageCollector.isValid() && !Utils.isEmptyString(me.getCustomerPKey())) {
+  // remove the time part from the date
+   var dateFrom = me.getDateFrom();
+
+  if ((me.getIsManagedCustomer() !== "1" && !Utils.isEmptyString(me.getSubstitutedUsrPKey()) &&
+       (dateFrom < me.getSubValidFrom() || dateFrom > me.getSubValidThru())) ||
+      (me.getIsManagedCustomer() == "0" && me.getIsSubstituted() == "0")) {
+    var newError = {
+      "level" : "error",
+      "objectClass" : "BoWizardCreateNewCall",
+      "messageID" : "CasClbCannotCreateSubstitutedCall"
+    };
+    messageCollector.add(newError);
+  }
+
+  if (me.getHasSubstitute() == "1") {
+    messageCollector.add({
+      "level" : "error",
+      "objectClass" : "BoWizardCreateNewCall",
+      "messageID" : "CasClbCannotCreateCallWhileSubstituted"
+    });
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

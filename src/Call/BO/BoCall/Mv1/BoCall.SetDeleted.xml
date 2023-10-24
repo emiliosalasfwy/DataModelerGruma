@@ -1,0 +1,43 @@
+<BusinessLogic methodName="setDeleted" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = me.getBoJobManager().loadAndSetPrerequisites("StatusChange_Delete")
+.then(function () {
+  me.getBoJobManager().getLoCurrentSurveys().delete();
+  me.getBoJobManager().getLoPOS().delete();
+  me.getBoJobManager().getLoQuestions().delete();
+  me.getBoJobManager().getLoMagnetizedJobList().demagnetizeAll();
+  // assign surveys to some POS so that the deletion will be saved
+  me.getBoJobManager().getLoPOS().getFirstItem().setSurveys(me.getBoJobManager().getLoCurrentSurveys());
+  return me.loadOnDemand("Attachments");
+}).then(function () {
+  if(Utils.isDefined(me.getLoCallAttachments())){
+    me.getLoCallAttachments().delete();  
+  }
+  if(Utils.isDefined(me.getLoAtmAttachment())){
+    me.getLoAtmAttachment().delete();  
+  }
+  return me.loadOnDemand("Assets");
+}).then(function () {
+  me.getLoCallAssetOverview().delete();
+  if (Utils.isDefined(me.getBoUserDailyReport())) {
+    if (Utils.isDefined(me.getBoUserDailyReport().getLoUsrTimeEntry())) {
+      var timeEntries = me.getBoUserDailyReport().getLoUsrTimeEntry().getItemsByParamArray([{"clbMainPKey" : me.getPKey()}]);
+      if (timeEntries.length > 0) {
+        var stateNewDirty = STATE.NEW | STATE.DIRTY;
+        for (var i = 0; i < timeEntries.length; i++) {
+          if (timeEntries[i].getObjectStatus() === stateNewDirty) {
+            timeEntries[i].setObjectStatus(0);
+          } else {
+            timeEntries[i].delete();
+          }
+        }
+      }
+    }
+    me.getBoUserDailyReport().setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+  }
+  me.delete();
+});]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

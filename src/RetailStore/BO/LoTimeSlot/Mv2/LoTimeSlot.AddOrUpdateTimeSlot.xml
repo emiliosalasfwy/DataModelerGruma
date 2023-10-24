@@ -1,0 +1,90 @@
+<BusinessLogic methodName="addOrUpdateTimeSlot" businessObjectClass="LoTimeSlot" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeSlot" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/**
+This function gets a BoTimeSlot modified or created by UI.
+Checks if the time slot exxists already in the list 
+  - if yes: update item
+  - if no: create item
+*/
+
+if(Utils.isDefined(timeSlot)){
+  
+  var calculateDaySort = function(dayOfWeek, startTime){
+    var day;
+    switch(dayOfWeek) {
+      case 'mon':
+        day = "Monday";
+        break;
+      case 'tue':
+        day = "Tuesday";
+        break;
+      case 'wed':
+        day = "Wednesday";
+        break;
+      case 'thu':
+        day = "Thursday";
+        break;
+      case 'fri':
+        day = "Friday";
+        break;
+      case 'sat':
+        day = "Saturday";
+        break;
+      case 'sun':
+        day = "Sunday";
+        break;
+    }
+    return day + "_" + startTime;
+  };
+  
+  //determine group text
+  //if there exist already items just take the same group text (e.g. Deviation to current time: -9 hrs)
+  var groupText = "";
+  if(me.getAllItems().length > 0){
+    groupText = me.getAllItems()[0].getGroupText();
+  }
+  
+
+  var itemToUpdate = me.getItemByPKey(timeSlot.pKey);
+
+  if(Utils.isDefined(itemToUpdate)){
+
+    //################
+    //###  update  ###
+    //################
+    itemToUpdate.setDayOfWeek(timeSlot.dayOfWeek);
+    itemToUpdate.setStartTime(Localization.localize(timeSlot.startTime.substring(0,8),"time"));
+    itemToUpdate.setEndTime(Localization.localize(timeSlot.endTime.substring(0,8),"time"));
+    itemToUpdate.setStartTimeToSave(timeSlot.startTime.length === 5 ? timeSlot.startTime + ":00.000Z" : timeSlot.startTime);
+    itemToUpdate.setEndTimeToSave(timeSlot.endTime.length === 5 ? timeSlot.endTime + ":00.000Z" : timeSlot.endTime);
+    itemToUpdate.setDaySort(calculateDaySort(timeSlot.dayOfWeek, timeSlot.startTime));
+
+  }else{
+
+    //####################
+    //###  create new  ###
+    //####################
+    
+    //Name is also mandatory. Will be set to account name in save function of the BoCustomer
+    var newItem = {
+      "pKey" : PKey.next(),
+      "operatingHoursId" : timeSlot.operatingHoursId,
+      "dayOfWeek" : timeSlot.dayOfWeek,
+      "type" : timeSlot.type,
+      "startTime" :  Localization.localize(timeSlot.startTime.substring(0,8),"time"),
+      "endTime" : Localization.localize(timeSlot.endTime.substring(0,8),"time"),
+      "startTimeToSave" : timeSlot.startTime.length === 5 ? timeSlot.startTime + ":00.000Z" : timeSlot.startTime,
+      "endTimeToSave" : timeSlot.endTime.length === 5 ? timeSlot.endTime + ":00.000Z" : timeSlot.endTime,
+      "groupText" : groupText,
+      "daySort" : calculateDaySort(timeSlot.dayOfWeek, timeSlot.startTime),
+      "objectStatus": STATE.NEW | STATE.DIRTY
+    };
+    me.addItems([newItem]);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

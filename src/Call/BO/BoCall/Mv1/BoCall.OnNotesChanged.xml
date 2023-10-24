@@ -1,0 +1,27 @@
+<BusinessLogic methodName="onNotesChanged" businessObjectClass="BoCall" businessObjectType="" asynchronous="null" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var value;
+var columnName;
+
+if(handlerParams.listItem.getPKey() === me.getPKey()) {
+  for (var i = 0; i < handlerParams.modified.length; i++) {
+    columnName = handlerParams.modified[i];
+    if (columnName!="text") {
+      continue;
+    }
+    value = handlerParams.newValues[columnName];
+    me.setNote(value);
+
+    var shortText = handlerParams.listItem.getText().substr(0, 100);
+    if(handlerParams.listItem.getText().length > 100) {
+      shortText += "...";
+    }
+    handlerParams.listItem.setShortText(shortText);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,60 @@
+<BusinessLogic methodName="getProductHierarchyForAddItem" businessObjectClass="BoOrderMeta" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fieldName" type="String" />
+    <MethodInput name="productPKey" type="DomPKey" />
+    <MethodInput name="numberOfLevels" type="Integer" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var luPrdSales;
+
+var promise = Facade.getObjectAsync("LuPrdSales", me.getQueryBy("productPKey", productPKey))
+  .then(function (lookupData) {
+
+  luPrdSales = BoFactory.instantiate("LuPrdSales", lookupData);
+  var criterionAttribute;            
+  var productHierarchy = {"fieldName" : fieldName, "values" : []};
+  if (Utils.isDefined(luPrdSales) && !Utils.isEmptyString(luPrdSales.getProductPKey())) 
+  {
+    for (var i=1; i <= numberOfLevels; i++) {
+      criterionAttribute = me.getCriterionAttributeForLevel("" + i);
+
+      if(Utils.isSfBackend())
+      {
+        switch (criterionAttribute) 
+        {
+          case "criterion_1_product_code__c":
+            criterionAttribute = "criterion1";
+            break;
+          case "criterion_2_product_code__c":
+            criterionAttribute = "criterion2";
+            break;
+          case "criterion_3_product_code__c":
+            criterionAttribute = "criterion3";
+            break;
+          case "criterion_4_product_code__c":
+            criterionAttribute = "criterion4";
+            break;
+          case "criterion_5_product_code__c":
+            criterionAttribute = "criterion5";
+            break;
+          case "criterion_6_product_code__c":
+            criterionAttribute = "criterion6";
+            break;
+          default:
+            criterionAttribute = "criterion1";
+
+            break;
+        }
+      }
+
+      productHierarchy.values.push(luPrdSales.get(criterionAttribute));
+    }
+
+  }
+
+  return productHierarchy;
+
+});]]>
+</Code>
+  <Return name="productHierarchy" value="promise" />
+</BusinessLogic>

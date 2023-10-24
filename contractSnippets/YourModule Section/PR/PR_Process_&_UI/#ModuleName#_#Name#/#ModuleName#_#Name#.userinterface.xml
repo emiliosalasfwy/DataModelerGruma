@@ -1,0 +1,4 @@
+<UIDescription name="${#ModuleName#}::${#Name#}UI" schemaVersion="0.0.0.5">
+  <Page pagePattern="" onBackDiscard="">
+  </Page>
+</UIDescription>

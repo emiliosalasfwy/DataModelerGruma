@@ -1,0 +1,11 @@
+<BusinessLogic methodName="getFirst" businessObjectClass="LoBpaPOSGeometry" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var geometryPKey = " ";
+if(me.getItems().length > 0){
+  geometryPKey = me.getItems()[0].getPKey();
+}]]>
+</Code>
+  <Return name="pkey" value="geometryPKey" />
+</BusinessLogic>

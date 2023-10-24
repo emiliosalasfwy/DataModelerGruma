@@ -1,0 +1,12 @@
+<BusinessLogic methodName="getIvcMetasByPaymentMeta" businessObjectClass="BoOrderMeta" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Parameters>
+    <MethodInput name="paymentMetaPKey" type="DomPKey" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+      
+      var params = { "sdoPaymentMetaPKey": paymentMetaPKey };
+      var inventoryMetasByPaymentMeta = this.getLoInventoryMetaByPaymentMeta().getItemsByParam(params);
+      
+    ]]></Code>
+  <Return name="ivcMetasByPaymentMeta" value="inventoryMetasByPaymentMeta" />
+</BusinessLogic>

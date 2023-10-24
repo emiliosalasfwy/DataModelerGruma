@@ -1,0 +1,43 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoUsrNotificationContextMenu" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Build context menu list
+var contextMenuItemList = [];
+
+var newParams  = context.jsonQuery;
+
+if (Utils.isOldParamsFormat(context.jsonQuery))
+{
+      newParams = Utils.convertDsParamsOldToNew(context.jsonQuery);
+      context.jsonQuery = newParams;
+}  
+
+var menuEntry0 = {
+  "id" : "0000001",
+  "actionImg" : "EnvelopeDarkGrey24",
+  "actionId" : "MarkAsRead",
+  "processEvent" : "MarkAsRead",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+};
+
+var menuEntry1 = { 
+  "id" : "0000002",
+  "actionImg" : "TrashcanDarkGrey24",
+  "actionId" : "Delete",
+  "processEvent" : "Delete",
+  "actionVisible" : "1",
+  "actionEnabled" : "1"
+}; 
+
+contextMenuItemList.push(menuEntry0);
+contextMenuItemList.push(menuEntry1);
+
+me.addItems(contextMenuItemList);
+
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

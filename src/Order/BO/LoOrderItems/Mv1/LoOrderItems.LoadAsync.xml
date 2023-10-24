@@ -1,0 +1,71 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoOrderItems" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonParams" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loadPromise;
+var useMergeEngine = jsonParams.useMergeEngine;
+
+if (Utils.isCasBackend() || !useMergeEngine) {
+  // Load items from temporary table containing the merge result via "LoOrderItemsPrepopulation"
+  loadPromise = Facade.getListAsync("LoOrderItemsPrepopulation", jsonParams).then(
+    function(items) {
+      // Add items to list "LoOrderItems"
+      me.addItems(items, jsonParams);
+      me.postLoadItemUpdates(me.getAllItems(), jsonParams);
+      if (me['setObjectStatus']) {
+        me.setObjectStatus(STATE.PERSISTED);
+      }
+      return when.resolve(me);
+    });
+}
+else {
+  // Get merge engine parameters
+  var mergeEngineCalls = [];
+  var mergeEngineParams = me.getMEParamsForProposalList(jsonParams);
+  mergeEngineCalls.push(Facade.getMergedListAsync(mergeEngineParams));
+
+  if(jsonParams.considerSelectablePromotion == "1"){
+    var mergeEngineParamsForSelectablePromotions = me.getMEParamsForItemsOfSelectPromotions(jsonParams);
+    mergeEngineCalls.push(Facade.getMergedListAsync(mergeEngineParamsForSelectablePromotions));
+  }
+
+  loadPromise = when.all(mergeEngineCalls).then(
+    function (mergeEngineResults) {
+      // Add items to list
+
+      for (var i = 0; i < mergeEngineResults.length; i++){
+        var items = mergeEngineResults[i];
+        var existingItems = {};
+
+        // workaround for the ME returning duplicate persisted items under certein circumstances
+        var remainingItems = items.filter(function (item) {
+          var isDuplicate = !Utils.isEmptyString(item.pKey) && Utils.isDefined(existingItems[item.pKey]);
+          existingItems[item.pKey] = item;
+          return !isDuplicate;
+        });
+
+        me.addItems(remainingItems, jsonParams);
+      }
+      // items are not in the right order because of the 2 merge engine calls
+      // additionally the refPKey is not available yet (empty until set by postLoadOrderItems)
+      me.orderBy([
+        { "prdMainPKey": "ASC" },
+        { "sdoItemMetaPKey": "ASC" },
+        { "promotionPKey": "ASC" },
+        { "sdoParentItemPKey": "ASC" },
+        { "isOrderUnit" : "DESC" },
+        { "sort" : "ASC" }]);
+      me.postLoadItemUpdates(me.getItems(), jsonParams);
+    });
+}
+
+var promise = loadPromise.then(function(){
+  // Filters need to be reset in order not to have side effects of a previous order
+  me.resetAllFilters();
+  me.setFilter("deletedFreeItem", "0", "EQ");
+  return me;
+});]]>
+</Code>
+  <Return name="loOrderItems" value="promise" />
+</BusinessLogic>

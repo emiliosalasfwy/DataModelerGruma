@@ -1,0 +1,12 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoPrmProducts" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[result.sortList();
+result.orderBy({"sortId":"ASC"});
+var promise = when.resolve(result);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

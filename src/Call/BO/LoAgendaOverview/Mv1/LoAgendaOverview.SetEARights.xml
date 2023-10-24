@@ -1,0 +1,19 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeVisibility" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var me = this;
+var acl = me.getACL();
+
+if(timeVisibility === "0")
+{  
+  acl.removeRight(AclObjectType.PROPERTY,"timeFrom", AclPermission.VISIBLE);
+}
+else
+{ 
+  acl.addRight(AclObjectType.PROPERTY,"timeFrom", AclPermission.VISIBLE);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

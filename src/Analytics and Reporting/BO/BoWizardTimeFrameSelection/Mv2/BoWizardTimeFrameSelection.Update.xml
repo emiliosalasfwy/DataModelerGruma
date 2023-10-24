@@ -1,0 +1,11 @@
+<BusinessLogic methodName="update" businessObjectClass="BoWizardTimeFrameSelection" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="userPKey" type="String" />
+    <MethodInput name="userName" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[this.setUserPKey(userPKey);
+this.setUserName(userName);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

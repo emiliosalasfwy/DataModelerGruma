@@ -1,0 +1,7 @@
+<BusinessLogic methodName="planningAllowed" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var allowed = !(Utils.isPhone() || this.creationAllowed() !== "1");]]>
+</Code>
+  <Return name="allowed" value="allowed" />
+</BusinessLogic>

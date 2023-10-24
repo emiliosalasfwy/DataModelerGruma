@@ -1,0 +1,13 @@
+<BusinessLogic methodName="endVisit" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+  <Code language="JavaScript"><![CDATA[if (me.getStatus() === 'InProgress') {
+  var aclBo = me.getACL();
+  aclBo.addRight(AclObjectType.PROPERTY, "status", AclPermission.EDIT);
+  me.setStatus('Completed');
+  aclBo.removeRight(AclObjectType.PROPERTY, "status", AclPermission.EDIT);
+  me.setActualEndDate(Utils.convertAnsiDateTime2AnsiDate(Utils.createAnsiDateTimeNow()));
+  me.setActualEndTime(Utils.createAnsiDateTimeNow().substring(11,16));
+  me.setActualEndTimeUI(Utils.createAnsiDateTimeNow().substring(11,16));
+}]]></Code>
+  <Return name="" value="" />
+</BusinessLogic>

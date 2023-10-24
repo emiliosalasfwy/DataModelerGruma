@@ -1,0 +1,135 @@
+<BusinessLogic methodName="validateDeliveryDate" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[var skipValidation = false;
+var promise = when.resolve();
+
+if(me.getPhase() != BLConstants.Order.PHASE_RELEASED && me.getPhase() != BLConstants.Order.PHASE_CANCELED && me.getSyncStatus() !== BLConstants.Order.NOT_SYNCABLE && me.getBoOrderMeta().getCheckDeliveryDate() == 1) {
+  var newError;
+  var level;
+  var deliveryDate = Utils.convertAnsiDate2Date(me.getDeliveryDate());
+  var maxDeliveryDate = Utils.convertAnsiDate2Date(Utils.addDays2AnsiFullDate(Utils.createAnsiToday(), me.getBoOrderMeta().getMaxLeadTime()));
+
+  // Determine level of error message
+  if (me.getBoOrderMeta().getCheckDeliveryDate() == 1) {
+    level = "error";
+  }
+  else {
+    level = "warning";
+  }
+
+  // Check Order.DeliveryDate > Order.CommitDate
+  if(Utils.isDefined(deliveryDate)) {
+    var commitDate = Utils.convertAnsiDate2Date(me.getCommitDate());
+    if (commitDate > deliveryDate) {
+      newError = {
+        "level": level,
+        "objectClass": "BoOrder",
+        "simpleProperty": "deliveryDate",
+        "messageID": "CasSdoCommitDateGreaterDeliveryDate"
+      };
+      messageCollector.add(newError);
+      skipValidation = true;
+    }
+  }
+  else {
+    newError = {
+      "level": level,
+      "objectClass": "BoOrder",
+      "simpleProperty": "deliveryDate",
+      "messageID": "CasSdoDeliveryDateNull"
+    };
+    messageCollector.add(newError);
+    skipValidation = true;
+  }
+
+  // Delivery date should not be larger than max lead time
+  var maxLeadTime = me.getBoOrderMeta().getMaxLeadTime();
+
+  if (deliveryDate > maxDeliveryDate && !skipValidation) {
+    newError = {
+      "level": level,
+      "objectClass": "BoOrder",
+      "simpleProperty": "deliveryDate",
+      "messageParams": { "days": maxLeadTime },
+      "messageID": "CasSdoMainDeliveryDateTooLarge"
+    };
+    messageCollector.add(newError);
+    skipValidation = true;
+  }
+
+  if (!skipValidation) {
+
+    // Check delivery date for saturday, sunday or public holiday
+    // Load list of public holidays for check
+    var deliveryDateValid = true;
+    var jsonParams = [];
+    jsonParams.push({ "field": "checkDate", "value": Utils.createAnsiToday() });
+    jsonParams.push({ "field": "maxCheckDate", "value": Utils.convertFullDate2Ansi(maxDeliveryDate) });
+
+    var jsonQuery = {};
+    jsonQuery.params = jsonParams;
+
+    promise = BoFactory.loadObjectByParamsAsync("LoPublicHolidays", jsonQuery)
+      .then(function (loPublicHolidays) {
+
+      var startDeliveryDateAnsi = Utils.createAnsiToday();
+      var calculatedDeliveryDate = Utils.convertAnsiDate2Date(startDeliveryDateAnsi);
+      var validDayCounter = 0;
+      var numberOfDays = 1;
+      var considerSaturday = me.getBoOrderMeta().getConsiderSaturday();
+      var considerSunday = me.getBoOrderMeta().getConsiderSunday();
+
+      // Calculate valid days between today and the delivery date
+      while (calculatedDeliveryDate < deliveryDate) {
+        if (me.checkDeliveryDate(calculatedDeliveryDate, considerSaturday, considerSunday, loPublicHolidays)) {
+          validDayCounter = validDayCounter + 1;
+        }
+        calculatedDeliveryDate = Utils.convertAnsiDate2Date(Utils.addDays2AnsiFullDate(startDeliveryDateAnsi, numberOfDays));
+        numberOfDays++;
+      }
+
+      // Check delivery date according to configurations regarding saturday, sunday and public holidays
+      deliveryDateValid = me.checkDeliveryDate(deliveryDate, me.getBoOrderMeta().getConsiderSaturday(), me.getBoOrderMeta().getConsiderSunday(), loPublicHolidays);
+
+      if (!deliveryDateValid) {
+        var messageId;
+
+        if ((deliveryDate.getDay() == 6) && (me.getBoOrderMeta().getConsiderSaturday())) {
+          messageId = "CasSdoMainDeliveryDateSaturday";
+        }
+        else if ((deliveryDate.getDay() === 0) && (me.getBoOrderMeta().getConsiderSunday())) {
+          messageId = "CasSdoMainDeliveryDateSunday";
+        }
+        else {
+          messageId = "CasSdoMainNoWorkDay";
+        }
+
+        newError = {
+          "level": level,
+          "objectClass": "BoOrder",
+          "simpleProperty": "deliveryDate",
+          "messageID": messageId
+        };
+
+        messageCollector.add(newError);
+        skipValidation = true;
+      }
+
+      // Delivery date should not be smaller than lead time
+      if (me.getBoOrderMeta().getDeliveryDatePolicy() === "BuiltIn" && validDayCounter <= me.getBoOrderMeta().getLeadTime() && (!skipValidation)) {
+        newError = {
+          "level": level,
+          "objectClass": "BoOrder",
+          "simpleProperty": "deliveryDate",
+          "messageParams": { "days": me.getBoOrderMeta().getLeadTime() },
+          "messageID": "CasSdoMainDeliveryDateTooSmall"
+        };
+        messageCollector.add(newError);
+      }
+    });
+  }
+}]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

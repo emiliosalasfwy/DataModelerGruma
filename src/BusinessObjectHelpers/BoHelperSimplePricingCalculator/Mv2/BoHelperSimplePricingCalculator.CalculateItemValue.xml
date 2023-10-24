@@ -1,0 +1,50 @@
+<BusinessLogic methodName="calculateItemValue" businessObjectClass="BoHelperSimplePricingCalculator" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="mainItem" type="Object" />
+    <MethodInput name="boOrderMeta" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var prices = {
+  grossValue: 0,
+  grossValueReceipt:  0,
+  value: 0,
+  valueReceipt: 0,
+  price: 0,
+  basePrice: 0,
+  basePriceReceipt: 0
+};
+
+var basePrice = parseFloat((mainItem.getSimplePricingBasePrice()).toString().replace(",","."));
+var discount = mainItem.getDiscount();
+var quantity = mainItem.getQuantity();
+var price;
+var basePricePerCurrentUnit = 0;
+
+if (mainItem.getMergeEngine_invalidated() == "0") {
+  basePricePerCurrentUnit = basePrice * mainItem.getPiecesPerSmallestUnit() / mainItem.getPiecesPerSmallestUnitForBasePrice();
+}
+var itemMeta = boOrderMeta.getLoOrderItemMetas().getItemsByParam({ "pKey" : mainItem.getSdoItemMetaPKey() });
+if (Utils.isDefined(itemMeta[0]) && (itemMeta[0].getUseSpecialPrice() == "1") && (mainItem.getSpecialPriceReceipt() > 0)) {
+  price = mainItem.getSpecialPriceReceipt();
+}
+else if (discount > 0) {
+  price = basePricePerCurrentUnit - (discount * basePricePerCurrentUnit / 100);
+}
+else {
+  price = basePricePerCurrentUnit;
+}
+//list of modified attributes has to be reset -> performance optimization (list refresh is missing)
+// otherwise event is triggerd twice for qty -> wrong basket values
+prices.price = price;
+prices.basePrice = basePrice;
+prices.basePriceReceipt = quantity > 0 ? price : 0;
+
+if (Utils.isDefined(quantity)) {
+  prices.grossValue = quantity * basePricePerCurrentUnit;
+  prices.grossValueReceipt = quantity * basePricePerCurrentUnit;
+  prices.value = quantity * price;
+  prices.valueReceipt = quantity * price;
+}]]>
+</Code>
+  <Return name="prices" value="prices" />
+</BusinessLogic>

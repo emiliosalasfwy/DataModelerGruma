@@ -1,0 +1,7 @@
+<BusinessLogic methodName="getListLength" businessObjectClass="LoTruckLoadTemplates" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var listLength = this.getAllItems().length;]]>
+</Code>
+  <Return name="listLength" value="listLength" />
+</BusinessLogic>

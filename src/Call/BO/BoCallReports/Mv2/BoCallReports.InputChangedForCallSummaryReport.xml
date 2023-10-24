@@ -1,0 +1,7 @@
+<BusinessLogic methodName="inputChangedForCallSummaryReport" businessObjectClass="BoCallReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[//This function has been deprecated]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

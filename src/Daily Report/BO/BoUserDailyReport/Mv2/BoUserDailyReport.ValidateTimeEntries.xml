@@ -1,0 +1,121 @@
+<BusinessLogic methodName="validateTimeEntries" businessObjectClass="BoUserDailyReport" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var isOverlap = false;
+var dateTimeHelper = ApplicationContext.get("dateTimeHelper");
+var entry1 = "";
+var entry2 = "";
+var entry1TimeFrame = "";
+var entry2TimeFrame = "";
+
+if (me.getBoUserDocMeta().getUiGroup() === "TimeCard") {
+  var loTimeEntries = me.getLoUsrTimeEntry().getItemsByParamArray([{
+    "usrTimeEntryMetaPKey" : me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey(),
+    "op" : "NE"
+  }, {
+    "description" : "Hidden",
+    "op" : "NE"
+  }, {
+    "objectStatus" : STATE.DIRTY | STATE.DELETED,
+    "op" : "NE"
+  }]);
+
+  loTimeEntries = dateTimeHelper.sortTimeEntries(loTimeEntries);
+
+  for (var idxloTimeEntries = 0; idxloTimeEntries < loTimeEntries.length; idxloTimeEntries++) {
+
+    if (idxloTimeEntries + 1 < loTimeEntries.length) {
+
+      var curDateEnd = dateTimeHelper.getUTCDateWithoutSeconds(loTimeEntries[idxloTimeEntries].getEffectiveUTCTimeThru());
+      var nextStartDate = dateTimeHelper.getUTCDateWithoutSeconds(loTimeEntries[idxloTimeEntries + 1].getEffectiveUTCTimeFrom());
+
+      if (nextStartDate.getTime() < curDateEnd.getTime()) {
+        entry1 = loTimeEntries[idxloTimeEntries].getDescription();
+        entry2 = loTimeEntries[idxloTimeEntries+1].getDescription();
+        entry1TimeFrame = loTimeEntries[idxloTimeEntries].getEffectiveTimeFrom() + " - " + loTimeEntries[idxloTimeEntries].getEffectiveTimeThru();
+        entry2TimeFrame = loTimeEntries[idxloTimeEntries+1].getEffectiveTimeFrom() + " - " + loTimeEntries[idxloTimeEntries+1].getEffectiveTimeThru();
+        isOverlap = true;
+        break;
+      }
+    }
+  }
+
+  var newError;
+  if (isOverlap) {
+    if (Utils.isDefined(me.getReleaseProcessActive()) && me.getReleaseProcessActive() == "1") {
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoUserDailyReport",
+        "simpleProperty" : " ",
+        "messageID" : "CasUsrTimeCardReleaseNoTimeOverlap",
+        "messageParams": { "entry1": entry1 , "entry2": entry2, "time1":entry1TimeFrame , "time2":entry2TimeFrame }
+      };
+    }
+    else {
+      newError = {
+        "level" : "error",
+        "objectClass" : "BoUserDailyReport",
+        "simpleProperty" : " ",
+        "messageID" : "CasUsrTimeCardSaveNoTimeOverlap",
+        "messageParams": { "entry1": entry1 , "entry2": entry2, "time1":entry1TimeFrame , "time2":entry2TimeFrame }
+      };
+    }
+  }
+
+  var newError2;
+  if(me.getReleaseProcessActive()== "1" && loTimeEntries.length > 0) {
+
+    var loWorkingTimeEntries = me.getLoUsrTimeEntry().getItemsByParamArray([{
+      "usrTimeEntryMetaPKey" : me.getBoUserDocMeta().getWorkUsrTimeEntryMetaPKey(),
+      "op" : "EQ"
+    }, {
+      "description" : "Hidden",
+      "op" : "NE"
+    }]);
+
+    loWorkingTimeEntries = dateTimeHelper.sortTimeEntries(loWorkingTimeEntries);
+
+    var startDate = dateTimeHelper.getUTCDateWithoutSeconds(loWorkingTimeEntries[0].getEffectiveUTCTimeFrom());
+    var endNewDate = Utils.createDateNow();
+    var utcAnsiEndDate = dateTimeHelper.getUTCAnsiString(endNewDate, loTimeEntries[loTimeEntries.length -1].getEffectiveTimeThruGeoOffset(), loTimeEntries[loTimeEntries.length -1].getEffectiveTimeThruDSTOffset());
+    var endDate = dateTimeHelper.getUTCDateWithoutSeconds(utcAnsiEndDate);
+    var timeRange;
+
+    if(dateTimeHelper.getUTCDateWithoutSeconds(loTimeEntries[0].getEffectiveUTCTimeFrom()).getTime() < startDate.getTime()) {
+      timeRange = loTimeEntries[0].getEffectiveTimeFrom() + " - " + loTimeEntries[0].getEffectiveTimeThru();
+      newError2 = {
+        "level" : "error",
+        "objectClass" : "BoUserDailyReport",
+        "simpleProperty" : " ",
+        "messageID" : "CasUsrTimeEntryOutOfBoundsReleaseActive",
+        "messageParams": { "entry": loTimeEntries[0].getDescription() , "time":timeRange}
+      };
+    }
+
+    if(dateTimeHelper.getUTCDateWithoutSeconds(loTimeEntries[loTimeEntries.length -1].getEffectiveUTCTimeThru()).getTime() > endDate.getTime()) {
+      //out of bound
+      timeRange = loTimeEntries[loTimeEntries.length -1].getEffectiveTimeFrom() + " - " + loTimeEntries[loTimeEntries.length -1].getEffectiveTimeThru();
+      newError2 = {
+        "level" : "error",
+        "objectClass" : "BoUserDailyReport",
+        "simpleProperty" : " ",
+        "messageID" : "CasUsrTimeEntryOutOfBoundsReleaseActive",
+        "messageParams": { "entry": loTimeEntries[loTimeEntries.length -1].getDescription() , "time":timeRange}
+      };
+    }
+  }
+
+  if(Utils.isDefined(newError)) {
+    messageCollector.add(newError);
+    me.setReleaseProcessActive("0");
+  }
+  if(Utils.isDefined(newError2)) {
+    messageCollector.add(newError2);
+    me.setReleaseProcessActive("0");
+  }
+}]]>
+</Code>
+  <Return name="validationMessage" value="messageCollector" />
+</BusinessLogic>

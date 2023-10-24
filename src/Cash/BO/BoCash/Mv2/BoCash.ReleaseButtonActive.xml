@@ -1,0 +1,7 @@
+<BusinessLogic methodName="releaseButtonActive" businessObjectClass="BoCash" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var active = (this.getPhase() === "Initial");]]>
+</Code>
+  <Return name="editable" value="active" />
+</BusinessLogic>

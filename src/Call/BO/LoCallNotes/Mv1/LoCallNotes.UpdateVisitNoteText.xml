@@ -1,0 +1,15 @@
+<BusinessLogic methodName="updateVisitNoteText" businessObjectClass="LoCallNotes" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="noteText" type="String" />
+    <MethodInput name="clbMainPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentNote = me.getItemsByParam({"pKey": clbMainPKey}); 
+if(currentNote.length>0){
+  if(currentNote[0].getText() != noteText){
+    currentNote[0].setText(noteText);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

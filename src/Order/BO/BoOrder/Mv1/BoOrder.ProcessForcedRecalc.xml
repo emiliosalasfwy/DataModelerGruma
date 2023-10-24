@@ -1,0 +1,59 @@
+<BusinessLogic methodName="processForcedRecalc" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve("ok");
+
+//Get StateType of next phase
+var nextStates = me.getBoWorkflow().getNextStates(me.getActualStatePKey());
+
+if (nextStates.length > 0){
+  if (nextStates[0].stateType == "Released"){
+    //check whether to check for forced recalculation
+    var boMeta = me.getBoOrderMeta();
+    var recalcRequired = boMeta.getRecalculationRequired();
+    if(recalcRequired !== "No"){
+      var computePrice = (boMeta.getComputePrice() === BLConstants.Order.BUTTON_MODE) || (boMeta.getComputePrice() === BLConstants.Order.EDIT_MODE);
+      /*The system checks whether the order is outdated. The order is outdated if
+        Order.Calculation_Time <> empty (Min.Date)
+        Order.Calculation_Time <> current date (only date, time not considered)
+        get date part of calc time*/
+      var calcTime = Utils.convertAnsiDateTime2AnsiDate(me.getCalculationTime());
+      var doctatype = me.getDocTaType();
+      var outdated = calcTime !== Utils.getMinDateAnsi() && calcTime !== Utils.createAnsiDateToday() && doctatype !== "NonValuatedDeliveryNote";
+      var forceRecalc = computePrice && outdated;
+
+      if(forceRecalc){
+        if(recalcRequired === "YesNotify"){
+          //show the notification
+          var buttonValues = {};
+          buttonValues[Localization.resolve("OK")] = "ok";
+          buttonValues[Localization.resolve("Cancel")] = "cancel";
+          promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Notification"), Localization.resolve("OrderForcedRecalculation"), buttonValues).then(
+            function(input){
+              if(input === "ok"){
+                return me.cpCalculate().then(
+                  function(){
+                    return "ok";
+                  });
+              }
+              else{
+                //cancel release process
+                me.setSetPhaseInBeforeSave("0");
+                me.setValidateForRelease("0");
+                return "Cancel";
+              }
+            });
+        }
+        else{
+          promise = me.cpCalculate().then(
+            function(){
+              return "ok";
+            });
+        }
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="rtrn" value="promise" />
+</BusinessLogic>

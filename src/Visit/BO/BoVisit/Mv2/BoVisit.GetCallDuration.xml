@@ -1,0 +1,34 @@
+<BusinessLogic methodName="getCallDuration" businessObjectClass="BoVisit" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="dateFrom" type="String" />
+    <MethodInput name="timeFrom" type="String" />
+    <MethodInput name="dateThru" type="String" />
+    <MethodInput name="timeThru" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var duration = 0;
+
+var isValid = function (date)
+{
+  return Utils.isDefined(date) && !Utils.isEmptyString(date);
+};
+
+var dateFrom = isValid(dateFrom) ? dateFrom : me.getPlannedStartDate();
+var timeFrom = isValid(timeFrom) ? timeFrom : me.getPlannedStartTime();
+var dateThru = isValid(dateThru) ? dateThru : me.getPlannedEndDate();
+var timeThru = isValid(timeThru) ? timeThru : me.getPlannedEndTime();
+
+if (!Utils.isEmptyString(dateFrom) && !Utils.isEmptyString(timeFrom) && !Utils.isEmptyString(dateThru) && !Utils.isEmptyString(timeThru)){
+  var timePartsTimeFrom = timeFrom.split(":");
+  var timePartsTimeThru = timeThru.split(":");
+
+  var dFrom = Utils.convertAnsiDate2Date(dateFrom);
+  var dThru = Utils.convertAnsiDate2Date(dateThru);
+  dFrom.setHours(timePartsTimeFrom[0], timePartsTimeFrom[1], 0, 0);
+  dThru.setHours(timePartsTimeThru[0], timePartsTimeThru[1], 0, 0);
+
+  duration = Math.round((dThru - dFrom) / 60000);
+}]]>
+</Code>
+  <Return name="callDuration" value="duration" />
+</BusinessLogic>

@@ -1,0 +1,69 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="LoTruckLoadOverview" businessObjectType="{BOType}" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(context.jsonQuery)) {
+  var newParams = context.jsonQuery;
+  if (Utils.isOldParamsFormat(newParams)) {
+    newParams = Utils.convertDsParamsOldToNew(newParams);
+  }
+
+  if (!Utils.isDefined(newParams.tmgMainPKey) &&
+      Utils.isDefined(ApplicationContext.get('currentTourPKey')) &&
+      !Utils.isEmptyString(ApplicationContext.get('currentTourPKey'))) {
+    newParams.tmgMainPKey = ApplicationContext.get('currentTourPKey');
+  }
+
+  var usrMainPKey = ApplicationContext.get('user').getPKey();
+  newParams.usrMainPKey = usrMainPKey;
+  context.jsonQuery = newParams;
+}
+
+var lookupMetaText;
+var promise = BoFactory.loadObjectByParamsAsync("LuInventoryMetaText", context.jsonQuery).then(
+  function (luInventoryMetaText) {
+    lookupMetaText = luInventoryMetaText;
+    return Facade.getListAsync("LoTruckLoadOverview", context.jsonQuery);
+  }).then(
+  function (loTruckLoadOverview) {
+    for (var i = 0; i < loTruckLoadOverview.length; i++) {
+      var item = loTruckLoadOverview[i];
+
+      if (item.phase === "Released" || item.phase === "Initial" || item.phase === "Canceled") {
+        var releaseTime = item.releaseTime;
+        var user = ApplicationContext.get('user');
+        if (item.phase === "Initial") {
+          item.releaseTime = ' ';
+        }        else if ((item.phase === "Released" && item.recipientPKey === user.getPKey() && item.documentType != "TruckIvcTransferInward") || (item.phase === "Canceled" && item.senderPKey === user.getPKey() && item.documentType == "TruckIvcTransferInward")) {
+          item.releaseTime = ' ';
+          item.documentId = ' ';
+          if (Utils.isDefined(lookupMetaText)) {
+            item.metaText = lookupMetaText.getMetaText();
+          } else {
+            item.metaText = "";
+          }
+          item.phase = 'Initial';
+        } else {
+          if (item.releaseTime === Utils.getMinDate() || item.releaseTime == " ") {
+            item.releaseTime = ' ';
+          } else {
+            item.releaseTime = Localization.localize(releaseTime, 'date');
+            item.releaseTime1 = Localization.localize(releaseTime, 'time');
+          }
+        }
+      } else {
+        item.releaseTime = ' ';
+      }
+    }
+
+    me.addItems(loTruckLoadOverview, context.jsonQuery.params);
+    me.orderBy({
+      "sortOrder": "ASC",
+      "sortReleaseTime": "DESC",
+      "documentId": "DESC"
+    });
+  });]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

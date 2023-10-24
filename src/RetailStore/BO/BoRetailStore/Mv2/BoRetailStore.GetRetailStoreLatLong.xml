@@ -1,0 +1,20 @@
+<BusinessLogic methodName="getRetailStoreLatLong" businessObjectClass="BoRetailStore" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var retailStoreLatLong = {};
+
+if(me.getLongitude() !== 0 && me.getLatitude() !== 0) {
+  // lat&long from retail store table.
+  retailStoreLatLong.latitude = me.getLatitude();
+  retailStoreLatLong.longitude = me.getLongitude();
+}
+
+else {
+    retailStoreLatLong.latitude = Utils.isEmptyString(me.getLuLocation().getLatitude()) ? 0 : me.getLuLocation().getLatitude() ;
+    retailStoreLatLong.longitude = Utils.isEmptyString(me.getLuLocation().getLongitude()) ? 0 : me.getLuLocation().getLongitude();
+}
+
+return retailStoreLatLong;]]>
+</Code>
+  <Return name="RetailStoreLatLong" value="retailStoreLatLong" />
+</BusinessLogic>

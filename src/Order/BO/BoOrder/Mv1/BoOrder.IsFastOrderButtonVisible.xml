@@ -1,0 +1,10 @@
+<BusinessLogic methodName="isFastOrderButtonVisible" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visible =  me.getBoOrderMeta().getItemListOption() == "FlatList" && me.isEditable() &&
+(!Utils.isDefined(me.getLoSelectablePromotion())||
+(Utils.isDefined(me.getLoSelectablePromotion()) && !Utils.isDefined(me.getLoSelectablePromotion().getCurrent()))||
+(Utils.isDefined(me.getLoSelectablePromotion()) && Utils.isDefined(me.getLoSelectablePromotion().getCurrent()) && me.getLoSelectablePromotion().getCurrent().getSpecialPromoted() != "1"));]]>
+</Code>
+  <Return name="visible" value="visible" />
+</BusinessLogic>

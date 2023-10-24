@@ -1,0 +1,26 @@
+<BusinessLogic methodName="getProductsSelectionTitle" businessObjectClass="LoRewards" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loRewards" type="Object" />
+    <MethodInput name="rewardId" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var currentReward = loRewards.getItemByPKey(rewardId);
+var defaultValue;
+var title;
+
+if(currentReward.getPerFactor() >= 1){
+  defaultValue = currentReward.getDefaultValue()*currentReward.getPerFactor();
+} else{
+  defaultValue = currentReward.getDefaultValue();
+}
+
+me.setCurrentByPKey(rewardId);
+if(defaultValue > 0) {
+  title = Localization.resolve("Header_RewardProductsList","You can [b]choose up to "+ defaultValue.toString() + " free products.[/b]"); 
+  title = title.replace("'#x#'",defaultValue.toString());
+} else{
+  title = Localization.resolve("Header_RewardProductsList_NoLimit","You can [b]choose any number of products.[/b]");
+}]]>
+</Code>
+  <Return name="title" value="title" />
+</BusinessLogic>

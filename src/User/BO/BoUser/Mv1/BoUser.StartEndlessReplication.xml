@@ -1,0 +1,9 @@
+<BusinessLogic methodName="startEndlessReplication" businessObjectClass="BoUser" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var syncTimeIntervall = 0;
+syncTimeIntervall = me.getBoUserSettings().getSyncTimeIntervall() * 60;
+Facade.startEndlessReplication(syncTimeIntervall, undefined);]]>
+</Code>
+  <Return name="syncTimeIntervallInSeconds" value="syncTimeIntervall" />
+</BusinessLogic>

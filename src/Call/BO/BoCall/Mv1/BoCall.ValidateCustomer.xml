@@ -1,0 +1,23 @@
+<BusinessLogic methodName="validateCustomer" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (messageCollector.containsNoErrors()) {
+  var managementRelValidFrom = Utils.convertAnsiDate2Date(me.getLuCustomerManagementInfo().getManagementRelationValidFrom());
+  var managementRelValidThru = Utils.convertAnsiDate2Date(me.getLuCustomerManagementInfo().getManagementRelationValidThru());
+  var callDateFrom = Utils.convertAnsiDate2Date(me.getDateFrom());
+  var invalidManagementRelCondition = (callDateFrom < managementRelValidFrom || callDateFrom > managementRelValidThru);
+
+  if (!Utils.isEmptyString(me.getBpaMainPKey()) && invalidManagementRelCondition) {
+    var newError = {
+      "level" : "error",
+      "objectClass" : "BoCall",
+      "messageID" : "CasClbCallInvalidManagementRelation"
+    };
+    messageCollector.add(newError);
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

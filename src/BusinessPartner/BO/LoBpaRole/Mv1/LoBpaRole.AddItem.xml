@@ -1,0 +1,31 @@
+<BusinessLogic methodName="addItem" businessObjectClass="LoBpaRole" businessObjectType="" asynchronous="FALSE" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="customerPKey" type="DomPKey" />
+    <MethodInput name="bpaRoleMetaPKey" type="DomPKey" />
+    <MethodInput name="category" type="DomBpaRoleCategory" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/* <!-- CW-REQUIRED: LI instantiation --> */
+var liBpaRole = 
+    {
+      "pKey" : PKey.next(),
+      "customerPKey" : customerPKey,
+      "bpaRoleMetaPKey" : bpaRoleMetaPKey,
+      "category" : category,
+      "salesOrg" : ApplicationContext.get('user').getBoUserSales().getSalesOrg(),
+      "validFrom" : Utils.createAnsiDateToday(),
+      "validThru" : Utils.getMaxDate(),
+      "objectStatus" : STATE.NEW
+    };
+
+// Add new Item to ListObjext
+
+if (Utils.isSfBackend())  // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+	me.addItemsWithPivotKey([liBpaRole], category);
+} else {
+	me.addListItems([liBpaRole]);
+}]]>
+</Code>
+  <Return name="liBpaRole" value="liBpaRole" />
+</BusinessLogic>

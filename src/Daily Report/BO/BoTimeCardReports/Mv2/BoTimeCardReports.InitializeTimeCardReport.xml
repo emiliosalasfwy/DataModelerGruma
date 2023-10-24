@@ -1,0 +1,431 @@
+<BusinessLogic methodName="initializeTimeCardReport" businessObjectClass="BoTimeCardReports" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="timeEntryData" type="Object" />
+    <MethodInput name="containerName" type="String" />
+    <MethodInput name="team" type="String" />
+    <MethodInput name="userName" type="String" />
+    <MethodInput name="startDate" type="String" />
+    <MethodInput name="endDate" type="String" />
+    <MethodInput name="loActivityItem" type="Object" />
+    <MethodInput name="reloading" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var chartHelper = me.getChartHelper();
+var isReload = (reloading === "reload");
+var svg;
+var text;
+var legendGroupWidth;
+var legendGroupHeight;
+var legendSvgWidth;
+var legendSvgHeight;
+// Get container and add title and chart container divs
+var d3Container;
+if(isReload) {
+  d3Container = chartHelper.getUIContainer(containerName, false);
+}
+else {
+  d3Container = chartHelper.getUIContainer(containerName, true);
+  chartHelper.addChartContainers(d3Container, containerName, "0", "1", "#e5e5e5");
+}
+var chartString = "chart_" + containerName;
+var chartSelector = "#"+chartString;
+var jsonData = me.prepareDataForTimeCardReport(timeEntryData, userName, team, startDate, endDate, loActivityItem);
+
+// Set title
+var title;
+if(team == "1") {
+  title = Localization.resolve("Report_TimeCard_Title_Team");
+}
+else {
+  title = Localization.resolve("Report_TimeCard_Title");
+}
+
+if(!isReload) {
+  chartHelper.setChartTitle(d3Container, title, containerName);
+}
+else {
+  svg = d3Container.select("#chartTitle_" + containerName);
+  text = svg.selectAll("text").text(title);
+}
+
+// Compute ratio
+var dimensions = chartHelper.computeContainerSize(containerName, 1, 1);
+var isPortraitMode = dimensions.height > dimensions.width;
+
+var chartReference;
+if(!isReload) {
+  // Define attributes for chart
+  var sizeJson;
+  if(isPortraitMode) {
+    if(Utils.isPhone()) {
+      sizeJson = chartHelper.computeContainerSize(containerName, 0.40, 1);
+    }
+    else {
+      sizeJson = chartHelper.computeContainerSize(containerName, 0.5, 1);
+    }
+  }
+  else {
+    sizeJson = chartHelper.computeContainerSize(containerName, 0.8, 0.5);
+  }
+
+  var legendHighlight = function(id) {
+    d3Container.selectAll("#colorContainer").select(".legendDiv").select(".legendSvg").select(".legend").selectAll('.legendGroup3').style("opacity",function(id2) {
+      return (id2.id != id.id || chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1) ? 0.3 : 1;
+    });
+  };
+
+  var legendUnhighlight = function(id) {
+    d3Container.selectAll("#colorContainer").select(".legendDiv").select(".legendSvg").select(".legend").selectAll('.legendGroup3').style("opacity",1);
+  };
+
+  // Create Chart
+  chartReference = c3.generate({
+    bindto : chartSelector,
+    data : {
+      columns : [jsonData.data.columns[0]],
+      type : 'pie',
+      onclick: legendHighlight,
+      onmouseover: legendHighlight,
+      onmouseout: legendUnhighlight,
+      onselected: legendHighlight,
+      onunselected: legendUnhighlight
+    },
+    color: {
+      pattern: jsonData.colors
+    },
+    size: sizeJson,
+    transition: {
+      duration: 1000
+    },
+    legend: {
+      show: false,
+      position: 'right'
+    },
+    tooltip : {
+      show:true,
+      contents : me.getChartHelper().getStyledTooltipFunction()
+    }
+  });
+}
+else {
+  chartReference = me.getChartHelper().getChartFromStorage(containerName);
+  chartReference.unload();
+
+  chartReference.load({
+    columns: [jsonData.data.columns[0]]
+  });
+}
+
+// custom legend
+var chartDiv = d3Container.select(chartSelector);
+var chartSvg = d3Container.select(chartSelector).select('svg');
+var legendDiv;
+var legendSvg;
+var legendGroup;
+
+if(isReload) {
+  legendDiv = d3Container.selectAll(".legendDiv");
+  legendSvg = legendDiv.select("svg");
+  legendGroup = legendSvg.select("g");
+
+  var groups = legendGroup.selectAll("g");
+  var rectangles = legendGroup.selectAll(".legendRect");
+  rectangles.style("fill", function(id) {
+    return (jsonData.legendData[id.index].legendEntry === "3" ? jsonData.legendData[id.index].color : "White");
+  });
+
+  var mainTexts = groups.selectAll(".mainText");
+  mainTexts.text(function(id) {
+    return jsonData.legendData[id.index].id;
+  });
+
+  var timeTexts = groups.selectAll(".timeText");
+  timeTexts.text(function(id) {
+    if(jsonData.legendData[id.index].legendEntry === "3" || jsonData.legendData[id.index].legendEntry === "4") {
+      return Math.floor(jsonData.legendData[id.index].time/60) + ":" + ("00" + (jsonData.legendData[id.index].time%60).toString()).slice(-2) + " h";
+    }
+  });
+
+  var eventRects = groups.selectAll(".legendEventRect");
+  eventRects.on('mouseover', function (id) {
+    if(chartReference.internal.hiddenTargetIds.indexOf(jsonData.legendData[id.index].id)!=-1) {
+      return;
+    }
+
+    chartReference.focus(jsonData.legendData[id.index].id);
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      return (id2.id != jsonData.legendData[id.index].id || chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1) ? 0.3 : 1;
+    });
+  })
+    .on('mouseout', function (id) {
+    chartReference.revert();
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      return chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1 ? 0.3 : 1;
+    });
+  })
+    .on('click', function (id) {
+    chartReference.internal.api.toggle(jsonData.legendData[id.index].id);
+    chartReference.internal.api.revert();
+
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      if(chartReference.internal.hiddenTargetIds.indexOf(jsonData.legendData[id.index].id)!=-1) {
+        return chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1 ? 0.3 : 1;
+      }
+      return (chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1) ? 0.3 : 1;
+    });
+
+    if(!Utils.isPhone()) {
+      var arcs = d3Container.selectAll(".c3-chart-arcs");
+      var texts = arcs.selectAll("text");
+      texts.style("font-size", "1.5em");
+    }
+  });
+}
+else {
+  legendDiv = d3Container.selectAll("#colorContainer").append("div").style("position", "absolute").attr("class", "legendDiv");
+
+  if(isPortraitMode) {
+    if(Utils.isPhone()) {
+      legendDiv.style("height", "40%").style("width", "100%").style("left", "0px").style("top", "60%");
+    }
+    else {
+      legendDiv.style("height", "45%").style("width", "100%").style("left", "0px").style("top", "55%");
+    }
+  }
+  else {
+    legendDiv.style("height", "100%").style("width", "50%").style("left", "50%").style("top", "0px");
+  }
+  legendSvg = legendDiv.append('svg').style("height", "100%").style("width", "100%").attr("class", "legendSvg");
+  legendGroup = legendSvg.append('g').attr("class", "legend");
+
+  var entryGroups = legendGroup.selectAll('g').data(jsonData.legendData).enter().append('g');
+
+  entryGroups.attr("transform", function(d, i) {
+    var offset = i*35;
+    if(i > 1) {
+      offset += 15;
+    }
+
+    if(d.legendEntry==="4") {
+      offset += 10;
+    }
+    return "translate(0,"+ offset +")";
+  })
+    .attr("class", function(id) {
+    return "legendGroup" + id.legendEntry;
+  });
+
+
+  entryGroups.append("rect")
+    .attr("x", function(d, i){ return 0;})
+    .attr("width", "1em")
+    .attr("height", "1em")
+    .attr("class", function(id) {
+    return "legendRect";
+  });
+
+  legendGroup.selectAll(".legendRect")
+    .style("fill-opacity", function(id) {
+    return (id.legendEntry === "3" ? 1 : 0);
+  })
+    .style("fill", function(id) {
+    return (id.legendEntry === "3" ? id.color : "White");
+  });
+
+  entryGroups.append("text")
+    .attr("class", "mainText")
+    .attr("y",function(d, i) {
+    return "0.45em";
+  })
+    .attr("x", function(d, i){ return "1.7em";})
+    .text(function(id) {
+    return id.id;
+  })
+    .style("font", "1.0em sans-serif")
+    .attr("alignment-baseline", "central");
+
+  entryGroups.append("text")
+    .attr("class", "timeText")
+    .attr("y",function(d, i) {
+    return "0.45em";
+  })
+    .attr("x", function(d, i){ return "19em";})
+    .text(function(id) {
+    if(id.legendEntry === "3" || id.legendEntry === "4") {
+      return Math.floor(id.time/60) + ":" + ("00" + (id.time%60).toString()).slice(-2) + " h";
+    }
+  })
+    .style("font", "1.0em sans-serif")
+    .attr("alignment-baseline", "central")
+    .style("text-anchor","end")
+    .attr("startOffset","100%");
+
+  legendGroupWidth = legendGroup.node().getBoundingClientRect().width;
+  legendGroupHeight = legendGroup.node().getBoundingClientRect().height;
+  legendSvgWidth = legendSvg.node().getBoundingClientRect().width;
+  legendSvgHeight = legendSvg.node().getBoundingClientRect().height;
+  var g3 = legendGroup.selectAll('.legendGroup3');
+  var legendEntryHeight = g3.node().getBoundingClientRect().height;
+
+  g3.append("rect")
+    .attr("x", function(d, i){ return 0;})
+    .attr("y", function(d, i){ return -8;})
+    .attr("width", legendGroupWidth)
+    .attr("height", legendEntryHeight+16)
+    .style("fill-opacity", 0)
+    .attr("class", function(id) {
+    return "legendEventRect";
+  })
+    .on('mouseover', function (id) {
+    if(chartReference.internal.hiddenTargetIds.indexOf(id.id)!=-1) {
+      return;
+    }
+
+    chartReference.focus(id.id);
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      return (id2.id != id.id || chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1) ? 0.3 : 1;
+    });
+  })
+    .on('mouseout', function (id) {
+    chartReference.revert();
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      return chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1 ? 0.3 : 1;
+    });
+  })
+    .on('click', function (id) {
+    chartReference.internal.api.toggle(id.id);
+    chartReference.internal.api.revert();
+    legendGroup.selectAll('.legendGroup3').style("opacity",function(id2) {
+      if(chartReference.internal.hiddenTargetIds.indexOf(id.id)!=-1) {
+        return chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1 ? 0.3 : 1;
+      }
+      return (chartReference.internal.hiddenTargetIds.indexOf(id2.id)!=-1) ? 0.3 : 1;
+    });
+
+    if(!Utils.isPhone()) {
+      var arcs = d3Container.selectAll(".c3-chart-arcs");
+      var texts = arcs.selectAll("text");
+      texts.style("font-size", "1.5em");
+    }
+  });
+
+  legendGroup.select('.legendGroup0').selectAll('text').style("font-weight", "bold");
+  var g4 = legendGroup.select('.legendGroup4');
+  g4.append("svg:line")
+    .attr("x1", 0)
+    .attr("y1", -10)
+    .attr("x2", g3[0][0].getBBox().width)
+    .attr("y2", -10)
+    .style("stroke", "#3D424D");
+  legendGroup.selectAll('text').style("fill","#3D424D");
+
+
+  //positioning of legend
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "scale(0.68)");
+  }
+
+  legendGroupWidth = legendGroup.node().getBoundingClientRect().width;
+  legendGroupHeight = legendGroup.node().getBoundingClientRect().height;
+  legendSvgWidth = legendSvg.node().getBoundingClientRect().width;
+  legendSvgHeight = legendSvg.node().getBoundingClientRect().height;
+
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +") scale(0.68)");
+  }
+  else {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +")");
+  }
+
+  //positioning of chart
+  if(Utils.isPhone()) {
+    var chartCont = d3Container.selectAll("#chart_Reporting_TimeCardReportContainer").select("svg");
+    var pieCont = d3Container.selectAll(".c3-chart-arcs");
+    var chartWidth = chartCont.node().getBoundingClientRect().width;
+    var chartHeight = chartCont.node().getBoundingClientRect().height;
+    pieCont.attr("transform", "translate(" + (chartWidth*0.5) +","+ (chartHeight*0.5) +")");
+  }
+}
+
+
+if(!Utils.isPhone()) {
+  var arcs = d3Container.selectAll(".c3-chart-arcs");
+  var texts = arcs.selectAll("text");
+  texts.style("font-size", "1.5em");
+}
+
+// update font styles
+svg = d3Container.select(chartSelector);
+text = svg.selectAll("text");
+text.style("font-family", "Helvetica Neue, Roboto, Segoe UI, sans-serif");
+
+me.getChartHelper().addChartToStorage(containerName, chartReference);
+
+setTimeout(function() {
+  //positioning of legend
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "scale(0.68)");
+  }
+
+  legendGroupWidth = legendGroup.node().getBoundingClientRect().width;
+  legendGroupHeight = legendGroup.node().getBoundingClientRect().height;
+  legendSvgWidth = legendSvg.node().getBoundingClientRect().width;
+  legendSvgHeight = legendSvg.node().getBoundingClientRect().height;
+
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +") scale(0.68)");
+  }
+  else {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +")");
+  }
+
+  //positioning of chart
+  if(Utils.isPhone()) {
+    var chartCont = d3Container.selectAll("#chart_Reporting_TimeCardReportContainer").select("svg");
+    var pieCont = d3Container.selectAll(".c3-chart-arcs");
+    var chartWidth = chartCont.node().getBoundingClientRect().width;
+    var chartHeight = chartCont.node().getBoundingClientRect().height;
+    pieCont.attr("transform", "translate(" + (chartWidth*0.5) +","+ (chartHeight*0.5) +")");
+  }
+}, 200);
+
+
+setTimeout(function() {
+  //positioning of legend
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "scale(0.68)");
+  }
+
+  legendGroupWidth = legendGroup.node().getBoundingClientRect().width;
+  legendGroupHeight = legendGroup.node().getBoundingClientRect().height;
+  legendSvgWidth = legendSvg.node().getBoundingClientRect().width;
+  legendSvgHeight = legendSvg.node().getBoundingClientRect().height;
+
+  if(Utils.isPhone()) {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +") scale(0.68)");
+  }
+  else {
+    legendGroup.attr("transform", "translate(" + (legendSvgWidth-legendGroupWidth)*0.5 +","+ (legendSvgHeight-legendGroupHeight)*0.5 +")");
+  }
+
+  //positioning of chart
+  if(Utils.isPhone()) {
+    var chartCont = d3Container.selectAll("#chart_Reporting_TimeCardReportContainer").select("svg");
+    var pieCont = d3Container.selectAll(".c3-chart-arcs");
+    var chartWidth = chartCont.node().getBoundingClientRect().width;
+    var chartHeight = chartCont.node().getBoundingClientRect().height;
+    pieCont.attr("transform", "translate(" + (chartWidth*0.5) +","+ (chartHeight*0.5) +")");
+  }
+}, 500);
+
+
+var index = 1;
+for(var i = 1; i < jsonData.data.columns.length; i++) {
+  setTimeout(function() {
+    me.inputChangedForTimeCardReport(timeEntryData, containerName, index, userName, team, startDate, endDate, loActivityItem);
+    index++;
+  }, i*1000);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

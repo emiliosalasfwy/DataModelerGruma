@@ -1,0 +1,16 @@
+<BusinessLogic methodName="createAsync" businessObjectClass="LoProductCategoryFilter" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var liProductCategoryFilter = {
+  "pKey": PKey.next(),
+  "text": Localization.resolve('ClearFilter'),
+  "isSelected": false,
+  "specialOption": "CLEAR",
+  "filter": "Category"
+};
+
+me.addListItems([liProductCategoryFilter]);
+var promise = when.resolve(me);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

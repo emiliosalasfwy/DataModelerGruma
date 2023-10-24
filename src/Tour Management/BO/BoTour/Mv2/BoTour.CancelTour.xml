@@ -1,0 +1,197 @@
+<BusinessLogic methodName="cancelTour" businessObjectClass="BoTour" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="reasonCode" type="String" />
+    <MethodInput name="cancelNote" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//#######################################################
+//### Cancel Visit + Delivery documents of the visits ###
+//#######################################################
+var cancelVisit = function (callPKey) {
+  return BoFactory.loadObjectByParamsAsync("BoCall", { "pKey" : callPKey }).then(
+    function (objBoCall) {
+      objBoCall.cancel("CanceledByTour", true);
+    }
+  );
+};
+
+//############################################
+//### Cancel Inventory/TruckLoad Documents ###
+//############################################
+var cancelInvDocument = function (pKey) {
+  var jqueryParams = [];
+  var jqueryQuery = {};
+  jqueryParams.push({
+    "field" : "pKey",
+    "value" : pKey
+  });
+  jqueryParams.push({
+    "field" : "isCanceling",
+    "value" : "true"
+  });
+  jqueryQuery.params = jqueryParams;
+
+  return BoFactory.loadObjectByParamsAsync("BoTruckLoad", jqueryQuery).then(
+    function (objBoTruckLoad) {
+      objBoTruckLoad.cancel("CanceledByTour");
+      objBoTruckLoad.setObjectStatusIsFrozen(false);
+      objBoTruckLoad.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+      return objBoTruckLoad.saveAsync();
+    }
+  );
+};
+
+//#############################
+//### Cancel Cash Documents ###
+//#############################
+var cancelCashDocument = function (pKey) {
+  return BoFactory.loadObjectByParamsAsync("BoCash", { "pKey" : pKey }).then(
+    function (objBoCash) {
+      objBoCash.cancel("CanceledByTour");
+      objBoCash.setObjectStatusIsFrozen(false);
+      objBoCash.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+
+      return objBoCash.saveAsync();
+    }
+  );
+};
+
+//##################################################
+//### Cancel Order Entry -Non Delivery Documents ###
+//##################################################
+var cancelOrderDocument = function (pKey) {
+  var jqueryQuery = {};
+
+  jqueryQuery.params = [
+    {
+      "field" : "pKey",
+      "value" : pKey
+    },
+    {
+      "field" : "isCanceling",
+      "value" : "true"
+    }
+  ];
+
+  return BoFactory.loadObjectByParamsAsync("BoOrder", jqueryQuery).then(
+    function (objBoOrder) {
+      objBoOrder.cancel("CanceledByTour");
+      objBoOrder.setObjectStatusFrozen(false);
+      objBoOrder.setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+
+      return objBoOrder.saveAsync();
+    }
+  );
+};
+
+//########################
+//### Update Time Card ###
+//########################
+var updateTimeCard = function (pKey) {
+  return BoFactory.loadObjectByParamsAsync(BO_USERDAILYREPORT, { "pKey" : pKey }).then(
+    function (boUserDailyReport) {
+
+      //Dont release the tiemcard if it is not related to the current user
+      var currentUserPKey = ApplicationContext.get('user').getPKey();
+      if (boUserDailyReport.getOwnerUsrMainPKey() === currentUserPKey && boUserDailyReport.getResponsiblePKey() === currentUserPKey) {
+        return boUserDailyReport.setNextWorkflowState("Release").then(
+          function (boUserDailyReport) {
+            return boUserDailyReport.saveAsync();
+          }
+        );
+      }
+    }
+  );
+};
+
+BusyIndicator.show();
+
+Facade.startTransaction();
+
+var deferreds = [];
+
+//cancel open visits
+var visits = me.getLoTourRelatedCalls().getAllItems();
+
+if (Utils.isDefined(visits) && visits.length > 0) {
+  for (var index = 0; index < visits.length; index++) {
+    deferreds.push(cancelVisit(visits[index].getPKey()));
+  }
+}
+
+//Check all open documents i.e. Not Released/Canceled
+var cancelReason = Utils.isDefined(reasonCode) ? reasonCode : "";
+
+var promise = BoFactory.loadObjectByParamsAsync("LoTourRelatedDocuments", { "tmgMainPKey" : me.getPKey() }).then(
+  function (loTourRelatedDocuments) {
+
+    if (Utils.isDefined(loTourRelatedDocuments)) {
+      var documents = loTourRelatedDocuments.getAllItems();
+
+      if (Utils.isDefined(documents) && documents.length > 0) {
+        for (var idx = 0; idx < documents.length; idx++) {
+          if (documents[idx].getDocMetaType() == "TruckLoad" || documents[idx].getDocMetaType() == "InventoryTransfer") {
+            deferreds.push(cancelInvDocument(documents[idx].getPKey()));
+          }
+
+          if (documents[idx].getDocMetaType() == "CashDocument") {
+            deferreds.push(cancelCashDocument(documents[idx].getPKey()));
+          }
+
+          if (documents[idx].getDocMetaType() == "OrderEntry") {
+            deferreds.push(cancelOrderDocument(documents[idx].getPKey()));
+          }
+        }
+      }
+    }
+
+    return when.all(deferreds).then(
+      function () {
+
+        //all calls and documents should be cancelled here
+        //now time card can be updated
+        var updateTimeCardPromise;
+
+        //check if in current running tour context
+        var currentTourPKey = ApplicationContext.get('currentTourPKey');
+        var currentTourStatus = ApplicationContext.get('currentTourStatus');
+        var openTimeCardPKey = ApplicationContext.get('openTimeCardPKey');
+
+        if(Utils.isDefined(currentTourPKey) && !Utils.isEmptyString(currentTourPKey) && currentTourPKey == me.getPKey() && Utils.isDefined(currentTourStatus) && currentTourStatus === "Running" && Utils.isDefined(openTimeCardPKey) && !Utils.isEmptyString(openTimeCardPKey)){
+          updateTimeCardPromise = updateTimeCard(ApplicationContext.get('openTimeCardPKey'));
+        }
+        else {
+          updateTimeCardPromise = when.resolve();
+        }
+
+        return updateTimeCardPromise.then(
+          function () {
+
+            //time card is updated now
+            //tour can be cancelled
+            me.setTmgStatus("Canceled");
+            me.setCancelReason(cancelReason);
+            if (Utils.isDefined(cancelNote)) {
+              me.setCancelNote(cancelNote);
+            }
+
+            //check if in current running tour context
+            var currentTourPKey = ApplicationContext.get('currentTourPKey');
+            var currentTourStatus = ApplicationContext.get('currentTourStatus');
+
+            if(Utils.isDefined(currentTourPKey) && !Utils.isEmptyString(currentTourPKey) && currentTourPKey == me.getPKey() && Utils.isDefined(currentTourStatus) && currentTourStatus === "Running"){
+              ApplicationContext.set('currentTourPKey', '');
+              ApplicationContext.set('currentTourStatus', '');
+              ApplicationContext.set('openTimeCardPKey', '');
+            }
+
+            return Facade.commitTransaction();
+          }
+        );
+      }
+    );
+  }
+);]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

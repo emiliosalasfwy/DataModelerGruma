@@ -1,0 +1,70 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loComments = me.getLoPrmCttComment();
+if (loComments.getAllItems().length === 0) {
+  // add empty comment
+  var liNewComment = {
+    pKey: PKey.next(),
+    text: " ",
+    usage: "Comment",
+    prmContractPKey: me.getPKey(),
+    objectStatus: STATE.NEW,
+  };
+
+  loComments.addListItems([liNewComment]);
+}
+
+loComments.setCurrentByPKey(loComments.getAllItems()[0].getPKey());
+
+//Determine substitution info for EA rights
+var params = [];
+var query = {};
+
+var usrMainPKey = ApplicationContext.get("user").getPKey();
+
+params.push({
+  field: "referenceUserPKey",
+  value: me.getResponsiblePKey(),
+});
+
+params.push({
+  field: "customerPKey",
+  value: me.getBpaCustomerPKey(),
+});
+
+params.push({
+  field: "referenceDate",
+  value: Utils.createAnsiDateTimeToday(),
+});
+
+query.params = params;
+
+var promise = BoFactory.loadObjectByParamsAsync(
+  "LuCustomerManagementInfo",
+  query
+)
+  .then(function (managementLookup) {
+    me.setLuCustomerManagementInfo(managementLookup);
+
+    me.setEARights();
+    me.setObjectStatus(STATE.PERSISTED);
+
+    return Utils.isCasBackend()
+      ? BoFactory.loadListAsync("LoPrmCttRecentState", {
+          prmContractPKey: me.getPKey(),
+        })
+      : when.resolve();
+  })
+  .then(function (recentStates) {
+    me.setLoRecentState(recentStates);
+
+    return me;
+  });
+]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

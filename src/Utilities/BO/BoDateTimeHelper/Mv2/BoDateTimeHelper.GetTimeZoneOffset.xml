@@ -1,0 +1,35 @@
+<BusinessLogic methodName="getTimeZoneOffset" businessObjectClass="BoDateTimeHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="fullDate" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var offsets;
+
+if (Utils.isDefined(fullDate)) {
+  offsets = {};
+  offsets.geoOffset = 0;
+  offsets.dstOffset = 0;
+
+  var givenDate = Utils.convertAnsiDate2Date(fullDate);
+  var givenDateOffset = givenDate.getTimezoneOffset()*-1;
+  var now = Utils.createDateNow();
+  var firstJanuary = Utils.createSpecificDate(now.getFullYear(), 0, 1);
+  var firstJanuaryOffset = firstJanuary.getTimezoneOffset()*-1;
+  var firstJuly = Utils.createSpecificDate(now.getFullYear(), 6, 1);
+  var firstJulyOffset = firstJuly.getTimezoneOffset()*-1;
+  var julyOffsetIsGreater = firstJanuaryOffset < firstJulyOffset;
+  var janOffsetIsGreater = firstJanuaryOffset > firstJulyOffset;
+  var northernHemisphere = givenDateOffset === firstJulyOffset;
+  var southernHemisphere = givenDateOffset === firstJanuaryOffset;
+  var dstOffset = 0;
+
+  if ((julyOffsetIsGreater && northernHemisphere) || (janOffsetIsGreater && southernHemisphere)) {
+    dstOffset = 1;
+  }
+
+  offsets.geoOffset = (givenDateOffset/60) - dstOffset;
+  offsets.dstOffset = dstOffset;
+}]]>
+</Code>
+  <Return name="offsets" value="offsets" />
+</BusinessLogic>

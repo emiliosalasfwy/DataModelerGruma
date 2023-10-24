@@ -1,0 +1,96 @@
+<BusinessLogic methodName="mapSignatureInformationToRefObject" businessObjectClass="BoSysReleaseProcess" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var refObject = this.getReferenceObject();
+var promise = when.resolve();
+var signatureBlobsAreEmpty = Utils.isEmptyString(me.signatureBlob1) && Utils.isEmptyString(me.signatureBlob2) && Utils.isEmptyString(me.signatureBlob3) && Utils.isEmptyString(me.signatureBlob4);
+//create this stuff only if signature is required
+if(!signatureBlobsAreEmpty) {
+  promise = BoFactory.createListAsync("LoSysSignatureAttribute", {}).then(
+    function (loSignatureAttribute) {
+      // Set Lo for SysSignatureAttributes
+      refObject.setLoSysSignatureAttribute(loSignatureAttribute);
+      refObject.getLoSysSignatureAttribute().addObjectItems(me.getLoSysSignatureAttribute().getAllItems());
+      if(Utils.isDefined(loSignatureAttribute)) {
+        var itemsLoSignatureAttribute = loSignatureAttribute.getAllItems();
+        length = itemsLoSignatureAttribute.length;
+        for(var i = 0; i < length; i++) { 
+          if(itemsLoSignatureAttribute[i].getAttribute()== "Time") {
+            var time = Localization.localize(Utils.createDateNow(), "date", Localization.formats.DateFormats.Time);
+            itemsLoSignatureAttribute[i].setValue(time);
+            break;
+          }   
+        }
+      }
+      var items = refObject.getLoSysSignatureAttribute().getAllItems();
+      for (var k = 0; k < items.length; k++) {
+        items[k].setObjectStatus(this.self.STATE_NEW_DIRTY);
+      }
+      return BoFactory.createListAsync("LoSysSignatureBlob", {});  
+    }).then(
+    function (loSignatureBlob) {
+      refObject.setLoSysSignatureBlob(loSignatureBlob);
+      // Create list items for SysSignatureBlob	
+      var stepItems = me.getLoSysReleaseProcessStep().getAllItems();
+      var objectItems = [];
+      var customerPKey = " ";
+      if (Utils.isDefined(refObject.getDeliveryRecipientPKey)) {
+        customerPKey = refObject.getDeliveryRecipientPKey();
+      }
+      var phase = " ";
+      if(Utils.isDefined(refObject.getPhase)){
+        phase = refObject.getPhase();
+      }
+      if(Utils.isDefined(refObject.getTmgStatus)){
+        phase = refObject.getTmgStatus();
+      }
+      var referencepkey = "";
+      for(var i = 1; i <= stepItems.length; i++) {
+        var mediaPath = me.get("signatureBlob" + i);
+        if (stepItems[i-1].getUsrRoleId() === "MobileDSDDriver" && Utils.isEmptyString(me.get("signatureName" + i))) {
+          me.set("signatureName" + i,ApplicationContext.get('user').getName());
+        }
+        var liSysSignatureBlob = {
+          "pKey" : me.get("attachmentBlobPKey" + i),
+          "bpaCustomerPKey" : customerPKey,
+          "name" : me.get("signatureName" + i),
+          "referencePKey" : refObject.getPKey(),
+          "referenceObjectPhase" : phase,
+          "sysReleaseProcessStepPKey" : stepItems[i-1].getPKey(),
+          "usrUserPKey" : ApplicationContext.get('user').getPKey(),
+          "mediaPath" : mediaPath,
+          "type" : Utils.getFileExtensionFromMediaPath(mediaPath),
+          "sysReleaseStepText" : stepItems[i-1].getText(),
+          "objectStatus" : STATE.NEW | STATE.DIRTY,
+          "signaturePKey": PKey.next()
+        };
+        //get the referencepkey for sysattributes
+        if (i == 1) {
+          referencepkey = liSysSignatureBlob.signaturePKey;
+        }
+
+        //avoid creation of signature object if there is no signature
+        if(Utils.isDefined(liSysSignatureBlob.type)){
+          objectItems.push(liSysSignatureBlob);
+        }
+
+      }
+      if(Utils.isDefined(objectItems) && objectItems.length > 0){
+        refObject.getLoSysSignatureBlob().addListItems(objectItems);
+        //CGCloud Additional Workaround for signature reference   
+        if (Utils.isSfBackend()){ 
+          var items = refObject.getLoSysSignatureAttribute().getAllItems();
+          for (var k = 0; k < items.length; k++) {
+            items[k].setReferencePKey(referencepkey);
+            items[k].setObjectStatus(this.self.STATE_NEW_DIRTY);
+          }
+        }
+      }
+    });
+}
+else {
+  me.loSysSignatureAttribute.setObjectStatus(STATE.PERSISTED);
+}]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

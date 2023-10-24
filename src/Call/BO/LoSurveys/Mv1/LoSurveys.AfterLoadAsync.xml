@@ -1,0 +1,70 @@
+<BusinessLogic methodName="afterLoadAsync" businessObjectClass="LoSurveys" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+
+var params = Utils.convertDsParamsOldToNew(context.jsonQuery);
+var boJobManager = params.boJobManager;
+
+if (params.posId !== " ") {
+	// Correct POS information of loaded items
+
+	//Get All POS for clbPosCheckPKeys
+	var posList = boJobManager.getLoPOS().getItemsByParamArray([{
+					"posId" : " ",
+					"op" : "NE"
+				}
+			]);
+	var dicPOSCheck = Utils.createDictionary();
+	var idx = posList.length;
+	var element;
+	while (idx--) {
+		element = posList[idx];
+		dicPOSCheck.add(element.getBpaMainPKey(), element.getPKey());
+	}
+
+	var listArray = result.getItemsByParamArray([{
+					"posId" : " ",
+					"op" : "NE"
+				}, {
+					"clbMainPKey" : boJobManager.getClbMainPKey(),
+					"op" : "NE"
+				}
+			]);
+	var clbPOSCheckPKey = "";
+
+	idx = listArray.length;
+	while (idx--) {
+		element = listArray[idx];
+		clbPOSCheckPKey = dicPOSCheck.get(element.getClbPOSCheckPKey());
+		element.setClbPOSCheckPKey(clbPOSCheckPKey);
+		element.setPosId(clbPOSCheckPKey);
+		element.setObjectStatus(this.self.STATE_UNMODIFIED);
+	}
+
+	result.setObjectStatus(this.self.STATE_UNMODIFIED);
+	result.orderBy({
+		"sort" : "ASC"
+	});
+}
+
+if (params.pushToPOSListAfterLoad && params.pushToPOSListAfterLoad === true)
+{
+  var currentPOSList = boJobManager.getLoPOS().getItemsByParamArray([{
+					"posId" : params.posId,
+					"op" : "EQ"
+				}
+			]);
+   if (currentPOSList.length > 0)
+   {
+     currentPOSList[0].setSurveys(result);
+   }
+}
+
+var promise = when.resolve(result);
+
+   ]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

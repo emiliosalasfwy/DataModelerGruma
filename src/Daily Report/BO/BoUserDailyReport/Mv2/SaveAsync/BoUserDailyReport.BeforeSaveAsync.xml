@@ -1,0 +1,16 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoUserDailyReport" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[//Timeentries are not supported at the moment..
+if (!Utils.isSfBackend()) // <!-- CW-REQUIRED: Framework is now Utils -->
+{
+  if (Utils.isDefined(this.getLoUsrTimeEntry())) {
+    Facade.saveListAsync(this.getLoUsrTimeEntry());
+  }
+}
+var promise=when.resolve(context);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

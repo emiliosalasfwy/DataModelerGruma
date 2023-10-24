@@ -1,0 +1,24 @@
+<BusinessLogic methodName="loadLoBpaOpenItemAsync" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomText" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+if (bReload == "1" || !Utils.isDefined(me.getLoBpaOpenItem())) {
+  promise = BoFactory.loadListAsync(LO_BPAOPENITEM, me.getQueryBy("customerPKey", me.getPKey())).then(
+    function (loBpaOpenItemJson) {
+      //set customer open items list and reset object status for save handling 
+      //(make not BoCustomer DIRTY after reloading data via tab click)
+      var objectState = me.getObjectStatus();
+      me.setLoBpaOpenItem(loBpaOpenItemJson);
+      //Calculate OpenItems Total
+      me.calculateOpenItemTotal();
+      me.setObjectStatus(objectState);
+    });
+}
+else {
+  promise = when.resolve();
+}]]>
+</Code>
+  <Return name="BoCustomer_LoadLoBpaOpenItemAsync" value="promise" />
+</BusinessLogic>

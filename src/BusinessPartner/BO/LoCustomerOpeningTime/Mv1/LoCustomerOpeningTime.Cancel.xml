@@ -1,0 +1,15 @@
+<BusinessLogic methodName="cancel" businessObjectClass="LoCustomerOpeningTime" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="pKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var liCustomerOpeningTime = me.getItemByPKey(pKey);
+
+// Delete item if it is newly created (isNew=1)
+if (Utils.isDefined(liCustomerOpeningTime) && liCustomerOpeningTime.getIsNew() == "1"){
+  liCustomerOpeningTime.delete();
+  me.setFilter("objectStatus", STATE.DIRTY | STATE.DELETED, "NCB");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

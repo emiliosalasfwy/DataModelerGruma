@@ -1,0 +1,92 @@
+<BusinessLogic methodName="sumOfValue" businessObjectClass="BoHelperHurdleExpressionFunctions" businessObjectType="businessobjecthelper" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="hurdle" type="Object" />
+    <MethodInput name="order" type="Object" />
+    <MethodInput name="call" type="Object" />
+    <MethodInput name="pricingCalculator" type="Object" />
+    <MethodInput name="targetValue" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var perFactor = 1;
+var evaluationResult = {
+  "evaluationResult": false,
+  "differenceInfo": {
+    "detailText": "",
+    "calculatedValue": "",
+    "perFactor": 0
+  }
+};
+
+// round is needed to round values in detailtext
+function round(value, decimals) {
+  return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+if(Utils.isDefined(targetValue) && !Utils.isEmptyString(targetValue)) {
+  var operator = hurdle.getOperator();
+  var itemsParams = [];
+  var itemsValue = 0;
+  var mainOrderItemMeta = order.getBoOrderMeta().getLoOrderItemMetas().getMainItemTemplate();
+  itemsParams.push({"quantity":"0","op":"GT"});
+  itemsParams.push({"sdoItemMetaPKey":mainOrderItemMeta.getPKey(),"op":"EQ"});
+  itemsParams.push({"promotionPKey":hurdle.getPromotionPKey(),"op":"EQ"});
+  var filteredItems = order.getLoItems().getItemsByParamArray(itemsParams);
+  var itemsToConsider = me.filterItemsByClassification(filteredItems, hurdle);
+  itemsToConsider.forEach(function(item){
+    var calculatedItemValue = pricingCalculator.calculateItemValue(item, order.getBoOrderMeta());
+    itemsValue += calculatedItemValue.grossValue;
+  });
+  evaluationResult.evaluationResult = me.evaluateOperation(itemsValue, operator, targetValue);
+  evaluationResult.differenceInfo.calculatedValue = itemsValue;
+
+  // to check the applicability of reward having linked hurdle and set the per factor according to evaluation result
+  if(!evaluationResult.evaluationResult) {
+    perFactor = 0;
+  }
+  if(operator === "PER") {
+    if(targetValue > 0 && itemsValue > 0) {
+      perFactor = Math.floor(itemsValue/targetValue);
+    }
+    else {
+      perFactor = 0; 
+    }       
+  }
+  evaluationResult.differenceInfo.perFactor = perFactor;
+
+  if(!evaluationResult.evaluationResult) {
+    switch (operator) {
+      case "gt":
+        evaluationResult.differenceInfo.detailText = "[b]" + round(targetValue + 0.01 - itemsValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "ge":
+        evaluationResult.differenceInfo.detailText = "[b]" + round(targetValue - itemsValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "PER":
+        evaluationResult.differenceInfo.detailText = "[b]" + round(targetValue - itemsValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_more");
+        break;
+      case "eq":
+        if (itemsValue < targetValue) {
+          evaluationResult.differenceInfo.detailText = "[b]" + round(targetValue - itemsValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_more");
+        }
+        else {
+          evaluationResult.differenceInfo.detailText = "[b]" + round(itemsValue - targetValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_less");
+        }
+        break; 
+      case "ne":
+        evaluationResult.differenceInfo.detailText = "[b]0.01 " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_moreless");
+        break;
+      case "le":
+        evaluationResult.differenceInfo.detailText = "[b]" + round(itemsValue - targetValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_less");
+        break;
+      case "lt":
+        evaluationResult.differenceInfo.detailText = "[b]" + round(itemsValue + 0.01 - targetValue, 2) + " " + order.getCurrency() + "[/b] " + Localization.resolve("Hurdle_less");
+        break;
+    }
+  }
+}
+else {
+  AppLog.warn("Invalid numeric value for following hurdle: '" + hurdle.getHurdleTitle() + "' (" + hurdle.getPKey() + ")");
+}]]>
+</Code>
+  <Return name="evaluationResult" value="evaluationResult" />
+</BusinessLogic>

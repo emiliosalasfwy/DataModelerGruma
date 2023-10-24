@@ -1,0 +1,5 @@
+<ListObject name="LoOrderMetaCancelReason" generateLoadMethod="true" xmlns="BoSchema.xsd">
+  <DataSource name="DsLoOrderMetaCancelReason" />
+  <Item objectClass="LiOrderMetaCancelReason" />
+  <Methods></Methods>
+</ListObject>

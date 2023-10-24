@@ -1,0 +1,41 @@
+<BusinessLogic methodName="addRelevantItem" businessObjectClass="LoVisitMap" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="loVisitList" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var loaded = false;
+var relevantItems = loVisitList.getAllItems().filter(function(visit){
+  return   visit.getVisitStatus() == 'Planned' || visit.getVisitStatus() == 'InProgress';
+});
+
+
+me.removeAllItems();
+
+if(Utils.isDefined(relevantItems)){
+
+  if(relevantItems.length > 0){
+    var mapItem = {
+      pkey:                    relevantItems[0].pKey,
+      retailStoreCity:         relevantItems[0].retailStoreCity,
+      retailStorePostalCode:   relevantItems[0].retailStorePostalCode,
+      retailStoreStreet:       relevantItems[0].retailStoreStreet,
+      retailStoreLongitude:    relevantItems[0].retailStoreLongitude,
+      retailStoreLatitude:     relevantItems[0].retailStoreLatitude,
+      visitorCity:             relevantItems[0].visitorCity,
+      visitorStreet:           relevantItems[0].visitorStreet,
+      visitorPostalCode:       relevantItems[0].visitorPostalCode,
+      latitude:                relevantItems[0].latitude,
+      longitude:               relevantItems[0].longitude,
+      mapPinId:                relevantItems[0].mapPinId,
+      mapPinImage:             relevantItems[0].mapPinImage,
+      toolTipText:             relevantItems[0].toolTipText
+    };
+    me.addItems([mapItem]);
+    loaded = true;
+  }
+}
+
+loaded = true;]]>
+</Code>
+  <Return name="loaded" value="loaded" />
+</BusinessLogic>

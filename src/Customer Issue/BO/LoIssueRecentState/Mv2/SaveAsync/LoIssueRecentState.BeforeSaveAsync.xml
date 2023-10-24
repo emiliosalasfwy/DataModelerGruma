@@ -1,0 +1,13 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="LoIssueRecentState" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+   
+   Facade.saveListAsync(this);
+    
+    var promise=when.resolve(context);
+		
+   ]]></Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

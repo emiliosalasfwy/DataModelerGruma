@@ -1,0 +1,34 @@
+<BusinessLogic methodName="prepareAccountReceivablesCardInfo" businessObjectClass="LoAccountReceivables" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visibleAccountReceivablesCount = 5;
+
+if(Utils.isPhone()) {
+  visibleAccountReceivablesCount = 3;
+}
+
+var count = me.cardItemCount;
+if(count <= visibleAccountReceivablesCount) {
+  visibleAccountReceivablesCount = count;
+}
+
+var info = " ";
+if(visibleAccountReceivablesCount > 0) {
+  info = visibleAccountReceivablesCount.toString() + " / " + count;
+}
+
+var accountRelevantReceivables = me.getAllItems();
+var loAccountReceivables = BoFactory.instantiate("LoAccountReceivables");
+loAccountReceivables.addListItems(accountRelevantReceivables);
+
+var accountReceivablesInfo = {};
+accountReceivablesInfo.info = info;
+accountReceivablesInfo.editable = accountRelevantReceivables.length > 0 ;
+accountReceivablesInfo.accountReceivablesList = loAccountReceivables;
+
+accountRelevantReceivables = accountRelevantReceivables.splice(0, visibleAccountReceivablesCount);
+me.removeAllItems();
+me.addItems(accountRelevantReceivables);]]>
+</Code>
+  <Return name="accountReceivablesInfo" value="accountReceivablesInfo" />
+</BusinessLogic>

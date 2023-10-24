@@ -1,0 +1,16 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoDeliveryRole" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LuSysCalendarBySalesOrg", context.jsonQuery).then(
+  function (luSysCalendar) {
+	if (luSysCalendar) {
+		me.setSysCalendarPKey(luSysCalendar.getPKey());
+	}
+	return me;
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

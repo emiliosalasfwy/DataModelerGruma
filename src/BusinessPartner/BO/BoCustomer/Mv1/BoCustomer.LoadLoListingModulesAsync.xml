@@ -1,0 +1,38 @@
+<BusinessLogic methodName="loadLoListingModulesAsync" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="bReload" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if(bReload == "1" || !Utils.isDefined(me.getLoListingModules())) {
+  promise = BoFactory.loadListAsync(LO_LISTINGMODULES, me.getQueryBy("bpaMainPKey", me.getPKey())).then(
+    function (loListingModulesJson) {
+      var objectState = me.getObjectStatus();
+      me.setLoListingModules(loListingModulesJson);
+      me.setObjectStatus(objectState);
+    });
+}
+else {
+  promise = when.resolve();
+}
+
+promise = promise.then(
+  function () {
+    if(Utils.isDefined(me.getLoListingModules())) {
+      var items = me.getLoListingClassification().getAllItems();
+      var length = items.length;
+
+      for(var i=0; i<length; i++){
+        if (items[i].listingModuleName !== null && items[i].listingModuleName !== ""){
+          var moduleAvailable = me.getLoListingModules().containsItem({ "listingModuleName": items[i].listingModuleName}, [{"fieldName": "listingModuleName", "op" : "EQ" }]);
+          if(moduleAvailable === false){
+            items[i].setWarningIcon("WarningIconSmall");
+          }
+        }
+      }
+    }
+  });]]>
+</Code>
+  <Return name="BoCustomer_LoListingModulesAsync" value="promise" />
+</BusinessLogic>

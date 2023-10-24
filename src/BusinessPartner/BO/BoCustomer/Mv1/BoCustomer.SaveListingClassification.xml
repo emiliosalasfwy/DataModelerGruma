@@ -1,0 +1,56 @@
+<BusinessLogic methodName="saveListingClassification" businessObjectClass="BoCustomer" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="listingModuleByPKey" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var items = me.getLoListingClassification().getAllItems();
+var length = items.length;
+var currentPrdCategoryItem = me.getLoListingClassification().getCurrent();
+var currentListingModule = "";
+
+if(Utils.isDefined(listingModuleByPKey)) {
+  currentListingModule = listingModuleByPKey.listingModuleName;
+}
+
+for (var i = 0; i < length; i++) {
+
+  if(items[i].value === currentPrdCategoryItem.value) {
+
+    var previousListingModule = items[i].listingModuleName;
+    if(previousListingModule !== currentListingModule) {
+
+      if((previousListingModule === null || previousListingModule === "") && (currentListingModule !== null && currentListingModule !== "")) {
+
+        //Insert record into Listing_Classification__c
+        items[i].setListingClassificationPKey(PKey.next());
+        items[i].setCustomerPKey(me.getPKey());
+        items[i].setListingModuleName(currentListingModule);
+        items[i].setProductCategory(items[i].value);
+        items[i].setObjectStatus(STATE.NEW | STATE.DIRTY);
+        break;
+
+      }
+      else if((previousListingModule !== null && previousListingModule !== "") && (currentListingModule === null || currentListingModule === "")) {
+        //Delete record from Listing_Classification__c
+        var liListingClassification =  {
+          "listingClassificationPKey": PKey.next(),
+          "customerPKey": me.getPKey(),
+          "listingModuleName": currentListingModule,
+          "productCategory": currentPrdCategoryItem.productCategory,
+        };
+        me.getLoListingClassification().addListItems([liListingClassification]);
+        items[i].delete();
+        break;
+      }
+      else if(previousListingModule !== null && currentListingModule !== null) {
+        //Update record into Listing_Classification__c
+        items[i].setListingModuleName(currentListingModule);
+        items[i].setObjectStatus(STATE.DIRTY | STATE.PERSISTED);
+        break;
+      }
+    }
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

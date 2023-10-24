@@ -1,0 +1,148 @@
+<BusinessLogic methodName="validateCallDate" businessObjectClass="BoCall" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var newError;
+var isValid = true;
+var isValidDate = function(date) {
+  return Utils.isDefined(date) && !Utils.isEmptyString(date);
+};
+
+if (messageCollector.containsNoErrors()) {
+  if (!isValidDate(me.getDateFrom()) || !isValidDate(me.getDateThru()) || !isValidDate(me.getTimeFrom()) || !isValidDate(me.getTimeThru())) {
+    isValid = false;
+    messageCollector.add({
+      "level": "error",
+      "objectClass": "BoCall",
+      "messageID": "CasClbFillInAllValues"
+    });
+  }
+
+  if (me.getDateFrom() > me.getDateThru()) {
+    isValid = false;
+    messageCollector.add({
+      "level": "error",
+      "objectClass": "BoCall",
+      "messageID": "CasClbDateFromGreaterDateThru"
+    });
+  }
+  else if (me.getDateFrom() === me.getDateThru() && me.getTimeFrom() > me.getTimeThru()) {
+    isValid = false;
+    messageCollector.add({
+      "level": "error",
+      "objectClass": "BoCall",
+      "messageID": "CasClbTimeFromGreaterTimeThru"
+    });
+  }
+
+  //Validate Valid Thru if substitution
+  if (!Utils.isEmptyString(me.getBpaMainPKey())) {
+    if (me.getBoJobManager().getCallDateChangedAfterLoad() == "1") {
+
+      //check management / substitution info for EA-Rights
+      var cmiParams = [];
+      var cmiQuery = {};
+
+      cmiParams.push({
+        "field" : "customerPKey",
+        "value" : me.getBpaMainPKey()
+      });
+      cmiParams.push({
+        "field" : "referenceDate",
+        "value" : me.getDateFrom()
+      });
+      cmiParams.push({
+        "field" : "referenceUserPKey",
+        "value" : me.getLuCustomerManagementInfo().getReferenceUsrMainPKey()
+      });
+      cmiQuery.params = cmiParams;
+      promise = BoFactory.loadObjectByParamsAsync("LuCustomerManagementInfo", cmiQuery)
+        .then(function (customerManagementInfoLookup) {
+        //If this is a substituted call, check attribut for EA-Rights
+        if (Utils.isDefined(customerManagementInfoLookup)) {
+          me.setLuCustomerManagementInfo(customerManagementInfoLookup);
+          me.updateSubstitutionInfo();
+        }
+        var managementInfo = me.getLuCustomerManagementInfo();
+
+        // substituted call outside of substitution timeframe
+        if (me.getReadOnlyBySubstitution() == "1") {
+          var stateNewDirty = STATE.NEW | STATE.DIRTY;
+          if (me.getObjectStatus() === stateNewDirty) {
+            newError = {
+              "level" : "error",
+              "objectClass" : "BoCall",
+              "simpleProperty" : "substitution",
+              "messageID" : "CasClbCannotCreateSubstitutedCall"
+            };
+          }
+          else {
+            newError = {
+              "level" : "error",
+              "objectClass" : "BoCall",
+              "simpleProperty" : "substitution",
+              "messageID" : "CasClbCallDateFromNotInSubstitutionTimeFrame"
+            };
+          }
+          messageCollector.add(newError);
+        }
+        else if (me.getSubstitution() === "0" && me.getResponsiblePKey() !== managementInfo.getReferenceUsrMainPKey()) {
+          // call of other user without substitution
+          newError = {
+            "level" : "warning",
+            "objectClass" : "BoCall",
+            "simpleProperty" : "substitution",
+            "messageID" : "CasClbCallDateFromNotInSubstitutionTimeFrame"
+          };
+          messageCollector.add(newError);
+        }
+        return isValid;
+      });
+    }
+    else {
+      var isNewCall = function (call) {
+        return (call.objectStatus & STATE.NEW) == STATE.NEW;
+      };
+      var isCallForUnmanagedCustomer = function (call) {
+        return call.getIsManagedCustomer() !== "1" && Utils.isCasBackend() || Utils.isSfBackend();
+      };
+      var isCallOutsideOfSubstitutionTimeframe = function (call) {
+        //fix datefrom and cut of the time part to compare only dates
+        return (call.getDateFrom().substring(0, 10)) < call.getSubValidFrom() || (call.getDateFrom().substring(0, 10)) > call.getSubValidThru();
+      };
+      var isSubstitutedCallOutsideOfSubstitutionTimeframe = function (call) {
+        return !Utils.isEmptyString(call.getSubstitutedUsrPKey()) && isCallOutsideOfSubstitutionTimeframe(call);
+      };
+      var isSubstitutedCallForUnmanagedCustomerOutsideOfSubstitutionTimeframe = function (call) {
+        return isCallForUnmanagedCustomer(call) && isSubstitutedCallOutsideOfSubstitutionTimeframe(call);
+      };
+
+      if (isNewCall(me) && (isSubstitutedCallForUnmanagedCustomerOutsideOfSubstitutionTimeframe(me) || (me.getIsManagedCustomer() == "0" && me.getIsSubstituted() == "0"))) {
+        messageCollector.add({
+          "level" : "error",
+          "objectClass" : "BoCall",
+          "messageID" : "CasClbCannotCreateSubstitutedCall"
+        });
+      }
+      if (isNewCall(me) && me.getHasSubstitute() == "1") {
+        messageCollector.add({
+          "level" : "error",
+          "objectClass" : "BoCall",
+          "messageID" : "CasClbCannotCreateCallWhileSubstituted"
+        });
+      }
+      promise = when.resolve(isValid);
+    }
+  }
+  else {
+    promise = when.resolve(isValid);
+  }
+}
+else {
+  promise = when.resolve(isValid);
+}]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

@@ -1,0 +1,33 @@
+<BusinessLogic methodName="updatePictureCountOnLoad" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[// Build dictionary for question information
+var pictureQuestionDict = Utils.createDictionary();
+var loQuestions =  me.getBoJobManager().getLoQuestions();
+var currentPictureQuestion;
+var pictureCount;
+var stateDeleted = STATE.DIRTY | STATE.DELETED;
+var stateNew = STATE.NEW;
+var stateUnmodified = STATE.PERSISTED;
+
+loQuestions.suspendListRefresh();
+loQuestions.forEach(function(pictureQuestion) {
+  pictureQuestion.setPictureCount("");
+  pictureQuestionDict.add(pictureQuestion.getPKey(), pictureQuestion);
+});
+
+me.getLoCallAttachments().forEach(function(currentPicture) {
+  if((currentPicture.getObjectStatus() != stateDeleted + stateNew) &&
+     (currentPicture.getObjectStatus() != stateDeleted + stateUnmodified) &&
+     (pictureQuestionDict.containsKey(currentPicture.getClbMainPKey()))){
+
+    currentPictureQuestion = pictureQuestionDict.get(currentPicture.getClbMainPKey());
+    pictureCount = !Utils.isEmptyString(currentPictureQuestion.getPictureCount()) ? parseInt(currentPictureQuestion.getPictureCount(), 10) : 0 ;
+    pictureCount += 1;
+    currentPictureQuestion.setPictureCount(pictureCount.toString());
+  }
+});
+loQuestions.resumeListRefresh(true);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

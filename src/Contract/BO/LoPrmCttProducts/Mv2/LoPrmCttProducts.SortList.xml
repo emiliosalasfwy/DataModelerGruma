@@ -1,0 +1,71 @@
+<BusinessLogic methodName="sortList" businessObjectClass="LoPrmCttProducts" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.suspendListRefresh();
+var products = me.getItemsByParamArray([{
+  "objectStatus" : STATE.DELETED,
+  "op" : "NCB"
+}]);
+
+if (products.length > 0){
+  var idxProduct = 0;
+  var lastPrdGrpId = "";
+  var currentPrdGrpId="";
+  var currentProduct;
+  var oldObjectStatus;
+
+  var compareByMetaType = function compare(a,b) {
+    if (a.getPrdMetaType() < b.getPrdMetaType()){
+      return -1;
+    }
+    if (a.getPrdMetaType() > b.getPrdMetaType()){
+      return 1;
+    }
+    return 0;
+  };
+
+  var groupedProducts = Utils.groupBy(products, function(product) { return product.getPrdgroupId(); });
+  for (var groupId in groupedProducts)
+  {
+    products = groupedProducts[groupId].sort(compareByMetaType);
+    for(idxProduct = 0; idxProduct<products.length; idxProduct++)
+    {
+      currentProduct=products[idxProduct];
+      currentPrdGrpId=currentProduct.getPrdgroupId();
+
+      //If is Group
+      if (currentProduct.getPrdMetaType()=="PrdGroup")
+      {
+        oldObjectStatus=currentProduct.getObjectStatus();
+        currentProduct.setGroupFlag("ArrowExpandGrey24");
+        currentProduct.setSortId(currentProduct.getPrdgroupId());
+        currentProduct.setObjectStatus(oldObjectStatus);
+        lastPrdGrpId=currentPrdGrpId;
+      }
+      else
+      {
+        //Product has a Group
+        if(currentPrdGrpId===lastPrdGrpId)
+        {
+          oldObjectStatus=currentProduct.getObjectStatus();
+          currentProduct.setGroupFlag("DotsSubGrey24");
+          currentProduct.setSortId(currentProduct.getPrdgroupId() + currentProduct.getProductId());
+          currentProduct.setObjectStatus(oldObjectStatus);
+        }
+        //Product has no Group
+        else
+        {
+          oldObjectStatus=currentProduct.getObjectStatus();
+          currentProduct.setGroupFlag(" ");
+          currentProduct.setSortId(" " + currentProduct.getProductId());
+          currentProduct.setObjectStatus(oldObjectStatus);
+        }
+      }
+    }
+  }
+}
+me.orderBy([{"sortId": "ASC"}]);
+me.resumeListRefresh();]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

@@ -1,0 +1,21 @@
+<BusinessLogic methodName="validateNotEmpty" businessObjectClass="BoPrmContract" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var newError;
+if (Utils.isEmptyString(this.getBoSlogan().getText()))
+{
+  newError = {"level": "error", 
+              "objectClass": "BoPrmContract", 
+              "messageID": "CasPrmCttSloganEmpty"};
+  messageCollector.add(newError);
+}else if (!Utils.isDefined(me.getDateFrom()) || !Utils.isDefined(me.getDateThru())){
+  newError = {"level" : "error",
+              "objectClass" : "BoPrmContract",
+              "messageID" : "CasClbFillInAllValues"};
+  messageCollector.add(newError);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

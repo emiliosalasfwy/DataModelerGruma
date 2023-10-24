@@ -1,0 +1,35 @@
+<BusinessLogic methodName="updateLastDisplayedHierarchyLevel" businessObjectClass="BoItemTabManager" businessObjectType="" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="level" type="DomInteger" />
+    <MethodInput name="levelId" type="DomId" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var hierarchyInformation = this.getLastDisplayedHierarchyLevel();
+
+// Cleanup all levels below the currently selected level
+for (var i = level; i < hierarchyInformation.values.length; i++) {
+  hierarchyInformation.values[i] = "";
+}
+
+if (levelId != "RESET") {
+  hierarchyInformation.values[level - 1] = levelId;
+}
+else {
+  this.setIsSkuLevel("0");
+  this.getBoOrder().getLoItems().setFilter("pKey","");
+  this.getBoOrder().getLoItemFilter().setFilter("displayOnHierarchyLevel", "0", "GT");
+  // setting the currently selected tab to hierarchy
+  me.setCurrentItemFilterId("Hierarchy");
+
+  var hierarchyFilterItems = this.getBoOrder().getLoItemFilter().getItemsByParam({"filterCode" : "Hierarchy"});
+
+  if (hierarchyFilterItems.length > 0) {
+    this.getBoOrder().getLoItemFilter().setCurrent(hierarchyFilterItems[0]);
+  }
+}
+
+// Return value for process context that enables/disables the navigate to last level after item selected event
+var navigateToLastLevelActive = "0";]]>
+</Code>
+  <Return name="result" value="navigateToLastLevelActive" />
+</BusinessLogic>

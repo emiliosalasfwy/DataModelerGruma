@@ -1,0 +1,221 @@
+<BusinessLogic methodName="getJobProducts" businessObjectClass="BoJobManager" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="posId" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+var loCurrentPOS = me.getLoPOS().getItemsByParam({
+  "posId" : posId
+});
+
+if (loCurrentPOS.length > 0) {
+  var liCurrentPOS = loCurrentPOS[0];
+  if (liCurrentPOS.getProductsInitialized() !== "1") {
+
+    liCurrentPOS.setProductsInitialized("1");
+
+    // Check and remove invalid existing surveys
+    var nonpersistedsurveyitems = liCurrentPOS.getSurveys().getAllItems().filter(function(x){
+      if(x.getObjectStatus() != STATE.PERSISTED) {
+        return x;
+      }
+    });
+    if (nonpersistedsurveyitems.length > 0) {
+      var pkeys = [];
+      for (var i = 0; i < nonpersistedsurveyitems.length; i++) {
+        pkeys.push(nonpersistedsurveyitems[i].getPKey());
+      }
+      if (pkeys.length > 0) {
+        liCurrentPOS.getSurveys().removeItems(pkeys);
+      }
+    }
+    // START -- Build dictionary of existing surveys
+    var existingJobMainSurveys = liCurrentPOS.getSurveys().getItemsByParam({
+      "posId" : posId
+    });
+    existingJobMainSurveys.sort(function (a, b) {
+      return (a.getPrdMainPKey() === b.getPrdMainPKey()) ? 0 : ((a.getPrdMainPKey() < b.getPrdMainPKey()) ? -1 : 1);
+    });
+
+    var idxExistingJobMainSurveys;
+    var lastPrdMainPKey = "";
+    var dicExistingJobs = {};
+    var currentDicExistingJobsOfProduct;
+    var currentSurvey;
+    var considerTargetValues = me.getConsiderTargetValues() == "1" && (["Planned"].indexOf(me.getClbStatus()) > -1);
+
+    for (idxExistingJobMainSurveys = 0; idxExistingJobMainSurveys < existingJobMainSurveys.length; idxExistingJobMainSurveys++) {
+      currentSurvey = existingJobMainSurveys[idxExistingJobMainSurveys];
+      if (currentSurvey.getPrdMainPKey() !== lastPrdMainPKey) {
+        lastPrdMainPKey = currentSurvey.getPrdMainPKey();
+        currentDicExistingJobsOfProduct = {};
+        dicExistingJobs[lastPrdMainPKey] = currentDicExistingJobsOfProduct;
+      }
+
+      currentDicExistingJobsOfProduct[currentSurvey.getJobDefinitionMetaPKey()] = { value: currentSurvey.getValue(), clbMainPKey: me.getClbMainPKey() };
+    }
+    // END -- Build dictionary of existing surveys
+
+    var loSurveyColumns = me.getLoSurveyColumns().getItemsByParam({
+      "measureType" : liCurrentPOS.getIsPOS() == "1" ? "POS" : "Store"
+    });
+    var liSurveyColumn;
+    var surveyFound;
+    var loProducts = liCurrentPOS.getSurveyProducts();
+
+    if (!Utils.isDefined(loProducts)) {
+      loProducts = BoFactory.instantiateLightweightList("LoJobProducts");
+      loProducts.setObjectStatus(STATE.PERSISTED);
+      loProducts.setObjectStatusFrozen(true);
+      loProducts.orderBy({
+        "prdId" : "ASC"
+      });
+
+      liCurrentPOS.setSurveyProducts(loProducts);
+    }
+    else {
+      if(loProducts.getAllItems().length > 0) {
+        loProducts.removeAllItems();
+      }
+    }
+
+    var jsonQuery = {};
+    jsonQuery.params = [
+      { "field" : "clbMainPKey", "operator" : "EQ", "value" : me.getClbMainPKey() },
+      { "field" : "clbMetaPKey", "operator" : "EQ", "value" : me.getClbMetaPKey() },
+      { "field" : "bpaMainPKey", "operator" : "EQ", "value" : me.getBpaMainPKey() },
+      { "field" : "validFrom", "operator" : "EQ", "value" : me.getReferenceDate() },
+      { "field" : "validThru", "operator" : "EQ", "value" : me.getReferenceDate() },
+      { "field" : "isPOS", "operator" : "EQ", "value" : liCurrentPOS.getIsPOS() },
+      { "field" : "clbStatus", "operator" : "EQ", "value" : me.getClbStatus() },
+      { "field" : "responsiblePKey", "operator" : "EQ", "value" : me.getResponsiblePKey() },
+      { "field" : "historicalProducts", "operator" : "EQ", "value" : me.getHistoricalProductConfig() },
+      { "field" : "isKubsch", "operator" : "EQ", "value" : liCurrentPOS.getIsKubsch() },
+      { "field" : "prdPOSContentPKey", "operator" : "EQ", "value" : liCurrentPOS.getPosContentPKey() },
+      { "field" : "posPKey", "operator" : "EQ", "value" : liCurrentPOS.getBpaMainPKey() },
+      { "field" : "posId", "operator" : "EQ", "value" : posId },
+      { "field" : "considerModule", "operator" : "EQ", "value" : me.getConsiderModule() }
+    ];
+
+    promise = Facade.getListAsync("LoJobProducts", jsonQuery).then(
+      function (listJobProducts) {
+        for (var idxProduct = 0; idxProduct < listJobProducts.length; idxProduct++) {
+          var currentJobProduct = listJobProducts[idxProduct];
+          var currentProductJDLPKeys = currentJobProduct.jDLPKeys;
+
+          // fill in values from already saved jobs
+          currentDicExistingJobsOfProduct = (currentJobProduct.prdMainPKey in dicExistingJobs) ? dicExistingJobs[currentJobProduct.prdMainPKey] : null;
+
+          for (var idxJobDef = 0; idxJobDef < loSurveyColumns.length; idxJobDef++) {
+            surveyFound = false;
+            liSurveyColumn = loSurveyColumns[idxJobDef];
+
+            if (currentDicExistingJobsOfProduct && currentDicExistingJobsOfProduct[liSurveyColumn.getJobDefinitionMetaPKey()] && (currentDicExistingJobsOfProduct[liSurveyColumn.getJobDefinitionMetaPKey()].clbMainPKey == me.getClbMainPKey() || liSurveyColumn.getPresetting() === "LastValue")) {
+              currentJobProduct[liSurveyColumn.getDisplayColumnName()] = (currentDicExistingJobsOfProduct[liSurveyColumn.getJobDefinitionMetaPKey()].value);
+              currentJobProduct[liSurveyColumn.getDisplayColumnName() + "LastValue"] = (currentDicExistingJobsOfProduct[liSurveyColumn.getJobDefinitionMetaPKey()].value);
+
+              //Assign the datwarehousePkey from existing jobs
+              currentJobProduct[liSurveyColumn.getDisplayColumnName() + "DataWareHouseKey"] = (liSurveyColumn.getDataWareHouseKey() in currentDicExistingJobsOfProduct) ? currentDicExistingJobsOfProduct[liSurveyColumn.getDataWareHouseKey()].value : undefined;
+              surveyFound = true;
+            }
+
+            // preset survey values only if survey is required for this product
+            if (loProducts.isJDLPKeyMatch(liSurveyColumn.getJobDefListPKeys(), currentProductJDLPKeys)) {
+
+              if (!surveyFound) {
+                //Initializing Last Value and Target Values
+                currentJobProduct[liSurveyColumn.getDisplayColumnName() + "LastValue"]= "";
+                currentJobProduct[liSurveyColumn.getDisplayColumnName() + "TargetValue"] = "";
+
+                if (liSurveyColumn.getPresetting() === "TargetValue") {
+                  if (considerTargetValues && liSurveyColumn.getTargetValueColumn() !== "0") {
+                    currentJobProduct[liSurveyColumn.getDisplayColumnName()] = (currentJobProduct["presetting" + liSurveyColumn.getTargetValueColumn()]);
+                  }
+                }
+                else if (liSurveyColumn.getPresetting() === "LastValue") {
+                  //Check Presetting value and set target value to Last value
+                  if (liSurveyColumn.getTargetValueColumn() !== "0") {
+                    currentJobProduct[liSurveyColumn.getDisplayColumnName()] = (currentJobProduct["presetting" + liSurveyColumn.getTargetValueColumn()]);
+                    currentJobProduct[liSurveyColumn.getDisplayColumnName() + "LastValue"]= (currentJobProduct["presetting" + liSurveyColumn.getTargetValueColumn()]);
+                  } 
+                }
+              }
+
+              if (considerTargetValues && liSurveyColumn.getTargetValueColumn() !== "0") {
+                currentJobProduct[liSurveyColumn.getDisplayColumnName() + "TargetValue"] = (currentJobProduct["presetting" + liSurveyColumn.getTargetValueColumn()]);
+              }
+
+              currentJobProduct[liSurveyColumn.getDisplayColumnName() + "DataWareHouseKey"] = liSurveyColumn.getDataWareHouseKey();
+            }
+          }
+
+          // Check for Discrepancy
+          var hasDiscrepance = "0";
+
+          if (posId === " ") {
+            if(currentJobProduct.svyDistributed === "NotDistributed" || currentJobProduct.svyDistributed === "OutOfStock") {
+              hasDiscrepance = "1";
+            }
+
+            if (liSurveyColumn.getPresetting() === "LastValue") {
+              if(valueHasDiscrepance(currentJobProduct.svyFacingsLastValue, currentJobProduct.svyFacings)) {
+                hasDiscrepance = "1";
+              }
+              else if (valueHasDiscrepance(currentJobProduct.svyPriceLastValue, currentJobProduct.svyPrice)) {
+                hasDiscrepance = "1";
+              }
+            }
+            else if (liSurveyColumn.getPresetting() === "TargetValue") {
+              if(valueHasDiscrepance(currentJobProduct.svyFacingsTargetValue, currentJobProduct.svyFacings)){
+                hasDiscrepance = "1";
+              }
+              else if(valueHasDiscrepance(currentJobProduct.svyPriceTargetValue, currentJobProduct.svyPrice)) {
+                hasDiscrepance = "1";
+              }
+            }
+          }
+          else {
+            if(currentJobProduct.svyPosDistributed === "NotDistributed" || currentJobProduct.svyPosDistributed === "OutOfStock") {
+              hasDiscrepance = "1";
+            }
+            if (liSurveyColumn.getPresetting() === "LastValue") {
+              if(valueHasDiscrepance(currentJobProduct.svyPosFacingsLastValue, currentJobProduct.svyPosFacings)){
+                hasDiscrepance = "1";
+              }
+              else if (valueHasDiscrepance(currentJobProduct.svyPosPriceLastValue, currentJobProduct.svyPosPrice)) {
+                hasDiscrepance = "1";
+              }
+            }
+            else if (liSurveyColumn.getPresetting() === "TargetValue") {
+              if(valueHasDiscrepance(currentJobProduct.svyPosFacingsTargetValue, currentJobProduct.svyPosFacings)){
+                hasDiscrepance = "1";
+              }
+              else if(valueHasDiscrepance(currentJobProduct.svyPosPriceTargetValue !== currentJobProduct.svyPosPrice)) {
+                hasDiscrepance = "1";
+              }
+            }
+          }
+          currentJobProduct.hasDiscrepance = hasDiscrepance;
+        }
+
+        if (listJobProducts.length > 0) {
+          loProducts.addItems(listJobProducts);
+          loProducts.orderBy({"prdGroupId": "ASC", "prdGroupText" : "ASC", "shortText":"ASC"});
+        }
+        liCurrentPOS.setSurveyCount(loProducts.getCount());
+      });
+  }
+  else {
+    promise = when.resolve(0);
+  }
+}
+else {
+  promise = when.resolve(0);
+}
+
+function valueHasDiscrepance (value, referenceValue) {
+  return Utils.isDefined(value) && value !== "" && value !== referenceValue;
+}]]>
+</Code>
+  <Return name="returnName" value="promise" />
+</BusinessLogic>

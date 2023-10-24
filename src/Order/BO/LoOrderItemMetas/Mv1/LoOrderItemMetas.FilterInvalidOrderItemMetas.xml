@@ -1,0 +1,7 @@
+<BusinessLogic methodName="filterInvalidOrderItemMetas" businessObjectClass="LoOrderItemMetas" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[me.setFilterArray([ { "active" : "1" , "op" : "EQ" } , { "validFrom" : Utils.createAnsiDateToday() , "op" : "LE" } , { "validThru" : Utils.createAnsiDateToday() , "op" : "GE" } ]);]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

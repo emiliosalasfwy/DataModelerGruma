@@ -1,0 +1,48 @@
+<BusinessLogic methodName="setEARights" businessObjectClass="LoQuestions" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="isReadOnly" type="DomBool" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var aclRights;
+
+if(isReadOnly){
+  //For read only calls, adding edit rights to camera button
+  aclRights = me.getACL();
+  aclRights.addRight(AclObjectType.OBJECT, "LoQuestions", AclPermission.EDIT);
+  aclRights.removeRight(AclObjectType.PROPERTY, "done", AclPermission.EDIT);
+  aclRights.removeRight(AclObjectType.PROPERTY, "value", AclPermission.EDIT);
+  aclRights.removeRight(AclObjectType.PROPERTY, "questionText", AclPermission.EDIT);
+  aclRights.removeRight(AclObjectType.PROPERTY, "mandatoryImageId", AclPermission.EDIT);
+
+  me.getItems().forEach(function(question){
+    aclRights = question.getACL();
+    //If pictureCount is Empty or Zero remove the camera icon
+    if(Utils.isEmptyString(question.getPictureCount()) || question.getPictureCount() == "0"){
+      aclRights.removeRight(AclObjectType.PROPERTY, "cameraIcon", AclPermission.VISIBLE);
+    }
+    else {
+      aclRights.addRight(AclObjectType.PROPERTY, "cameraIcon", AclPermission.VISIBLE);
+    }
+  });
+} 
+else{
+  me.getItems().forEach(function(question){
+    aclRights = question.getACL();
+    if(question.getVisible() == "1"){
+      if(!aclRights.isVisible(AclObjectType.OBJECT, "LiQuestion")){
+        aclRights.addRight(AclObjectType.OBJECT, "LiQuestion", AclPermission.VISIBLE);
+      }
+      if(question.getCameraIcon() != "CapturePictureIcon"){
+        aclRights.removeRight(AclObjectType.PROPERTY, "cameraIcon", AclPermission.VISIBLE);
+      }
+    } 
+    else {
+      if(aclRights.isVisible(AclObjectType.OBJECT, "LiQuestion")){
+        aclRights.removeRight(AclObjectType.OBJECT, "LiQuestion", AclPermission.VISIBLE);
+      }
+    }
+  });
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

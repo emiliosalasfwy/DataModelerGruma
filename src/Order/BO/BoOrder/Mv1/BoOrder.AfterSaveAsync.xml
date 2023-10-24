@@ -1,0 +1,41 @@
+<BusinessLogic methodName="afterSaveAsync" businessObjectClass="BoOrder" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise;
+
+if ((this.getValidateForRelease() == "1") && (me.getSetPhaseInBeforeSave() == "1") && (this.getOrgPhase() == this.getPhase())) {
+  var buttonValues = {};
+  buttonValues[Localization.resolve("OK")] = "ok";
+
+  promise = MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Error"), Localization.resolve("NoResponsibleFoundByWorkflow"), buttonValues)
+    .then(
+    function () {
+    return result;
+  });
+} else {
+
+  var syncOption = me.getBoOrderMeta().getSyncOptions();
+
+  if (me.getPhase()==="Released" && me.getOrgPhase()!=="Released")
+  { 
+    if  (syncOption == "Release"|| syncOption == "ReleaseCancel")
+    {
+      Facade.startBackgroundReplication();
+    } 
+  }
+  else if (me.getPhase()==="Canceled" && me.getOrgPhase()!=="Canceled")
+  {
+    if  (syncOption == "Cancel"|| syncOption == "ReleaseCancel")
+    {
+      Facade.startBackgroundReplication();
+    } 
+  }
+
+  promise = when.resolve(result);
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

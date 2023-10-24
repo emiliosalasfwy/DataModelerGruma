@@ -1,0 +1,68 @@
+<BusinessLogic methodName="beforeLoadAsync" businessObjectClass="BoProduct" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var jsonQuery = context.jsonQuery;
+
+if (!jsonQuery) {
+  jsonQuery = {
+    'params': []
+  };
+}
+
+context = {
+  'jsonQuery': jsonQuery
+};
+
+var promise = Facade.getObjectAsync(BO_PRODUCT, jsonQuery).then(
+  function (selfJson) {
+    context.selfJson = selfJson;
+    if (me.beforeInitialize) {
+      me.beforeInitialize.apply(me, [context]);
+    }
+    me.setProperties(selfJson);
+    if (me.afterInitialize) {
+      me.afterInitialize.apply(me, [context]);
+    }
+    if (Utils.isDefined(selfJson)) {
+      var jsonParams = me.prepareLookupsLoadParams(selfJson);
+      return Facade.loadLookupsAsync(jsonParams);
+    }
+  }).then(
+  function (lookups) {
+    if (Utils.isDefined(lookups)) {
+      me.assignLookups(lookups);
+    }
+
+    return BoFactory.loadObjectByParamsAsync("LuProductBasePrice", me.getQueryBy("pKey", me.getPKey()));
+  }).then(
+  function (luProductBasePrice) {
+    if (Utils.isDefined(luProductBasePrice)) {
+      me.setLuProductBasePrice(luProductBasePrice);
+    }
+
+    return BoFactory.loadListAsync(LO_PRODUCTHIERARCHY, me.getQueryBy("ProductPKey", me.getPKey()));
+  }).then(
+  function (loProductHierarchy) {
+    if (Utils.isDefined(loProductHierarchy)) {
+      me.setLoProductHierarchy(loProductHierarchy);
+    }
+    else {
+      me.setLoProductHierarchy(null);
+    }
+
+    return BoFactory.loadListAsync(LO_PRDSTATEFORMASTERDATA, me.getQueryBy("ProductPKey", me.getPKey()));
+  }).then(
+  function (loPrdStateForMasterData) {
+    if (Utils.isDefined(loPrdStateForMasterData)) {
+      me.setLoPrdStateForMasterData(loPrdStateForMasterData);
+    }
+    else {
+      me.setLoPrdStateForMasterData(null);
+    }
+  }
+);]]>
+</Code>
+  <Return name="context" value="promise" />
+</BusinessLogic>

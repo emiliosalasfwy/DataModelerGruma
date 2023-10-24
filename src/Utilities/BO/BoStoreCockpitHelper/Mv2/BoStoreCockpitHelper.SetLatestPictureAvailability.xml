@@ -1,0 +1,14 @@
+<BusinessLogic methodName="setLatestPictureAvailability" businessObjectClass="BoStoreCockpitHelper" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="liLatestPicture" type="LiCallAttachments" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isDefined(liLatestPicture)) {
+  me.setIsLatestPictureAvailable("1");
+}
+else {
+  me.setIsLatestPictureAvailable("0");
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

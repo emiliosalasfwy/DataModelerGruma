@@ -1,0 +1,59 @@
+<BusinessLogic methodName="selectItemAfterAdd" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="addProductResult" type="Object" />
+    <MethodInput name="barcodeScanBehavior" type="DomSdoBarcodeScanBehavior" />
+    <MethodInput name="mode" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var selectLastCurrentItem = false;
+var filterItems;
+var currentSelectedTruckItem;
+var allItems = me.getLoItems();
+
+if (Utils.isDefined(addProductResult)) {
+  var _addProductResult = addProductResult;
+
+  if (Utils.isDefined(_addProductResult.selectPKey)) {
+    var mainItem = allItems.getItemByPKey(_addProductResult.selectPKey);
+    // Select added item
+    allItems.setCurrent(mainItem);
+
+    if ((mode === "addScannedProduct" && barcodeScanBehavior.getId() === "OnlySelect") || (mode === "addProduct" && addProductResult.countExistingItems.length === 0)) {
+      allItems.setFocus(mainItem, "quantity");
+    }
+    currentSelectedTruckItem = me.getLoItems().getCurrent();
+  }
+  else {
+    selectLastCurrentItem = true;
+  }
+}
+else {
+  selectLastCurrentItem = true;
+}
+
+if (selectLastCurrentItem) {
+  // Select item
+  if (!Utils.isDefined(currentSelectedTruckItem)) {
+    var truckItems = me.getLoItems().getItemObjects();
+
+    if (truckItems.length > 0) {
+      currentSelectedTruckItem = truckItems[0];
+    }
+  }
+
+  if (!Utils.isDefined(currentSelectedTruckItem)) {
+    me.getLoItems().setCurrent(currentSelectedTruckItem);
+    if ((mode === "addScannedProduct" && barcodeScanBehavior.getId() === "OnlySelect") || (mode === "addProduct" && addProductResult.countExistingItems.length === 0)) {
+      allItems.setFocus(currentSelectedTruckItem, "quantity");
+    }
+  }
+}
+//Refresh the quantity difference
+if (Utils.isDefined(currentSelectedTruckItem)) {
+  currentSelectedTruckItem.setQtyDifference(currentSelectedTruckItem.getQuantity() - currentSelectedTruckItem.getTargetQuantity());
+  //Display Unit information
+  me.createDisplayInformationForListItem(currentSelectedTruckItem);
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

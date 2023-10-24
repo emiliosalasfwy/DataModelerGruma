@@ -1,0 +1,26 @@
+<BusinessLogic methodName="selectItemAfterScan" businessObjectClass="LoVisitRetailVisitKPI" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="productId" type="String" />
+    <MethodInput name="boAssessmentTask" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(productId)){
+  var isInStoreProduct = false;
+  
+  var setPkey;
+  
+  var primaryAIDItems = boAssessmentTask.getLoPrimaryRetailVisitKPI().getItemsByParamArray([{"productId" : productId, "op" : "EQ"}]);
+    primaryAIDItems.forEach(function(rvkpi) {
+        if(boAssessmentTask.locationFilter.toLowerCase() === rvkpi.inStoreLocationName.toLowerCase()) {
+          if(!Utils.isDefined(setPkey)) {
+            setPkey = rvkpi.pKey;
+          }
+    }
+    });
+  
+   boAssessmentTask.getLoPrimaryRetailVisitKPI().setCurrentByPKey(setPkey);
+   isInStoreProduct = Utils.isDefined(setPkey) ? true : false;
+}]]>
+</Code>
+  <Return name="isInStoreProduct" value="isInStoreProduct" />
+</BusinessLogic>

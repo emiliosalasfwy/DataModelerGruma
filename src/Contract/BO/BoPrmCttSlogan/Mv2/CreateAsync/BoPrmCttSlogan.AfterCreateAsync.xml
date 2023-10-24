@@ -1,0 +1,15 @@
+<BusinessLogic methodName="afterCreateAsync" businessObjectClass="BoPrmCttSlogan" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    var user = ApplicationContext.get('user');
+    result.setSalesOrg(user.getBoUserSales().getSalesOrg());
+    result.setLanguage(user.getLanguageSpoken());
+    result.setObjectStatus(this.self.STATE_NEW);
+    var promise=when.resolve(result);
+		
+   ]]></Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

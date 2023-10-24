@@ -1,0 +1,15 @@
+<BusinessLogic methodName="onTripListChanged" businessObjectClass="BoWizardCreateCallViaTpl" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="handlerParams" type="Object" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+		var me = this;
+		if(handlerParams.oldValue != handlerParams.newValue) {
+      var loTripList = me.getLoTripList();
+      if(Utils.isDefined(loTripList)) {
+        loTripList.setCurrentByPKey(handlerParams.newValue);
+      }
+		}
+		
+   ]]></Code>
+</BusinessLogic>

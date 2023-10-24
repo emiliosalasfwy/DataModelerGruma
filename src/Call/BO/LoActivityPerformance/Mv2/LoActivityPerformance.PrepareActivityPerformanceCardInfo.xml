@@ -1,0 +1,34 @@
+<BusinessLogic methodName="prepareActivityPerformanceCardInfo" businessObjectClass="LoActivityPerformance" businessObjectType="listobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var visibleActivitiesCount = 5;
+
+if(Utils.isPhone()) {
+  visibleActivitiesCount = 3;
+}
+
+var count = me.cardItemCount;
+if(count <= visibleActivitiesCount) {
+  visibleActivitiesCount = count;
+}
+
+var info = ' ';
+if(visibleActivitiesCount > 0) {
+  info = visibleActivitiesCount.toString() + ' / ' + count;
+}
+
+var performanceRelevantActivities = me.getAllItems();
+var loActivityPerformance = BoFactory.instantiate('LoActivityPerformance');
+loActivityPerformance.addListItems(performanceRelevantActivities);
+
+var activityPerformanceInfo = {};
+activityPerformanceInfo.info = info;
+activityPerformanceInfo.editable = performanceRelevantActivities.length > 0;
+activityPerformanceInfo.activityPerformanceList = loActivityPerformance;
+
+performanceRelevantActivities = performanceRelevantActivities.splice(0, visibleActivitiesCount);
+me.removeAllItems();
+me.addItems(performanceRelevantActivities);]]>
+</Code>
+  <Return name="activityPerformanceInfo" value="activityPerformanceInfo" />
+</BusinessLogic>

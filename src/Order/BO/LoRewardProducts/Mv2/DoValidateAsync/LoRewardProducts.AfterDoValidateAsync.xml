@@ -1,0 +1,12 @@
+<BusinessLogic methodName="afterDoValidateAsync" businessObjectClass="LoRewardProducts" asynchronous="true" accessibility="PUBLICresult" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="result" type="Object" />
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+  <Code language="JavaScript">
+    <![CDATA[
+		var promise = when.resolve(result);
+	]]>
+  </Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

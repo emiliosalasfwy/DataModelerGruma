@@ -1,0 +1,100 @@
+<BusinessLogic methodName="computeFreeQuantity" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="itemPKey" type="DomPKey" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var promise = when.resolve(me);
+var blub;
+
+var ivcMetaPKeys = [];
+var usrMainPKeys = [];
+var bpaMainPKeys = [];
+var prdMainPKeys = [];
+var tmgTourPKeys = [];
+var etpVehiclePKeys = [];
+var jsonParamsForFinding = [];
+var jsonQueryForFinding = {};
+
+if (Utils.isDefined(itemPKey)) 
+{
+  var liOrderItem = me.getLoItems().getItemByPKey(itemPKey);
+  var itemMeta = me.getBoOrderMeta().getLoOrderItemMetas().getItemTemplateByPKey(liOrderItem.getSdoItemMetaPKey());
+  if (Utils.isDefined(itemMeta)) 
+  {
+
+    // Determine inventory information only if the item template is used to UseUserInventory or UseQuota
+    if ((itemMeta.getUseUserInventory() == "1") || (itemMeta.getUseQuota() == "1")) 
+    {
+
+
+      // Get inventory meta information with prepared search keys
+      var ivcMetasByItemMeta = me.getBoOrderMeta().getIvcMetasByItemMeta(liOrderItem.getSdoItemMetaPKey());
+
+      for (var i = 0; i < ivcMetasByItemMeta.length; i++) {
+        ivcMetaPKeys.push(ivcMetasByItemMeta[i].getIvcMetaPKey());
+        usrMainPKeys.push(ivcMetasByItemMeta[i].getUsrMainPKey());
+        bpaMainPKeys.push(ivcMetasByItemMeta[i].getBpaMainPKey());
+        tmgTourPKeys.push(ivcMetasByItemMeta[i].getTmgTourPKey());
+        etpVehiclePKeys.push(ivcMetasByItemMeta[i].getEtpVehiclePKey());
+      }
+
+      prdMainPKeys.push(liOrderItem.getPrdMainPKey());
+
+      jsonParamsForFinding.push({
+        "field" : "ivcMetaPKeys",
+        "value" : "'" + ivcMetaPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "usrMainPKeys",
+        "value" : "'" + usrMainPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "bpaMainPKeys",
+        "value" : "'" + bpaMainPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "prdMainPKeys",
+        "value" : "'" + prdMainPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "tmgTourPKeys",
+        "value" : "'" + tmgTourPKeys.join("','") + "'"
+      });
+      jsonParamsForFinding.push({
+        "field" : "etpVehiclePKeys",
+        "value" : "'" + etpVehiclePKeys.join("','") + "'"
+      });
+
+      jsonQueryForFinding.params = jsonParamsForFinding;
+
+      promise = BoFactory.loadObjectByParamsAsync("LoInventoryFinding", jsonQueryForFinding)
+        .then(function (loInventoryFinding) {
+
+    var luPlannedQuantityQuery = {};
+	luPlannedQuantityQuery.params = [{
+			"field" : "tmgMainPKey",
+			"value" : me.getTmgMainPKey()
+		}, {
+			"field" : "documentType",
+			"value" : me.getDocumentType()
+		}, {
+			"field" : "prdMainPKey",
+			"value" : liOrderItem.getPrdMainPKey()
+		}, {
+			"field" : "salesOrg",
+			"value" : me.getSalesOrg()
+		}, {
+			"field" : "movementDirection",
+			"value" : liOrderItem.getMovementDirection()
+		}
+	];
+
+	return BoFactory.loadObjectByParamsAsync("LuPlannedQuantity", luPlannedQuantityQuery);
+
+  });
+    }
+  }
+}]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

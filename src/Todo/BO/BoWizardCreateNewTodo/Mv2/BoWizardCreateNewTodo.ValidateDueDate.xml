@@ -1,0 +1,25 @@
+<BusinessLogic methodName="validateDueDate" businessObjectClass="BoWizardCreateNewTodo" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[var initiationDate = Utils.createAnsiDateTimeToday();
+
+// Validate if Due Date is blank
+if (Utils.isDefined(me.getDueDate())) {
+  if (
+    me.getDueDate() != Utils.getMinDate() &&
+    me.getDueDate() < initiationDate
+  ) {
+    messageCollector.add({
+      level: "error",
+      objectClass: "BoWizardCreateNewTodo",
+      messageID: "CasBoToDoInitiationDateGTDueDate",
+    });
+  }
+} else {
+  me.setDueDate(Utils.getMinDate());
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

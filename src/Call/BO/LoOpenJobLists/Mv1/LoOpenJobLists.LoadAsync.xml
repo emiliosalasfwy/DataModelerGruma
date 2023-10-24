@@ -1,0 +1,39 @@
+<BusinessLogic methodName="loadAsync" businessObjectClass="LoOpenJobLists" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="jsonQuery" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(Utils.isSfBackend()){
+  jsonQuery.params[0].value = Utils.convertForDBParam(jsonQuery.referenceDateFrom, 'DomDate');
+  jsonQuery.params[1].value = Utils.convertForDBParam(jsonQuery.referenceDateThru, 'DomDate');
+}
+jsonQuery.params.push({"field" : "asoName", "value" : "AsoJobLists"});
+
+var promise = me.addAsoInformation(jsonQuery).then(
+  function (success) {
+    return Facade.getListAsync(LO_OPENJOBLISTS, jsonQuery);
+  }).then(
+  function (items) {
+    me.addItems(items, jsonQuery);
+    me.orderBy({"customerName" : "ASC"});
+
+    var jobDefs = me.getAllItems();
+    var currentJDL;
+
+    for(var idxJDL=0; idxJDL < jobDefs.length; idxJDL++){
+      currentJDL = jobDefs[idxJDL];
+      if(Utils.isDefined(currentJDL.getPromotionId()) && (!Utils.isEmptyString(currentJDL.getPromotionId()))){
+        if(Utils.isDefined(currentJDL.getPromotionSlogan())){
+          var promotionDateFrom = Localization.localize(currentJDL.promotionDateFrom, "date");
+          var promotionDateThru = Localization.localize(currentJDL.promotionDateThru, "date");
+          var displayText = currentJDL.getJobDefinitionListText() + ' | ' + currentJDL.getPromotionSlogan();
+          currentJDL.setJobDefinitionListText(displayText);
+        }
+      }
+    }
+    me.setObjectStatus(STATE.PERSISTED);
+    return me;
+  });]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

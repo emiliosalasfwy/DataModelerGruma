@@ -1,0 +1,60 @@
+<BusinessLogic methodName="beforeSaveAsync" businessObjectClass="BoTodo" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="context" type="Object" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[/***********************************************************
+*  1 CGCloud table / 2 onPrem tables                          *
+*                                                          *
+*  CGCloud:    -Note is directly stored in Task.Description   *
+*  onPrem:  -Separate table for Note                       *
+************************************************************/
+
+var todoSavedPromise;
+
+if (Utils.isSfBackend()) {
+  todoSavedPromise = BoFactory.createObjectAsync("BoSfHelper", {})
+    .then(function(helper) {
+    return helper.saveTrackedObject(me, [{name: "description", dsColumn: "Description", value: me.getBoTodoNote().getText()}]);
+  });
+}
+else {
+  todoSavedPromise = Facade.saveObjectAsync(me).then(function() {
+    return true;
+  });
+}
+
+var promise = todoSavedPromise.then(function(boWasSaved) {
+  var deferreds = [];
+
+  if (boWasSaved) {
+    [me.getLoRecentState(), me.getLoAtmAttachment(), me.getLoTodoAttachments()].forEach(function(item) {
+      if(Utils.isDefined(item)) {
+        deferreds.push(item.saveAsync());
+      }
+    });
+
+    // SF/CASDIF: General Dif
+    // In SF case the note is saved directly to Task
+    if(!Utils.isSfBackend()) {
+      deferreds.push(me.getBoTodoNote().saveAsync());
+    }
+  }
+
+  return when.all(deferreds).then(
+    function () {
+      //Reset object status for all to prevent multiple saves
+      me.traverse(function(node){
+        node.setObjectStatus(STATE.PERSISTED);
+        if(node.isList) {
+          node.getAllItems().forEach(function(item){
+            item.setObjectStatus(STATE.PERSISTED);
+          });
+        }
+      },function (a, b, c){});
+    }
+  );
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

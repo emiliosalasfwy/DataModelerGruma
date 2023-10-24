@@ -1,0 +1,22 @@
+<BusinessLogic methodName="cancelVisit" businessObjectClass="LoAgendaOverview" businessObjectType="listobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="CallPKey" type="Object" />
+    <MethodInput name="reasonCode" type="Object" />
+    <MethodInput name="disableTransactionHandling" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (Utils.isDefined(disableTransactionHandling) &&
+    (disableTransactionHandling == "1" || disableTransactionHandling === "true" || disableTransactionHandling === true)){
+  disableTransactionHandling = true;
+}
+else{
+  disableTransactionHandling = false;
+}
+
+var promise = BoFactory.loadObjectByParamsAsync("BoCall", me.getQueryBy("pKey", CallPKey))
+.then(function (objBoCall) {
+  return objBoCall.cancel(reasonCode, disableTransactionHandling);
+});]]>
+</Code>
+  <Return name="result" value="promise" />
+</BusinessLogic>

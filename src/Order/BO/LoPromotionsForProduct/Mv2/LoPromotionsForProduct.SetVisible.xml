@@ -1,0 +1,16 @@
+<BusinessLogic methodName="setVisible" businessObjectClass="LoPromotionsForProduct" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE">
+  <Parameters>
+    <MethodInput name="visible" type="Bool" />
+  </Parameters>
+  <Code language="JavaScript"><![CDATA[
+    
+    if (visible == "true") {
+      this.getACL().addRight(AclObjectType.OBJECT, "LoPromotionsForProduct", AclPermission.VISIBLE)
+    } else {
+      this.getACL().removeRight(AclObjectType.OBJECT, "LoPromotionsForProduct", AclPermission.VISIBLE)
+    }
+    
+    BindingUtils.refreshEARights(false);
+
+    ]]></Code>
+</BusinessLogic>

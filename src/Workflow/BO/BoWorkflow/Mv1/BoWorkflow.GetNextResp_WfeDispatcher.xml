@@ -1,0 +1,26 @@
+<BusinessLogic methodName="getNextResp_WfeDispatcher" businessObjectClass="BoWorkflow" businessObjectType="" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var queryUserByRole = {};
+queryUserByRole.params = [{ "field": "usrRoleId", "value": "WorkflowDispatcher" }];
+
+var promise = BoFactory.loadObjectByParamsAsync("LoUserByRole", queryUserByRole).then(
+  function (loUserByRole) {
+
+    var items = loUserByRole.getItemObjects();
+    if (items.length > 0) {
+      var wfeDispatcherPKey = items[0].getPKey();
+
+      var nextResponsibleCollection = {};
+      nextResponsibleCollection.responsibles = {};
+      nextResponsibleCollection.mainResponsibles = {};
+
+      nextResponsibleCollection.responsibles[wfeDispatcherPKey] = wfeDispatcherPKey;
+
+      return nextResponsibleCollection;
+    }
+  }
+);]]>
+</Code>
+  <Return name="nextResponsibleCollection" value="promise" />
+</BusinessLogic>

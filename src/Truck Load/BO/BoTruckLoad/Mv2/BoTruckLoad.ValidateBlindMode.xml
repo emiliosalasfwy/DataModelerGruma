@@ -1,0 +1,70 @@
+<BusinessLogic methodName="validateBlindMode" businessObjectClass="BoTruckLoad" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="messageCollector" type="messageCollector" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if (this.getDocumentType() === "ProductCheckOut")
+{
+  if (!this.isEditable() || this.getReleaseIgnored() == "1")
+  {
+    return;
+  }
+
+  if (this.getValidateForBlindMode() !== "1")
+  {
+    if (this.getReleaseTriggered() == "1")
+    {
+      var itemPresettingPolicy = this.getBoOrderMeta().getItemPresettingPolicy();
+      var itemInputRequired = this.getBoOrderMeta().getItemInputRequired();
+      var actualPrdCheckOutType = this.getActualPrdCheckOutType();
+
+      var items = this.getLoItems().getAllItems();
+
+      if (actualPrdCheckOutType === "SKU" && (itemPresettingPolicy == "BlindMode" || itemPresettingPolicy == "NonBlindMode"))
+      {
+        if (itemInputRequired == "1")
+        {
+          //validate -any non edited items present in the list
+          var nonEditedItems = this.getLoItems().getItemsByParam(
+            {
+              "edited" : "0"
+            }
+          );
+          if (Utils.isDefined(nonEditedItems) && nonEditedItems.length > 0)
+          {
+            var newError =
+                {
+                  "level" : "error",
+                  "objectClass" : "BoTruckLoad",
+                  "messageID" : "CasSdoMainBlindModeItemsNotYetEdited"
+                };
+            messageCollector = this.addMessageToContainer(messageCollector, newError);
+          }
+        }
+        else
+        {
+          var mainItem;
+          for (var i = 0; i < items.length; i++)
+          {
+            mainItem = items[i];
+            if (mainItem.getEdited() === "0")
+            {
+              mainItem.setQuantity("0");
+            }
+
+            mainItem.setEdited("1");
+          }
+        }
+      }
+      this.setValidateForBlindMode("1");
+    }
+  }
+
+  if (this.getReleaseTriggered() == "1")
+  {
+    this.setReleaseTriggered("0");
+  }
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>

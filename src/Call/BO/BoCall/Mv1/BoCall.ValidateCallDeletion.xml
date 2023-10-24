@@ -1,0 +1,30 @@
+<BusinessLogic methodName="validateCallDeletion" businessObjectClass="BoCall" businessObjectType="businessobject" asynchronous="true" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters />
+<Code language="JavaScript">
+<![CDATA[var promise = BoFactory.loadObjectByParamsAsync("LuHasReferencedOrder", me.getQueryBy('clbMainPKey', me.getPKey()))
+.then(function(hasReferencedOrder){
+
+  if(hasReferencedOrder.referencedOrderCount > 0){
+    var messageCollector = new MessageCollector();
+    var buttonValues = {};
+    var newError = {
+      "level": "error", 
+      "objectClass": "BoCall", 
+      "simpleProperty": " ", 
+      "messageID": "CasClbCallHasReferencedOrder"
+    };
+    messageCollector.add(newError);
+    var messages = messageCollector.getMessages().join("<br>");
+    buttonValues[Localization.resolve("OK")] = "ok";
+    return MessageBox.displayMessage(Localization.resolve("MessageBox_Title_Validation"), messages, buttonValues)
+      .then(function(){
+      return when.resolve("invalid");
+    });
+  }
+  else{
+    return when.resolve("valid");
+  }
+});]]>
+</Code>
+  <Return name="promise" value="promise" />
+</BusinessLogic>

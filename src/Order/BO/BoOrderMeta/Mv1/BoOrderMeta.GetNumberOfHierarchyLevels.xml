@@ -1,0 +1,35 @@
+<BusinessLogic methodName="getNumberOfHierarchyLevels" businessObjectClass="BoOrderMeta" accessibility="PUBLIC" asynchronous="false" final="false" module="CORE" xmlns="BlSchema.xsd">
+  <Code language="JavaScript"><![CDATA[
+ 
+        var numberOfLevels = 0;
+        var productSelectorConfiguration;
+
+        if ((this.getItemListOption() == "Hierarchy") && (this.getMobilityRelevant() == "1")) {
+            var params = [];
+
+            params.push({ "Level1": "All", "op": "NE" });
+            params.push({ "Level1": "Basket", "op": "NE" });
+            params.push({ "Level1": "New", "op": "NE" });
+            params.push({ "Level1": "Promotion", "op": "NE" });
+            params.push({ "Level1": "OutOfStock", "op": "NE" });
+            params.push({ "Level1": "History", "op": "NE" });
+
+            productSelectorConfiguration = this.getLoProductSelector().getItemsByParamArray(params);
+
+            if (productSelectorConfiguration.length > 0) {
+   
+              if (!Utils.isEmptyString(productSelectorConfiguration[0].getLevel1())) {
+                  numberOfLevels = numberOfLevels + 1;
+              }
+
+              if (!Utils.isEmptyString(productSelectorConfiguration[0].getLevel2())) {
+                  numberOfLevels = numberOfLevels + 1;
+              }               
+            }
+        } 
+        
+        numberOfLevels = numberOfLevels.toString(); 
+        
+    ]]></Code>
+  <Return name="numberOfLevels" value="numberOfLevels" />
+</BusinessLogic>

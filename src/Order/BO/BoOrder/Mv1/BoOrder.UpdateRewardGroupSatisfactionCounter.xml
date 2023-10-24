@@ -1,0 +1,19 @@
+<BusinessLogic methodName="updateRewardGroupSatisfactionCounter" businessObjectClass="BoOrder" businessObjectType="businessobject" asynchronous="false" accessibility="PUBLIC" final="false" module="CORE" simpleEditorOnly="">
+  <Parameters>
+    <MethodInput name="selectedPromotionPKey" type="String" />
+  </Parameters>
+<Code language="JavaScript">
+<![CDATA[if(!Utils.isEmptyString(selectedPromotionPKey) && me.rewardGroupExistsInOrder()) {
+  var selectablePromotion = me.getLoSelectablePromotion().getItemByPKey(selectedPromotionPKey);
+  if(Utils.isDefined(selectablePromotion)){
+    var rewardGroupSatisfactionCounter = "Satisfied Reward Groups: " + selectablePromotion.getSatisfiedRewardGroupCount() + "/" + selectablePromotion.getTotalRewardGroup();
+    me.getHurdleEvaluationHelper().setRewardsAndHurdlesTitle(rewardGroupSatisfactionCounter);
+    me.getHurdleEvaluationHelper().setRewardsButtonCounter(selectablePromotion.getSatisfiedRewardGroupCount() + "/" + selectablePromotion.getTotalRewardGroup());
+  }
+}
+else {
+  me.getHurdleEvaluationHelper().setRewardsAndHurdlesTitle(me.getLuOrderer().getName());
+}]]>
+</Code>
+  <Return name="" value="" />
+</BusinessLogic>
